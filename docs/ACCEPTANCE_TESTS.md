@@ -9,6 +9,17 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-011B.2 — installed PWA update behavior (alpha.7, iPhone UAT pending)
+
+- [ ] **CP-B221:** With an internet connection, the *existing* iPhone Home Screen app eventually loads alpha.7 via service-worker activation and a restart. Do not remove the installed app; older app versions cannot retroactively show new Check now controls.
+- [ ] **CP-B222:** In Settings, **Check now** reports an attempted update check. It must not clear IndexedDB, overwrite an achievement, or claim a specific newer version when none is confirmed.
+- [ ] **CP-B223:** On a subsequent release, when a newer controller activates, a **New version ready** notice offers a user-initiated restart. No automatic reload while entering achievement/role/credential information.
+- [ ] **CP-B224:** Confirm the restart action does not discard an unsaved form without the existing confirmation; do not interrupt pending saves. The banner appears above compact mobile navigation but beneath editing dialogs.
+- [ ] **CP-B225:** Offline app launch retains the local dataset; update check with no connection produces a clear message. Safari and installed PWA may have separate local storage.
+
+**Safety:** Export a current backup beforehand. Never reinstall the PWA, clear browser data, unregister workers, or delete caches merely to force an update. The PR's Chromium check cannot certify iOS WebKit update scheduling.
+
+
 ## CP-011B.1 — compact timeline (alpha.6) iPhone gate
 
 After merging CP-011B, the user reported the employment history rendered full employer and role descriptions, making the timeline difficult to scan. Alpha.6 is a presentation-only correction; **CP-011B remains subject to iPhone acceptance**.
