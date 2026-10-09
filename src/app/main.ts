@@ -9,7 +9,7 @@ import {icon} from '../ui/icons.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
 import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,achievementEnrichmentDetails} from '../ui/achievementIntelligence.js';
-import {competencyPage,customCompetencyForm,readCustomCompetency} from '../ui/competencyLibrary.js';
+import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency} from '../ui/competencyLibrary.js';
 import {dateBounds} from '../domain/dates.js';
 
 type Screen='home'|'vault'|'profile'|'portfolio'|'competencies';
@@ -355,6 +355,10 @@ async function removeProject(id:string){
   try{await database.removeRecord('projects',id,project.revision);await loadCareerCollections();render();notify('Experience deleted.');}
   catch(err){notify(errorMessage(err),'error');}
 }
+function refreshCompetencies(){
+  const target=document.querySelector<HTMLElement>('.skill-groups');
+  if(target&&careerCollections)target.innerHTML=competencyGroups(careerCollections,skillQuery,skillCategory);
+}
 function refreshPortfolioCards(){
   const target=document.getElementById('portfolio-results');
   if(target&&careerCollections)target.innerHTML=portfolioCards(careerCollections,portfolioFilters);
@@ -444,8 +448,8 @@ document.addEventListener('click',e=>{
   const actionTarget=resolveActionTarget(e.target);
   if(actionTarget)runAction(actionTarget);
 });
-document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;render(true);}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
-document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;render();}
+document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
+document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;refreshCompetencies();}
   if(t.id==='rich-primaryProjectId'||t.name==='projectId')isDirty=true;
   if(t.name==='projectId'){const form=t.closest('form');if(form)updatePrimaryOptions(form);}
   if(t.id==='role-filter'){filterRole=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}
