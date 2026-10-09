@@ -1,5 +1,15 @@
 # CareerProof release notes
 
+## 0.1.1-alpha.4 — CP-011A.3 iPhone keyboard / Outcome visibility (PR review)
+
+- Rechecks focused-field visibility after mobile VisualViewport CSS/layout changes and during late keyboard animation; scrolls only the modal-body instead of the background document.
+- Handles textarea taller than the keyboard-visible region by revealing its label and an editable portion; retains browser-native caret scrolling as text grows.
+- Tracks unobstructed viewport height in standalone mode, preserving pinch-zoom exclusion and safe-area behavior; uses the full visible mobile dialog height while keyboard is open.
+- Adds synthetic staged-keyboard focus/typing/focus-switching regression tests and new CP-UI301 iPhone acceptance gate; physical Safari acceptance remains pending.
+- Preserves schema 2, format-2/legacy-1 backup, record data, selected CP branding, compact navigation, date inputs, and all CP-011A data protection.
+- [Root cause and manual checklist](IOS_KEYBOARD_OUTCOME_CP_011A_3.md). CP-011B remains paused until actual device acceptance.
+
+
 ## 0.1.1-alpha.3 — CP-011A.2 iOS Form & Navigation Refinement (PR review)
 
 - Resets native date/month/time presentation to bounded border-box, left-aligned WebKit values and shared 48px/16px input treatment; retains native picker and existing date precision/blank-draft adapters.
