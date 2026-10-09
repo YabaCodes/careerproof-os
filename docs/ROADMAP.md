@@ -27,6 +27,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **Update 2026-10-09:** The user verified on iPhone that achievement input fields work and the mobile bottom navigation is aligned after PR #1. Those two UI defects are accepted. Remaining backup/recovery, offline, and destructive-action UAT stays open; see DECISIONS_AND_STATUS.md and [the v0.1.1 implementation brief](V0.1.1_IMPLEMENTATION_BRIEF.md).
 
+**CP-011A.3 correction:** User found that iPhone keyboard obscures the Outcome textarea after CP-011A.2. A focused alpha.4 bugfix is required, with real-device UAT before CP-011B. See [the keyboard acceptance report](IOS_KEYBOARD_OUTCOME_CP_011A_3.md).
+
 ## 3. Requirements traceability
 
 | Functional ID | Capability | Main UI | Stores / services | Acceptance |
