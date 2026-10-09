@@ -53,7 +53,7 @@ test('Settings export imports cleanly, legacy warning is explicit, and invalid f
   const before=await rawCollections(page);
   const malformed=structuredClone(backup);malformed.collections.achievements[0].status=['recorded'];
   await page.locator('#restore-file').setInputFiles({name:'Synthetic_Invalid.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(malformed))});
-  await expect(page.locator('#toast')).toContainText('Cannot restore');expect(await rawCollections(page)).toEqual(before);await expect(page.getByRole('dialog')).toHaveAttribute('aria-label','Settings');
+  await expect(page.locator('#toast')).toContainText('Cannot restore');expect(await rawCollections(page)).toEqual(before);await expect(page.getByRole('dialog',{name:'Settings & data'})).toBeVisible();
   await page.locator('#restore-file').setInputFiles({name:'Synthetic_Valid.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(backup))});
   await expect(page.getByText('This replaces your current data')).toBeVisible();await page.locator('[data-action="confirm-restore"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);expect(await rawCollections(page)).toEqual(before);
   await importFile(page,legacyBackup());await expect(page.getByText('Legacy format-1 backup:')).toBeVisible();await expect(page.getByRole('dialog')).toContainText('custom competencies and links currently stored here will be removed');
@@ -96,24 +96,36 @@ test('mobile navigation has five equal positions at 320/375px and direct backdro
 test('cached PWA opens offline with stored records and all foundation modules',async({page,context})=>{
   await start(page);await capture(page,'Synthetic offline entry');await page.locator('[data-action="save-achievement"][data-status="recorded"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));});
-  const keys=await page.evaluate(()=>caches.keys());expect(keys).toContain('careerproof-v0.1.1-alpha.1');
+  const keys=await page.evaluate(()=>caches.keys());expect(keys).toContain('careerproof-v0.1.1-alpha.2');
   await context.setOffline(true);await page.reload();await expect(page.getByText('Synthetic offline entry').first()).toBeVisible();await settings(page);await expect(page.getByRole('dialog')).toContainText('Database schema 2');
+  const cachedAssets=await page.evaluate(async()=>{
+    const files=['icon.svg','icon-192.png','icon-512.png','icon-maskable-512.png','apple-touch-icon.png','favicon-32.png','favicon-16.png','app/ui/dialog.js'];
+    return Promise.all(files.map(async file=>({file,ok:(await fetch('./'+file)).ok})));
+  });
+  expect(cachedAssets.every(asset=>asset.ok)).toBe(true);
   await context.setOffline(false);
 });
 test('worker activation replaces the previous cache and retains local records offline',async({page,context})=>{
   await page.goto('/__fixture__');
+  const seeded=fullCollections();
+  await page.evaluate(async c=>{
+    const {database}=await import('/app/data/db.js');
+    await database.initialize();
+    await database.replaceAllData(c,{theme:'light'},await database.getGeneration());
+  },seeded);
+  const before=await rawCollections(page);
   await page.evaluate(async()=>{
     await navigator.serviceWorker.register('/__legacy_sw__',{scope:'/'});
     await navigator.serviceWorker.ready;
     if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
-  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.0-ui-hotfix-1');
+  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.1-alpha.1');
   await start(page);
   await page.evaluate(async()=>{
     if(!navigator.serviceWorker.controller?.scriptURL.endsWith('/sw.js'))await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
   const cachesNow=await page.evaluate(()=>caches.keys());
-  expect(cachesNow).toContain('careerproof-v0.1.1-alpha.1');await expect.poll(()=>page.evaluate(()=>caches.keys())).not.toContain('careerproof-v0.1.0-ui-hotfix-1');
-  await capture(page,'Synthetic cache-upgrade entry');await page.locator('[data-action="save-achievement"][data-status="recorded"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
-  await context.setOffline(true);await page.reload();await expect(page.getByText('Synthetic cache-upgrade entry').first()).toBeVisible();await context.setOffline(false);
+  expect(cachesNow).toContain('careerproof-v0.1.1-alpha.2');await expect.poll(()=>page.evaluate(()=>caches.keys())).not.toContain('careerproof-v0.1.1-alpha.1');
+  expect(await rawCollections(page)).toEqual(before);
+  await context.setOffline(true);await page.reload();await expect(page.getByText('Resolved synthetic issue').first()).toBeVisible();expect(await rawCollections(page)).toEqual(before);await context.setOffline(false);
 });

@@ -12,7 +12,8 @@
 - The original deployment selected **branch root** and served source `index.html` without compiled `app/app/main.js`, leaving users at 'Opening CareerProof…'. The GitHub Pages source was corrected to Actions, and the build/deploy completed successfully.
 - Original v0.1.0 had dialog click-through behavior and visually uneven mobile navigation. **PR #1** (`v0.1.0 UI Hotfix 1: dialogs stay open while typing, even mobile nav`) was merged into `main` on 2026-10-09. It introduced scoped direct-backdrop interaction and nav alignment fixes plus regression tests and service-worker cache update.
 - **iPhone hotfix acceptance (user-confirmed 2026-10-09):** Input fields in the achievement editor work, and the bottom navigation is aligned after merged PR #1. Those two defects can be closed. This is **not** confirmation of full v0.1.0 UAT; backup/restore, offline startup, archive/delete and broader device checks still need manual evidence.
-- CP-011A is now implemented for review on feat/cp-011a-migration-recovery as 0.1.1-alpha.1 (schema 2, format 2). The deployed/main baseline remains v0.1.0 until user review and merge. CP-011B–E have not begun. See [CP-011A contracts](CP_011A_MIGRATION_RECOVERY.md).
+- The user merged CP-011A in PR #4; main is 0.1.1-alpha.1, schema 2 and backup format 2/legacy 1. The user reported all five CP-011A iPhone smoke checks passed. Extended fault/quota/migration qualification retains separate evidence requirements.
+- CP-011A.1 is authorized on fix/cp-011a-ui-brand-polish as 0.1.1-alpha.2 for shared UI stabilization and selected branding. No data contract change or new module screens. CP-011B is paused pending merge and iPhone acceptance. See [UI audit](UI_AUDIT_CP_011A_1.md) and [CP-011A contracts](CP_011A_MIGRATION_RECOVERY.md).
 
 ## 2. Decision register
 
@@ -40,6 +41,8 @@
 | DEC-021 | CP-011A includes complete recovery before new workflows | User approved strict import validation, additive schema 2, legacy adapter, atomic full replacement and persistent generations; CP-011B–E remain separate |
 | DEC-022 | One persisted PrecisionDate; UI/legacy adapters | Exact historical days preserved; blank drafts null; hidden P0 fields survive existing UI edits |
 | DEC-023 | Historical achievements migrate Confidential | No automatic external-sharing approval; full private backup still includes confidential data |
+| DEC-024 | CP-011A.1 precedes CP-011B | Stabilize every existing screen, responsive tokens, dialogs and icons without changing schema/backup contracts |
+| DEC-025 | User-selected Concept 1 Modern Monogram and supplied nav family | Latest selection supersedes earlier rejected concepts; editable vector plus platform PNG assets; no automatic merge/deploy |
 | DEC-020 | Use GitHub documentation as durable Codex source of truth | Do not assume Codex has full past chat history |
 
 ## 3. Design artifacts and precedence
@@ -80,12 +83,12 @@ Do not silently reconcile contradictions when they affect persistent data or use
 - JSON backups are unencrypted.
 - No employer/role/project relationships, built-in competency intelligence, reviews, CVs or job matching at v0.1.0.
 - Browser storage is not durable in all failure scenarios; backups are necessary.
-- SVG PWA icon installation support may vary across devices.
+- Platform PNG and Apple touch assets now accompany SVG in CP-011A.1; installed-icon refresh still needs real-device verification.
 - UI hotfix automated tests do not prove keyboard/iPhone interaction.
 
-**Before v0.1.1 implementation**: The user has confirmed achievement input fields and aligned mobile navigation on iPhone. Remaining v0.1.0 checks (Settings interactions, save/edit/archive/reopen, backup restore with synthetic data, offline installed startup) are **not yet confirmed** and should be verified or explicitly tracked without claiming completion. See [the implementation brief](V0.1.1_IMPLEMENTATION_BRIEF.md) for migration and acceptance safeguards.
+**Accepted baseline**: The user confirmed the original input/navigation fixes and subsequently all five CP-011A iPhone smoke checks on alpha.1. This does not automatically close the expanded recovery/quota/stale-tab matrix or the newly changed UI/device checks in CP-011A.1. See [the implementation brief](V0.1.1_IMPLEMENTATION_BRIEF.md) for migration and acceptance safeguards.
 
-**For v0.1.1**: Obtain formal acceptance of v1→v2 IndexedDB migration design; role/project reference behavior, date precision handling, **legacy format-1 backup import compatibility**; verify no data loss. Use [CP-IMP-011](V0.1.1_IMPLEMENTATION_BRIEF.md) as the approved implementation planning brief, not evidence of completed work.
+**For v0.1.1**: CP-011A migration/recovery contracts were approved and implemented. Continue extended recovery and device acceptance, then CP-011B–E relationship workflows and qualification. Use [CP-IMP-011](V0.1.1_IMPLEMENTATION_BRIEF.md) as the approved implementation planning brief, not evidence of completed work.
 
 **Later open implementation choices** (do not block documentation PR):
 - CP-011A resolves precision-date/migration contracts; later UI may add an explicit precision picker.

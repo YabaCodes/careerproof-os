@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
+import {icon} from '../dist/app/ui/icons.js';
 import {resolveActionTarget} from '../dist/app/ui/actionRouting.js';
 const backdrop={dataset:{action:'backdrop'},closest:()=>backdrop};
 test('modal fields and labels do not dismiss the dialog',()=>{
@@ -17,8 +17,12 @@ test('nested icons still activate their own button',()=>{
   const svg={closest:()=>button};
   assert.equal(resolveActionTarget(svg),button);
 });
-test('mobile nav has five equally sized columns and aligned buttons',async()=>{
-  const css=await readFile('dist/styles.css','utf8');
-  assert.match(css,/\.mobile-nav\{display:grid;grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
-  assert.match(css,/\.mobile-create\{[^}]*place-self:center;[^}]*margin:0;/);
+test('navigation icons share a coordinate system and decorative accessibility contract',()=>{
+  for(const name of ['home','vault','plus','user','settings']){
+    const svg=icon(name,24);
+    assert.match(svg,/viewBox="0 0 24 24"/);
+    assert.match(svg,/stroke-width="2"/);
+    assert.match(svg,/aria-hidden="true" focusable="false"/);
+  }
+  assert.notEqual(icon('settings'),icon('sun'),'Settings must be a distinct gear');
 });

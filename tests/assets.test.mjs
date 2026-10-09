@@ -3,6 +3,19 @@ import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { join, dirname, resolve } from 'node:path';
 const root=resolve('dist');
+test('platform PNG dimensions, manifest purposes and Apple touch references are correct',async()=>{
+  const expected={'icon-192.png':192,'icon-512.png':512,'icon-maskable-512.png':512,'apple-touch-icon.png':180,'favicon-32.png':32,'favicon-16.png':16};
+  for(const [name,size] of Object.entries(expected)){
+    const png=await readFile(join(root,name));
+    assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a',name);
+    assert.equal(png.readUInt32BE(16),size,name+' width');
+    assert.equal(png.readUInt32BE(20),size,name+' height');
+  }
+  const manifest=JSON.parse(await readFile(join(root,'manifest.webmanifest'),'utf8'));
+  assert.deepEqual(manifest.icons.map(i=>[i.src,i.sizes,i.purpose]),[['./icon-192.png','192x192','any'],['./icon-512.png','512x512','any'],['./icon-maskable-512.png','512x512','maskable']]);
+  const html=await readFile(join(root,'index.html'),'utf8');
+  assert.match(html,/rel="apple-touch-icon" href="\.\/apple-touch-icon.png" sizes="180x180"/);
+});
 test('production HTML references existing JavaScript, CSS, manifest and icon assets',async()=>{
   const html=await readFile(join(root,'index.html'),'utf8');
   for(const ref of ['./app/app/main.js','./styles.css','./manifest.webmanifest','./icon.svg']) {

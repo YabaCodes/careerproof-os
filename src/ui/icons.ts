@@ -1,12 +1,12 @@
 const paths: Record<string,string>={
-  home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/>',
-  vault:'<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M10 14h4"/>',
-  user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/>',
+  home:'<path class="icon-fill" d="m4 10 8-7 8 7v11h-6v-6h-4v6H4Z"/><path d="m2 10 10-8 10 8"/>',
+  vault:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 8h8M8 12h5"/>',
+  user:'<circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0Z"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
   chevron:'<path d="m9 18 6-6-6-6"/>',
   close:'<path d="M18 6 6 18M6 6l12 12"/>',
-  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+  settings:'<path d="M21.90 10.61 L21.90 13.39 L19.76 13.94 L18.86 16.12 L19.99 18.02 L18.02 19.99 L16.12 18.86 L13.94 19.76 L13.39 21.90 L10.61 21.90 L10.06 19.76 L7.88 18.86 L5.98 19.99 L4.01 18.02 L5.14 16.12 L4.24 13.94 L2.10 13.39 L2.10 10.61 L4.24 10.06 L5.14 7.88 L4.01 5.98 L5.98 4.01 L7.88 5.14 L10.06 4.24 L10.61 2.10 L13.39 2.10 L13.94 4.24 L16.12 5.14 L18.02 4.01 L19.99 5.98 L18.86 7.88 L19.76 10.06Z"/><circle cx="12" cy="12" r="3"/>',
   trophy:'<path d="M8 4h8v7a4 4 0 0 1-8 0V4ZM8 6H4v2a4 4 0 0 0 4 4m8-6h4v2a4 4 0 0 1-4 4M12 15v4m-4 2h8"/>',
   search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
   calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18"/>',
@@ -22,11 +22,11 @@ const paths: Record<string,string>={
   info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6m0-10v.1"/>',
   archive:'<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v12h14V9m-10 5h6"/>',
   refresh:'<path d="M20 7V3l-3 3a8 8 0 1 0 2.4 9M20 3v5h-5"/>',
-  layers:'<path d="m12 3 9 5-9 5-9-5 9-5zm-9 10 9 5 9-5M3 18l9 5 9-5"/>',
-  lock:'<rect x="5" y="10" width="14" height="12" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  layers:'<path d="m12 2 9 5-9 5-9-5 9-5zm-9 10 9 5 9-5M3 17l9 5 9-5"/>',
+  lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4 4l2 2m12 12 2 2M2 12h2m16 0h2M4 20l2-2M18 6l2-2"/>',
   moon:'<path d="M20 14a8 8 0 0 1-10-10 8 8 0 1 0 10 10z"/>',
   alert:'<path d="M12 3 2 21h20L12 3zm0 7v5m0 3v.1"/>',
 };
-export function icon(name:string,size=20):string {return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]??paths.info}</svg>`;}
+export function icon(name:string,size=20):string {return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths[name]??paths.info}</svg>`;}
