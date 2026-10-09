@@ -7,12 +7,12 @@
 - GitHub repository: **YabaCodes/careerproof-os**, default branch `main`.
 - Deployment: GitHub Pages via **GitHub Actions**, build output `dist/`. Public URL: https://yabacodes.github.io/careerproof-os/
 - Tech: TypeScript/DOM, compiled ES modules, CSS tokens, IndexedDB, service worker. Build/test: `npm test`; source modules under `src/`, `styles.css`, `public/`; CI at `.github/workflows/deploy.yml`.
-- Current app semver according to package/source/release notes: **v0.1.0**; DB schema **1**; JSON export format **1**. Hotfix kept the 0.1.0 version.
+- Deployed/main baseline before the CP-011A merge: **v0.1.0**; DB schema **1**; JSON export format **1**. Hotfix kept the 0.1.0 version.
 - Implemented from README/source: basic Profile; Quick Capture (draft/recorded); Vault search/filter/sort/edit/archive/restore/delete; basic home stats; local persistence; JSON backup and restore; responsive themes/PWA shell.
 - The original deployment selected **branch root** and served source `index.html` without compiled `app/app/main.js`, leaving users at 'Opening CareerProof…'. The GitHub Pages source was corrected to Actions, and the build/deploy completed successfully.
 - Original v0.1.0 had dialog click-through behavior and visually uneven mobile navigation. **PR #1** (`v0.1.0 UI Hotfix 1: dialogs stay open while typing, even mobile nav`) was merged into `main` on 2026-10-09. It introduced scoped direct-backdrop interaction and nav alignment fixes plus regression tests and service-worker cache update.
 - **iPhone hotfix acceptance (user-confirmed 2026-10-09):** Input fields in the achievement editor work, and the bottom navigation is aligned after merged PR #1. Those two defects can be closed. This is **not** confirmation of full v0.1.0 UAT; backup/restore, offline startup, archive/delete and broader device checks still need manual evidence.
-- At this handover, **v0.1.1 has NOT begun**. Existing source might advance after this documentation PR; always inspect current code/history at task start.
+- CP-011A is now implemented for review on feat/cp-011a-migration-recovery as 0.1.1-alpha.1 (schema 2, format 2). The deployed/main baseline remains v0.1.0 until user review and merge. CP-011B–E have not begun. See [CP-011A contracts](CP_011A_MIGRATION_RECOVERY.md).
 
 ## 2. Decision register
 
@@ -37,6 +37,9 @@
 | DEC-017 | First release must be useful, not empty app shell | v0.1.0 includes achievement capture and storage |
 | DEC-018 | Honest testing: browser-device tests separate from automated build | Prior deployment and modal regressions demonstrate need for UAT |
 | DEC-019 | Personal records never committed to public GitHub | Use generic synthetic data in docs and tests |
+| DEC-021 | CP-011A includes complete recovery before new workflows | User approved strict import validation, additive schema 2, legacy adapter, atomic full replacement and persistent generations; CP-011B–E remain separate |
+| DEC-022 | One persisted PrecisionDate; UI/legacy adapters | Exact historical days preserved; blank drafts null; hidden P0 fields survive existing UI edits |
+| DEC-023 | Historical achievements migrate Confidential | No automatic external-sharing approval; full private backup still includes confidential data |
 | DEC-020 | Use GitHub documentation as durable Codex source of truth | Do not assume Codex has full past chat history |
 
 ## 3. Design artifacts and precedence
@@ -85,8 +88,8 @@ Do not silently reconcile contradictions when they affect persistent data or use
 **For v0.1.1**: Obtain formal acceptance of v1→v2 IndexedDB migration design; role/project reference behavior, date precision handling, **legacy format-1 backup import compatibility**; verify no data loss. Use [CP-IMP-011](V0.1.1_IMPLEMENTATION_BRIEF.md) as the approved implementation planning brief, not evidence of completed work.
 
 **Later open implementation choices** (do not block documentation PR):
-- Exact technical mechanism for target precision-date representation and on-disk upgrade adapters.
-- How comprehensive `recordLinks` transactional helpers are exposed without bloating UI.
+- CP-011A resolves precision-date/migration contracts; later UI may add an explicit precision picker.
+- CP-011A adds generic validated persistence; later contextual unlink/reassignment workflows must disclose dependencies. Parent deletion currently blocks safely.
 - Final authoring and review of all 32 competency-specific behavioral rubrics (only three exemplars explicitly specified).
 - Usability study of Quick Capture (<60s target), product adoption, pricing and willingness-to-pay validation.
 - Future encryption/cloud synchronization/security controls; out of current P0/P1 scope.

@@ -1,16 +1,20 @@
 {
   "name": "careerproof-os",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1-alpha.1",
   "type": "module",
   "description": "CareerProof OS — local-first career achievement PWA",
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run build && node --test tests/*.test.mjs",
-    "preview": "npx http-server dist -p 4173 -c-1"
+    "test": "npm run build && node --test tests/*.test.mjs && npm run test:browser",
+    "preview": "npx http-server dist -p 4173 -c-1",
+    "test:browser": "playwright test",
+    "fixtures:backup": "npm run build && node scripts/generate-test-backups.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "fake-indexeddb": "6.2.5",
     "typescript": "^5.8.3"
   }
 }

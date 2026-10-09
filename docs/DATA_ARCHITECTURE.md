@@ -4,9 +4,11 @@
 
 ## 1. Current implementation vs target
 
-**Shipped v0.1.0:** `careerproof-local` IndexedDB at schema version **1**, with `profiles`, `achievements` and `meta` stores. Existing Achievement records use `occurredOn` (exact local date) and Profile has displayName/headline/summary/email/location. JSON backup format **1** includes one profile + achievements. All of this must remain compatible on migration.
+**Legacy shipped v0.1.0:** `careerproof-local` IndexedDB at schema version **1**, with `profiles`, `achievements` and `meta` stores. Existing Achievement records use `occurredOn` (exact local date) and Profile has displayName/headline/summary/email/location. JSON backup format **1** includes one profile + achievements. All of this must remain compatible on migration.
 
 **Target P0/P1 model:** 17 principal logical collections described below plus internal metadata. New stores and date-precision records require carefully tested migrations; do not treat this document as a reason to reset version-1 data.
+
+**CP-011A branch:** schema 2 implements the 12 P0 collections plus meta, precision-date migration, strict format-1 adaptation, complete format-2 backups and persistent restore generations. No P1 stores are introduced. See [the implemented contract](CP_011A_MIGRATION_RECOVERY.md) for exact fields, versions, limits and tests. PR/device acceptance is separate from this implementation.
 
 IndexedDB does **not** enforce relational foreign keys. Repository/domain services must implement ID integrity and atomic multi-store updates. No remote backend for v0.1.x.
 

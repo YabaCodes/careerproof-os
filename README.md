@@ -1,10 +1,10 @@
-# CareerProof OS — v0.1.0
+# CareerProof OS — v0.1.1-alpha.1 (CP-011A)
 
 **Own your experience. Prove your impact.**
 
-A privacy-first, local-only professional achievement PWA. This is the first usable increment of the CareerProof product roadmap.
+A privacy-first, local-only professional achievement PWA. This branch adds the database migration and recovery foundation to the existing capture PWA. The complete v0.1.1 feature milestone remains in progress; deployment requires user review and merge.
 
-## What works in v0.1.0
+## Existing workflows retained
 - Personal career profile: display name, headline, summary, professional email, location.
 - Create achievements quickly; save as draft or complete record.
 - Optional outcome and impact category; dates default to today's **local** date.
@@ -15,14 +15,15 @@ A privacy-first, local-only professional achievement PWA. This is the first usab
 - Responsive iPhone, iPad, and desktop layouts, light/dark/system themes, installable offline PWA.
 
 ## Deliberately not built yet
-v0.1.1 adds employment timeline, credentials, projects, detailed evidence, and the competency library. Later 0.1.x updates add scoring, performance reviews, CV builder, and job matching. Planned future modules are **not** yet clickable.
+CP-011A adds P0 persistence contracts and the built-in taxonomy, schema-1 migration, full format-2 backups and legacy import. CP-011B–E will add employment timeline, credentials, projects, detailed evidence and the competency UI. Later increments add self-assessment, distinct evidence breadth, reviews, CVs and job matching. Planned future modules are **not** yet clickable.
 
 ## Run from source
 
-Requires Node.js 20+ and npm. No other runtime dependencies.
+Requires Node.js 20+ and npm. Browser tests also need the Chromium headless-shell runtime. The shipped app has no backend or runtime npm dependencies.
 
 ```bash
-npm install
+npm ci
+npx playwright install --with-deps chromium --only-shell
 npm test
 npm run build
 npm run preview
@@ -30,16 +31,19 @@ npm run preview
 
 The compiled static site is in `dist/`. Open the preview URL (typically `http://127.0.0.1:4173`). Do not open `dist/index.html` directly as a `file://` URL: browser modules, service workers and persistence may not work as expected.
 
-## Publish to GitHub Pages — no local development installation needed
+## Review and deployment
 
-1. Create a **new** GitHub repository named `careerproof-os`.
-2. Upload the contents of this project folder, **not** the outer ZIP as a single file.
-3. In the repository, open **Settings → Pages**, and select **GitHub Actions** as the deployment source.
-4. Commit to the `main` branch. The included `.github/workflows/deploy.yml` installs TypeScript, runs tests, builds and deploys automatically.
-5. After the workflow succeeds, the site appears under your GitHub Pages address (`https://<github-user>.github.io/careerproof-os/`).
-6. Open the URL on your iPhone, then use **Share → Add to Home Screen** to install it.
+Work on a feature branch and open a PR targeting main. PR checks build and run all automated tests without publishing. **The user reviews and merges**; do not deploy directly. After an approved merge, the existing GitHub Actions workflow deploys compiled dist/ to GitHub Pages. Pages must use GitHub Actions, not the repository root.
 
-No repository is created automatically. Pages must be enabled in GitHub; first deploy can require approval or permission changes.
+Generate disposable manual-test files with `npm run fixtures:backup`. See [device acceptance steps](docs/ACCEPTANCE_TESTS.md).
+
+## Migration and recovery
+
+Schema 2 preserves existing schema-1 IDs, content, exact dates, timestamps, revisions and archive states. Historical achievements migrate as Confidential. One authoritative PrecisionDate is stored; the current editor uses a compatibility projection.
+
+Format 2 backs up all 12 P0 collections and theme. Format-1/schema-1 imports remain supported. Every restore replaces all local collections and preferences; a legacy backup also removes newer history/portfolio/custom competency records absent from that file. Preview explains this before confirmation. Invalid imports and failed transactions preserve existing data. Stale tabs must reload after another tab restores data.
+
+Export/import limit: **12 MiB of UTF-8 JSON**, at most **100,000 records per collection**. Oversized exports fail explicitly; no records are silently omitted. See [CP-011A contracts](docs/CP_011A_MIGRATION_RECOVERY.md).
 
 ## Data safety
 
@@ -47,7 +51,7 @@ No repository is created automatically. Pages must be enabled in GitHub; first d
 
 Browser data may be cleared or evicted; make backups using Settings → Export regularly. Exported JSON is unencrypted and may contain sensitive information. Save backups securely and avoid putting your real workplace information in GitHub.
 
-Restoring a backup **replaces** the current local profile and all achievements. The app validates the backup before replacing its database; exporting the current data before restore is recommended. The app does not yet support merging backups or cloud sync.
+Restoring a backup **replaces** all local career collections and portable preferences. The app validates the backup before replacing its database; exporting the current data before restore is recommended. The app does not yet support merging backups or cloud sync.
 
 ## Development conventions
 
@@ -59,7 +63,7 @@ Restoring a backup **replaces** the current local profile and all achievements. 
 - `public/`: PWA manifest, offline worker, icon.
 - `tests/`: automated validation and backup-format tests.
 
-App version `0.1.0` · database schema version `1` · JSON backup format `1`.
+App version `0.1.1-alpha.1` · database schema version `2` · JSON backup format `2` (also imports legacy format `1`).
 
 ## Next increment
 
