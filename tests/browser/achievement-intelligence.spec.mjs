@@ -190,7 +190,7 @@ test('archived competency remains linked to historical achievement through edit/
   await page.locator('[data-action=edit-achievement]').click();
   await page.locator('#rich-detail-panel summary').click();
   await expect(page.locator('input[name=competencyId][value=custom-competency]')).toBeChecked();
-  await expect(page.locator('.rich-check')).toContainText('archived historical link');
+  await expect(page.locator('input[name=competencyId][value=custom-competency]').locator('..')).toContainText('archived historical link');
   await save(page);
   expect((await snapshot(page)).recordLinks).toEqual(previous);
 });
