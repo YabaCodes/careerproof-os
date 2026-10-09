@@ -39,7 +39,7 @@ export function syncCareerDisclosures(root:ParentNode):void {
     const button=group.querySelector<HTMLButtonElement>('.career-more');
     if(!button)continue;
     const clipped=Boolean(description&&description.scrollHeight>description.clientHeight+2);
-    button.hidden=!(clipped||extras);
+    button.hidden=!(clipped||extras||button.getAttribute('aria-expanded')==='true');
   }
 }
 
