@@ -1,3 +1,12 @@
+## CP-011A.3 keyboard visibility — alpha.4 (iPhone UAT required)
+
+User-reported after merged PR #6: **Outcome is covered when the keyboard opens and requires manual scrolling.** The CP-UI204 keyboard portion of alpha.3 was **not accepted**. The focused alpha.4 code attempts to repair this with viewport-settled modal-body scrolling; actual Safari verification remains pending.
+
+- [ ] **CP-UI301 Outcome / keyboard:** On an actual iPhone in the current installation, focus Outcome. The label and first lines of the active textarea must appear above the keyboard without manual scrolling; type multiple lines and switch focus to Title, Contribution and Outcome. Footer actions remain reachable. Dismiss/reopen the keyboard. Report iPhone model/iOS/Safari vs installed PWA and any remaining manual-scroll requirement.
+- [ ] **CP-UI302 Regression:** Compact navigation and date picker unchanged; after safe reload, prior records remain intact; synthetic achievement save/edit/offline work. Do not remove the PWA or clear data.
+
+Automated coverage: new staged 700→550→430→360→300px keyboard tests (320/375/390/430px; light/dark) with synthetic VisualViewport and focus switching. See [CP-011A.3 root cause and limitations](IOS_KEYBOARD_OUTCOME_CP_011A_3.md). Do not claim real iOS acceptance from Chromium.
+
 # CareerProof — Acceptance test plan
 
 ## CP-011A.2 automated evidence — alpha.3
