@@ -140,6 +140,12 @@ test('competency library displays 32 built-in skills plus custom skills and link
   await page.locator('[data-action=archive-competency]').click();
   await expect(page.locator('details.skill-entry')).toHaveCount(0);
   expect((await snapshot(page)).competencies.find(x=>x.name==='Industrialization Strategy').status).toBe('archived');
+  await page.locator('#competency-archived').check();
+  await expect(page.locator('details.skill-entry')).toHaveCount(1);
+  await page.locator('details.skill-entry summary').click();
+  await page.locator('[data-action=restore-competency]').click();
+  await expect(page.locator('details.skill-entry')).toHaveCount(1);
+  expect((await snapshot(page)).competencies.find(x=>x.name==='Industrialization Strategy').status).toBe('active');
 });
 
 test('Vault filters support role, project, competency and date without changing source records',async({page})=>{
