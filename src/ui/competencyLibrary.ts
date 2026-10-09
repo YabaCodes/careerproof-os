@@ -3,8 +3,8 @@ import {normalizeName} from '../domain/taxonomy.js';
 import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
 const esc=(v:unknown):string=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]!));
-export function competencyGroups(c:CareerCollections,query:string,category:string):string{
-  const active=c.competencies.filter(r=>r.status==='active');
+export function competencyGroups(c:CareerCollections,query:string,category:string,showArchived=false):string{
+  const active=c.competencies.filter(r=>r.status==='active'||showArchived);
   const filtered=active.filter(r=>(!category||r.categoryId===category)&&
     (!query||[r.name,r.description,...r.aliases].join(' ').toLowerCase().includes(query.toLowerCase())));
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
@@ -16,21 +16,23 @@ export function competencyGroups(c:CareerCollections,query:string,category:strin
         const links=c.recordLinks.filter(l=>l.linkType==='achievement-competency'&&l.targetId===skill.id);
         const examples=links.map(l=>c.achievements.find(a=>a.id===l.sourceId)).filter((a):a is NonNullable<typeof a>=>Boolean(a));
         return '<details class="skill-entry" data-skill="'+esc(skill.id)+'"><summary><span><strong>'+esc(skill.name)+'</strong>'+
-          (skill.isBuiltIn?'':' <span class="career-primary">Custom</span>')+
+          (skill.isBuiltIn?'':' <span class="career-primary">Custom</span>')+(skill.status==='archived'?' <span class="career-meta">Archived</span>':'')+
           '<small>'+examples.length+' linked example'+(examples.length===1?'':'s')+'</small></span>'+
           icon('chevron',17)+'</summary><div class="skill-entry-details">'+
           (skill.description?'<p>'+esc(skill.description)+'</p>':'<p class="career-meta">No skill definition provided.</p>')+
           (examples.length?'<div class="portfolio-achievement-links">'+examples.map(a=>
             '<button class="career-inline-add" data-action="competency-achievement" data-id="'+esc(a.id)+'">'+esc(a.title)+'</button>').join('')+'</div>':
             '<p class="career-meta">No linked achievements. Connect a documented example from the Achievement Vault.</p>')+
-          (!skill.isBuiltIn?'<div class="portfolio-actions"><button class="button button-outline" data-action="edit-competency" data-id="'+esc(skill.id)+'">Edit custom skill</button>'+
-            '<button class="button button-outline" data-action="archive-competency" data-id="'+esc(skill.id)+'">Archive</button></div>':'')+
+          (!skill.isBuiltIn?'<div class="portfolio-actions">'+(skill.status==='active'?
+            '<button class="button button-outline" data-action="edit-competency" data-id="'+esc(skill.id)+'">Edit custom skill</button>'+
+            '<button class="button button-outline" data-action="archive-competency" data-id="'+esc(skill.id)+'">Archive</button>':
+            '<button class="button button-outline" data-action="restore-competency" data-id="'+esc(skill.id)+'">Restore skill</button>')+'</div>':'')+
           '</div></details>';
       }).join('')+'</section>';
   }).join('');
   return groups||'<div class="panel"><p class="career-empty">No competencies match your search.</p></div>';
 }
-export function competencyPage(c:CareerCollections,query:string,category:string):string{
+export function competencyPage(c:CareerCollections,query:string,category:string,showArchived=false):string{
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
   return '<div class="competency-page"><div class="page-heading page-heading-flex"><div><p class="eyebrow">YOUR DOCUMENTED CAPABILITIES</p><h1>Competency Library</h1>'+
     '<p class="page-subtitle">Map recorded achievements to skills. Linked examples are not self-assessed proficiency or independent verification.</p></div>'+
@@ -38,8 +40,9 @@ export function competencyPage(c:CareerCollections,query:string,category:string)
     '<button class="career-inline-add" data-action="nav" data-screen="profile">'+icon('back',16)+' Back to Career Profile</button>'+
     '<section class="panel skill-toolbar"><div class="field"><label for="competency-search">Search competencies</label><input id="competency-search" value="'+esc(query)+'" placeholder="Search skills"/></div>'+
     '<div class="field"><label for="competency-category">Category</label><select id="competency-category"><option value="">All categories</option>'+
-    categories.map(cat=>'<option value="'+esc(cat.id)+'" '+(category===cat.id?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></div></section>'+
-    '<div class="skill-groups">'+competencyGroups(c,query,category)+'</div></div>';
+    categories.map(cat=>'<option value="'+esc(cat.id)+'" '+(category===cat.id?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></div>'+
+    '<label class="skill-archive-toggle"><input type="checkbox" id="competency-archived" '+(showArchived?'checked':'')+'/> Include archived custom skills</label></section>'+
+    '<div class="skill-groups">'+competencyGroups(c,query,category,showArchived)+'</div></div>';
 }
 export function customCompetencyForm(c:CareerCollections,record?:Competency):string{
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
