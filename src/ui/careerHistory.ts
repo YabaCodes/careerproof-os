@@ -29,7 +29,7 @@ function disclosure(kind:CareerKind,id:string,label:string,description:string,ex
     (description?'<p class="career-description career-clamped">'+html(description)+'</p>':'')+
     (extras?'<div class="career-hidden-extra" hidden>'+extras+'</div>':'')+
     '</div><button type="button" class="career-more" data-action="toggle-career-details" aria-controls="'+html(target)+
-    '" aria-expanded="false" data-detail-label="'+html(label)+'" hidden>… More</button></div>';
+    '" aria-expanded="false" aria-label="Show full details for '+html(label)+'" data-detail-label="'+html(label)+'" hidden>… More</button></div>';
 }
 
 export function syncCareerDisclosures(root:ParentNode):void {
