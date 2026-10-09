@@ -1,5 +1,15 @@
 # CareerProof release notes
 
+## 0.1.1-alpha.5 — CP-011B Career History & Qualifications (PR review)
+
+- Adds employer/role history with multiple promotions/overlapping current roles, a primary-role setting, optional qualifications and credential data to Career Profile. No new mobile nav destination.
+- Reuses existing schema-2 stores with precise year/month/day dates; preserves IDs/revisions, user data, old profile fields, and existing achievement capture/backup features.
+- Primary-role changes save atomically alongside role updates. Referenced employer/role deletion is blocked instead of cascading. Credential URLs require supported http(s) schemes.
+- Adds education, credential and employment browser checks, responsive styling and synthetic full-backup round trip tests.
+- Updates PWA cache with the new compiled careerHistory module and app version. No migration or new backend.
+- [Scope, data safeguards and pending iPhone acceptance](CP_011B_HISTORY_QUALIFICATIONS.md). CP-011C is not authorized until alpha.5 iPhone UAT passes.
+
+
 ## 0.1.1-alpha.4 — CP-011A.3 iPhone keyboard / Outcome visibility (PR review)
 
 - Rechecks focused-field visibility after mobile VisualViewport CSS/layout changes and during late keyboard animation; scrolls only the modal-body instead of the background document.
