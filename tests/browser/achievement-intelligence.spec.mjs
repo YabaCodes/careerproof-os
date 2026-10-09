@@ -26,7 +26,7 @@ async function openEdit(page){
   await page.locator('[data-action=detail][data-id=achievement-1]').click();
   await page.locator('[data-action=edit-achievement]').click();
   await expect(page.locator('#achievement-form')).toBeVisible();
-  await page.locator('#rich-detail-panel summary').click();
+  await page.locator('#rich-detail-panel [data-action=toggle-rich-panel]').click();
 }
 async function save(page){
   await page.locator('[data-action=save-achievement][data-status=recorded]').click();
@@ -194,7 +194,7 @@ test('archived competency remains linked to historical achievement through edit/
   await page.locator('.mobile-nav [data-screen=vault]').click();
   await page.locator('[data-action=detail][data-id=achievement-1]').click();
   await page.locator('[data-action=edit-achievement]').click();
-  await page.locator('#rich-detail-panel summary').click();
+  await page.locator('#rich-detail-panel [data-action=toggle-rich-panel]').click();
   await expect(page.locator('input[name=competencyId][value=custom-competency]')).toBeChecked();
   await expect(page.locator('input[name=competencyId][value=custom-competency]').locator('..')).toContainText('archived historical link');
   await save(page);
