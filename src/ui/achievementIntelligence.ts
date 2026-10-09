@@ -39,11 +39,12 @@ export function evidenceRow(record?:EvidenceReference):string {
     '<button type="button" class="career-inline-add rich-remove" data-action="remove-rich-row">Remove reference</button></fieldset>';
 }
 export function richAchievementFields(a:AchievementView|undefined,c:CareerCollections,projectContext:string|null):string{
-  const activeCompetencies=c.competencies.filter(x=>x.status==='active').sort((a,b)=>a.name.localeCompare(b.name));
   const linked=(type:string):Set<string>=>new Set(c.recordLinks.filter(l=>l.sourceId===a?.id&&l.linkType===type).map(l=>l.targetId));
   const linkedProjects=linked('achievement-project');
   if(projectContext)linkedProjects.add(projectContext);
   const linkedCompetencies=linked('achievement-competency');
+  const activeCompetencies=c.competencies.filter(x=>x.status==='active'||linkedCompetencies.has(x.id))
+    .sort((a,b)=>a.name.localeCompare(b.name));
   const primary=c.recordLinks.find(l=>l.sourceId===a?.id&&l.linkType==='achievement-project'&&l.isPrimary)?.targetId??'';
   const metrics=c.impactMetrics.filter(m=>m.achievementId===a?.id);
   const references=c.evidenceReferences.filter(e=>e.achievementId===a?.id);
@@ -59,7 +60,7 @@ export function richAchievementFields(a:AchievementView|undefined,c:CareerCollec
   }).join('');
   const competencyOptions=activeCompetencies.map(x=>
     '<label class="rich-check"><input type="checkbox" name="competencyId" value="'+html(x.id)+'" '+(linkedCompetencies.has(x.id)?'checked':'')+'/>'+
-    '<span>'+html(x.name)+'</span></label>').join('');
+    '<span>'+html(x.name)+(x.status==='archived'?' (archived historical link)':'')+'</span></label>').join('');
   const primaryOptions='<div class="field"><label for="rich-primaryProjectId">Primary experience (optional)</label><select id="rich-primaryProjectId" name="primaryProjectId">'+
     '<option value="">No primary experience</option>'+c.projects.filter(p=>linkedProjects.has(p.id)).map(p=>
       '<option value="'+html(p.id)+'" '+(primary===p.id?'selected':'')+'>'+html(p.name)+'</option>').join('')+'</select></div>';
