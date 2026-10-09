@@ -6,6 +6,7 @@ export class DialogController {
   private revealFrame=0;
   private revealTimer=0;
   private restingViewportHeight=0;
+  private revealWantsLabel=false;
 
   trackViewport():void {
     const refresh=(event?:Event)=>{
@@ -46,16 +47,21 @@ export class DialogController {
     refresh();
   }
 
-  private queueReveal(delayed:boolean):void {
+  private queueReveal(delayed:boolean,preferLabel=delayed):void {
+    this.revealWantsLabel ||= preferLabel;
     cancelAnimationFrame(this.revealFrame);
     this.revealFrame=requestAnimationFrame(()=>{
-      this.revealFrame=requestAnimationFrame(()=>this.revealFocusedField());
+      this.revealFrame=requestAnimationFrame(()=>{
+        const alignLabel=this.revealWantsLabel;
+        this.revealWantsLabel=false;
+        this.revealFocusedField(alignLabel);
+      });
     });
     if(delayed){
       window.clearTimeout(this.revealTimer);
       // Safari may finish animating the keyboard after its last resize event.
       // This is a fallback, not a fixed scroll offset or a polling loop.
-      this.revealTimer=window.setTimeout(()=>this.queueReveal(false),180);
+      this.revealTimer=window.setTimeout(()=>this.queueReveal(false,true),180);
     }
   }
 
@@ -94,7 +100,7 @@ export class DialogController {
     });
   }
 
-  private revealFocusedField():void {
+  private revealFocusedField(preferLabel:boolean):void {
     const active=document.activeElement;
     if(!(active instanceof HTMLElement)||!active.matches('input:not([type=file]),textarea,select'))return;
     const field=active.closest<HTMLElement>('.field');
@@ -121,9 +127,11 @@ export class DialogController {
       // label and at least the first lines; let the native textarea scroll
       // its own caret as more text is entered.
       const control=active.getBoundingClientRect();
+      const label=field.querySelector('label')?.getBoundingClientRect();
       const visible=Math.max(0,Math.min(control.bottom,bottom)-Math.max(control.top,top));
       const minimumVisible=Math.min(56,Math.max(28,available/2));
-      if(visible<minimumVisible){
+      const labelHidden=Boolean(label&&(label.top<top||label.bottom>bottom-minimumVisible));
+      if(visible<minimumVisible||(preferLabel&&labelHidden)){
         delta=fieldRect.top-top;
       }
     }
