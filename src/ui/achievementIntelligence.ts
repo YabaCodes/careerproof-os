@@ -27,7 +27,7 @@ export function metricRow(record?:ImpactMetric):string {
     '<button type="button" class="career-inline-add rich-remove" data-action="remove-rich-row">Remove metric</button></fieldset>';
 }
 export function evidenceRow(record?:EvidenceReference):string {
-  const data='data-id="'+html(record?.id??crypto.randomUUID())+'" data-revision="'+(record?.revision??0)+'"';
+  const data='data-id="'+html(record?.id??crypto.randomUUID())+'" data-revision="'+(record?.revision??0)+'" data-reviewed-at="'+html(record?.userReviewedAt??'')+'"';
   const options=[['description','Description'],['url','URL'],['document-reference','Document reference']];
   return '<fieldset class="rich-row evidence-row" '+data+'><legend>Evidence reference</legend>'+
     '<div class="rich-row-grid"><div class="field"><label>Reference name<input name="label" maxlength="200" required value="'+html(record?.label??'')+'" placeholder="e.g. Test report"/></label></div>'+
@@ -118,7 +118,7 @@ export function parseRichFields(form:HTMLFormElement){
     if(referenceType==='url'&&!safeUrl(str(data,'referenceValue')))throw new ValidationError('Evidence URL must be a valid http:// or https:// address.');
     return {id:row.dataset.id??crypto.randomUUID(),revision:Number(row.dataset.revision??'0'),
       referenceType:referenceType as EvidenceReference['referenceType'],label:str(data,'label'),
-      referenceValue:str(data,'referenceValue'),notes:str(data,'notes'),userReviewedAt:null};
+      referenceValue:str(data,'referenceValue'),notes:str(data,'notes'),userReviewedAt:row.dataset.reviewedAt||null};
   });
   return {projectIds,primaryProjectId,competencyIds,metrics,references,roleId:str(fd,'roleId')||null,
     confidentiality:confidentiality as Confidentiality,
