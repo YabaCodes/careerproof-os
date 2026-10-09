@@ -521,13 +521,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 
 /* CP-011D — advanced achievement metadata is opt-in and does not inflate Quick Capture. */
 .rich-panel { border:1px solid var(--line);border-radius:var(--radius-control);overflow:hidden;min-width:0; }
-.rich-panel>summary { cursor:pointer;list-style:none;padding:var(--space-4);font-weight:650;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2); }
-.rich-panel>summary::-webkit-details-marker { display:none; }
-.rich-panel>summary:focus-visible { outline:2px solid var(--teal);outline-offset:-2px; }
+.rich-panel>.rich-expander { cursor:pointer;border:0;width:100%;text-align:left;color:var(--text);background:transparent;padding:var(--space-4);font-size:var(--type-body);font-weight:650;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2); }
+.rich-panel>.rich-expander:focus-visible { outline:2px solid var(--teal);outline-offset:-2px; }
 .rich-summary-hint { color:var(--muted);font-size:var(--type-meta);font-weight:400; }
 .rich-panel-body { padding:var(--space-4);padding-top:0;display:grid;gap:var(--space-4);min-width:0; }
 /* Author display:grid otherwise overrides the closed <details> UA rule, creating untappable overlapping content. */
-.rich-panel:not([open])>.rich-panel-body { display:none!important; }
+.rich-panel-body[hidden] { display:none!important; }
 .rich-link-fieldset { min-width:0;border:1px solid var(--line);border-radius:var(--radius-control);padding:var(--space-3); }
 .rich-link-fieldset legend { padding:0 var(--space-2);font-weight:600; }
 .rich-choice-list { max-height:176px;overflow-y:auto;display:grid;gap:2px;min-width:0;margin-bottom:var(--space-3); }
@@ -564,7 +563,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   .vault-advanced-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .skill-toolbar { grid-template-columns:minmax(0,1fr); }
   .skill-panel { padding:var(--space-4); }
-  .rich-panel>summary,.rich-panel-body { padding:var(--space-3); }
+  .rich-panel>.rich-expander,.rich-panel-body { padding:var(--space-3); }
   .rich-panel-body { padding-top:0; }
 }
 @media(max-width:359px) {
