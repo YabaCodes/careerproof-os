@@ -81,10 +81,17 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
       await page.locator('#outcome').focus();await resize(page,height);
       await expect(page.locator('html')).toHaveAttribute('data-keyboard-open','true');
       await expect.poll(()=>page.locator('.modal-footer').evaluate(el=>getComputedStyle(el).paddingBottom)).toBe('8px');
-      const bounds=await page.evaluate(()=>{
+      // The correction happens after CSS reflow on two rendering frames.
+      // Wait for final geometry instead of racing the keyboard resize event.
+      const measure=()=>page.evaluate(()=>{
         const r=s=>{const b=document.querySelector(s).getBoundingClientRect();return {top:b.top,bottom:b.bottom};};
         return {header:r('.modal-header'),body:r('.modal-body'),label:r('label[for=outcome]'),input:r('#outcome'),footer:r('.modal-footer'),buttons:[...document.querySelectorAll('.modal-footer button')].map(el=>{const b=el.getBoundingClientRect();return {top:b.top,bottom:b.bottom,height:b.height,width:b.width};})};
       });
+      await expect.poll(async()=>{
+        const b=await measure();
+        return b.label.top>=b.body.top-1&&b.input.bottom<=b.body.bottom+1;
+      },{timeout:3000}).toBe(true);
+      const bounds=await measure();
       expect(bounds.header.top).toBeGreaterThanOrEqual(40);expect(bounds.footer.bottom).toBeLessThanOrEqual(40+height);
       expect(bounds.body.top).toBeGreaterThanOrEqual(bounds.header.bottom);expect(bounds.body.bottom).toBeLessThanOrEqual(bounds.footer.top);
       expect(bounds.label.top).toBeGreaterThanOrEqual(bounds.body.top);expect(bounds.input.bottom).toBeLessThanOrEqual(bounds.body.bottom);
