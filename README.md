@@ -1,8 +1,8 @@
-# CareerProof OS — v0.1.1-alpha.2 (CP-011A.1)
+# CareerProof OS — v0.1.1-alpha.3 (CP-011A.2)
 
 **Own your experience. Prove your impact.**
 
-A privacy-first, local-only professional achievement PWA. This branch stabilizes the existing UI and applies selected branding on top of the merged migration and recovery foundation. The complete v0.1.1 feature milestone remains in progress; deployment requires user review and merge.
+A privacy-first, local-only professional achievement PWA. This branch refines native iOS date controls, mobile navigation density and dialog spacing on top of the merged UI and recovery foundation. Approved branding and all data contracts are retained. The complete v0.1.1 feature milestone remains in progress; deployment requires user review and merge.
 
 ## Existing workflows retained
 - Personal career profile: display name, headline, summary, professional email, location.
@@ -31,7 +31,7 @@ npm run preview
 
 The compiled static site is in `dist/`. Open the preview URL (typically `http://127.0.0.1:4173`). Do not open `dist/index.html` directly as a `file://` URL: browser modules, service workers and persistence may not work as expected.
 
-Regenerate selected platform icons with `npm run brand:assets`, the review sheet with `npm run brand:review`, and synthetic UI screenshots with `npm run audit:ui`.
+Generate alpha.2/alpha.3 comparison screenshots with `node scripts/ios-refinement-evidence.mjs after` (use `before` with `CP_TEST_ROOT` pointing to the matching compiled baseline). Regenerate selected platform icons with `npm run brand:assets`, the review sheet with `npm run brand:review`, and synthetic UI screenshots with `npm run audit:ui`.
 
 ## Review and deployment
 
@@ -65,11 +65,11 @@ Restoring a backup **replaces** all local career collections and portable prefer
 - `public/`: PWA manifest, offline worker and platform icon assets.
 - `tests/`: automated validation and backup-format tests.
 
-App version `0.1.1-alpha.2` · database schema version `2` · JSON backup format `2` (also imports legacy format `1`).
+App version `0.1.1-alpha.3` · database schema version `2` · JSON backup format `2` (also imports legacy format `1`).
 
 ## Next increment
 
-CP-011B is paused until this UI checkpoint is merged and verified on iPhone. Review the [UI audit](docs/UI_AUDIT_CP_011A_1.md), [screenshots](docs/UI_VISUAL_REVIEW.md), [branding](docs/BRANDING_REVIEW.md) and [test results](docs/UI_REGRESSION_REPORT.md).
+CP-011B is paused until CP-011A.2 is reviewed, merged and explicitly verified on iPhone. See the [alpha.3 correction report and before/after screenshots](docs/IOS_FORM_NAV_REFINEMENT.md). Review the [UI audit](docs/UI_AUDIT_CP_011A_1.md), [screenshots](docs/UI_VISUAL_REVIEW.md), [branding](docs/BRANDING_REVIEW.md) and [test results](docs/UI_REGRESSION_REPORT.md).
 
 
 **v0.1.1 — Professional Experience & Evidence:** roles/employers, education, credentials, portfolio, competency tags and related achievement links. Schema changes will use migrations and must preserve existing data.

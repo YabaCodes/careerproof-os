@@ -1,5 +1,7 @@
 # CP-011A.1 regression evidence
 
+Historical alpha.2 results below. For current alpha.3 results (37 Node / 52 Chromium), updated offline upgrade coverage, and iPhone acceptance limits see [CP-011A.2 report](IOS_FORM_NAV_REFINEMENT.md).
+
 Local verification on 2026-10-09: **37/37 Node tests and 30/30 headless Chromium tests passed**, with zero skipped tests. `npm test`, `npm run typecheck`, production build and `git diff --check` passed. Playwright 1.56.1 / Chromium 141; synthetic fixtures only. GitHub PR CI is a separate gate and must pass on the submitted commit.
 
 ## Automated coverage

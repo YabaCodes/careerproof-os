@@ -1,10 +1,27 @@
 # CareerProof — Acceptance test plan
 
+## CP-011A.2 automated evidence — alpha.3
+
+On 2026-10-09: **37/37 Node and 52/52 Chromium tests passed**, zero skipped; separate typecheck, production build and diff whitespace check passed. Twenty-two focused cases add date/control alignment and appearance at 320/375/390/430px in both themes, exact compact navigation geometry and touch targets, label/footer reachability at reduced visual heights, synthetic safe-area accounting, precision/blank-draft edit and archive round-trips. All earlier recovery tests remain. Alpha.2-cache fixture → alpha.3 and offline native-date editing are tested. See [root cause, dimensions, comparisons and limits](IOS_FORM_NAV_REFINEMENT.md).
+
+### CP-011A.2 iPhone acceptance — required before CP-011B
+
+PR #5 is merged. Alpha.2 iPhone review found date-control overflow, premature form focus/context and excessive mobile density; these checks qualify alpha.3 separately. Chromium does not replace physical iPhone Safari/PWA verification. Keep a secure, verified backup before updating; use a disposable synthetic-data origin for imports. **Removing/reinstalling the iPhone Home Screen PWA may delete local data. Do not remove it solely to refresh its icon without first exporting, validating/previewing the backup (cancel before replacement), and securely storing it outside the app.**
+
+- [ ] **CP-UI201 Update/branding/data:** Reopen/reload the existing installation online; Settings shows alpha.3 and schema 2. Approved CP/icon assets are unchanged. If existing records remain, compare IDs/dates/archive states in exports; do not reconstruct missing records, clear storage or import automatically.
+- [ ] **CP-UI202 Native dates:** In light/dark, portrait/landscape and larger text, check visible title/date labels, equal left/right margins, 48px input/select treatment and left-aligned date. Tap the real native date control, select/edit/clear a synthetic value, close the picker and reopen the form. No extra border, zoom, clipping or modal dismissal. In an isolated synthetic dataset, verify imported year/month dates retain their precision and blank drafts stay blank.
+- [ ] **CP-UI203 Compact navigation:** Home/Vault/Add/Profile/Settings remain equally spaced, icons/labels share alignment, Add is not raised. Confirm 60px content plus separate safe inset, 19–20px icons/24px frames/34px Add circle, subtle active state and reliable full-button taps; check no home-indicator overlap.
+- [ ] **CP-UI204 Keyboard/context/footer:** Opening capture/profile should not automatically open the keyboard or hide the first label. Tap each field; focus retains label/context, keyboard does not zoom (16px text), final fields and footer remain reachable. Scroll long text normally; dismiss/reopen keyboard and rotate. Check both save buttons, Close, no background scrolling and no duplicated blank safe-area strip. Repeat Settings/restore preview reachability using synthetic data.
+- [ ] **CP-UI205 Persistence/accessibility:** Save/edit/reload a synthetic exact-day achievement, clear/save/reopen a draft, archive/restore. Values and IDs persist. Check VoiceOver names/reading order and hardware Tab/Shift+Tab/Escape; cancelling dirty dismissal preserves input and close returns focus.
+- [ ] **CP-UI206 Offline/update:** After alpha.3 worker activation, close/reopen the existing installed app offline. Data, Settings, compact nav, native date control and editing work. Real alpha.2 worker update and cold launch remain device checks; automated cache fixtures are separate evidence.
+
+Record device/OS/browser, installed vs Safari mode, theme/orientation and results. **Do not start CP-011B until the user approves and verifies this corrective release.**
+
 ## CP-011A.1 automated evidence — alpha.2
 
 On 2026-10-09: **37/37 Node and 30/30 Chromium tests passed**, plus separate typecheck and production build. The new 14-case viewport/theme matrix covers every existing destination and dialog, long/empty content, labels, focus, target sizes and overflow. Focus/scroll/hash/notification/busy-state tests, simulated keyboard geometry, contrast and platform assets augment all retained recovery tests. 252 before and 252 after screenshots are audited; proposed states have zero horizontal overflow, horizontal clipping, undersized targets or missing navigation. See [full evidence](UI_REGRESSION_REPORT.md) and [screenshots](UI_VISUAL_REVIEW.md).
 
-### CP-011A.1 device acceptance — pending after approved merge
+### CP-011A.1 device acceptance — PR #5 merged; remaining checks carry forward
 
 The user confirmed all five earlier CP-011A iPhone smoke checks on alpha.1. The following checks apply to the newly changed alpha.2 UI. Use synthetic fixtures on a disposable test origin for destructive restores; keep a securely saved real backup before updating an existing installation.
 

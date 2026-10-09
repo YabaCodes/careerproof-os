@@ -1,6 +1,16 @@
 # CareerProof release notes
 
-## 0.1.1-alpha.2 — CP-011A.1 UI/UX Stabilization & Branding (PR review)
+## 0.1.1-alpha.3 — CP-011A.2 iOS Form & Navigation Refinement (PR review)
+
+- Resets native date/month/time presentation to bounded border-box, left-aligned WebKit values and shared 48px/16px input treatment; retains native picker and existing date precision/blank-draft adapters.
+- Matches Wealth OS's compact philosophy: 60px nav content, 19–20px glyphs, 24px frames, 10.5px labels, 34px Add circle and 1.8px strokes; five equal full-button targets, common icon/label alignment and subtle active state. Safe inset remains separate.
+- Keeps initial phone focus on the named dialog, with body-only label-context scrolling. Reduces shared form/body/footer spacing, prevents narrow footer label splitting, and removes redundant bottom inset when a keyboard candidate reduces the visual viewport. Compact textareas remain internally scrollable.
+- Preserves the approved monogram/platform assets, all schema-2/format-2/legacy-1 contracts, record IDs and precision, atomic recovery and stale-tab protection. No new modules, recovery attempt, automatic imports or production achievement seeding.
+- App/package/worker cache move to alpha.3. Adds 22 focused mobile/theme/precision/viewport cases and alpha.2-cache upgrade/offline-style checks; actual local results **37 Node + 52 Chromium passed**, typecheck/build/diff check passed.
+- Includes [root cause, Wealth OS dimensions, before/after screenshots and limits](IOS_FORM_NAV_REFINEMENT.md). Native iPhone picker/keyboard/safe areas/VoiceOver/offline cold-start remain manual; Chromium does not certify them.
+- CP-011B is paused until separate PR review/merge and explicit iPhone acceptance (CP-UI201–206). No automatic merge/deployment.
+
+## 0.1.1-alpha.2 — CP-011A.1 UI/UX Stabilization & Branding (merged in PR #5; iPhone findings require CP-011A.2)
 
 - Consolidates shared typography, spacing, controls, cards, dialogs and light/dark contrast.
 - Fixes phone Profile overflow, crowded Settings and the missing tablet navigation interval.
@@ -11,7 +21,7 @@
 - Adds 14 responsive/theme matrix cases and focused interaction/contrast/loading/icon/offline-upgrade checks. Local results: 37 Node + 30 Chromium tests passed, typecheck and production build passed.
 - Captures 252 screenshots per baseline/proposed version; zero proposed horizontal overflow, clipping, undersized controls or missing-navigation encounters. See [audit](UI_AUDIT_CP_011A_1.md), [visual evidence](UI_VISUAL_REVIEW.md), [branding](BRANDING_REVIEW.md), [test report](UI_REGRESSION_REPORT.md).
 - App/cache version is alpha.2; IndexedDB schema 2 and backup format 2/legacy 1 are unchanged. No new modules or persistent data changes.
-- CP-011B is paused until user review/merge and iPhone stabilization acceptance. No direct merge/deployment. Real-device checks remain in ACCEPTANCE_TESTS.md.
+- The user merged PR #5; subsequent iPhone review led to CP-011A.2. CP-011B remains paused for that corrective checkpoint. Real-device checks remain in ACCEPTANCE_TESTS.md.
 
 ## 0.1.1-alpha.1 — CP-011A Database Migration & Recovery Foundation (merged; five iPhone smoke checks user-confirmed)
 

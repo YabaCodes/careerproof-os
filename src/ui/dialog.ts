@@ -5,7 +5,7 @@ export class DialogController {
   private viewportFrame=0;
 
   trackViewport():void {
-    const refresh=()=>{
+    const refresh=(event?:Event)=>{
       cancelAnimationFrame(this.viewportFrame);
       this.viewportFrame=requestAnimationFrame(()=>{
         const viewport=window.visualViewport;
@@ -13,11 +13,18 @@ export class DialogController {
         document.documentElement.style.setProperty('--visual-height',height+'px');
         document.documentElement.style.setProperty('--visual-top',(viewport?.offsetTop??0)+'px');
         document.documentElement.dataset.compactDialog=String(height<500);
+        const editable=document.activeElement?.matches('input:not([type=file]),textarea,select');
+        // Browser toolbars and pinch zoom are not a software keyboard. The
+        // threshold is deliberately larger than ordinary browser chrome.
+        document.documentElement.dataset.keyboardOpen=String(Boolean(editable&&(viewport?.scale??1)===1&&document.documentElement.clientHeight-height>150));
+        if(event?.type!=='scroll')this.revealFocusedField();
       });
     };
     window.addEventListener('resize',refresh,{passive:true});
     window.visualViewport?.addEventListener('resize',refresh,{passive:true});
     window.visualViewport?.addEventListener('scroll',refresh,{passive:true});
+    document.addEventListener('focusin',refresh);
+    document.addEventListener('focusout',refresh);
     refresh();
   }
 
@@ -48,9 +55,25 @@ export class DialogController {
 
   focusFirst():void {
     requestAnimationFrame(()=>{
-      const node=document.querySelector<HTMLElement>('.modal input:not([type=file]),.modal textarea,.modal select')??document.querySelector<HTMLElement>('.modal button,.modal');
+      // Phone autofocus can open the keyboard and pan past the first label even
+      // with preventScroll. Start at the named dialog; typing is a deliberate tap.
+      const node=window.matchMedia('(max-width:767px)').matches?document.querySelector<HTMLElement>('.modal'):
+        document.querySelector<HTMLElement>('.modal input:not([type=file]),.modal textarea,.modal select')??document.querySelector<HTMLElement>('.modal button,.modal');
       node?.focus({preventScroll:true});
     });
+  }
+
+  private revealFocusedField():void {
+    const field=document.activeElement?.closest<HTMLElement>('.field');
+    const body=field?.closest<HTMLElement>('.modal-body');
+    if(!field||!body)return;
+    const context=field.getBoundingClientRect(),viewport=body.getBoundingClientRect();
+    const top=context.top-viewport.top-8;
+    const bottom=context.bottom-viewport.bottom+8;
+    // Scroll this body only, keeping its label with the control. Oversized
+    // textareas start at the label; manual scrolling/caret movement remain native.
+    if(top<0)body.scrollTop+=top;
+    else if(bottom>0)body.scrollTop+=Math.min(top,bottom);
   }
 
   restoreFocus():void {

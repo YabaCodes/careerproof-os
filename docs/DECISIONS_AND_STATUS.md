@@ -12,8 +12,9 @@
 - The original deployment selected **branch root** and served source `index.html` without compiled `app/app/main.js`, leaving users at 'Opening CareerProof…'. The GitHub Pages source was corrected to Actions, and the build/deploy completed successfully.
 - Original v0.1.0 had dialog click-through behavior and visually uneven mobile navigation. **PR #1** (`v0.1.0 UI Hotfix 1: dialogs stay open while typing, even mobile nav`) was merged into `main` on 2026-10-09. It introduced scoped direct-backdrop interaction and nav alignment fixes plus regression tests and service-worker cache update.
 - **iPhone hotfix acceptance (user-confirmed 2026-10-09):** Input fields in the achievement editor work, and the bottom navigation is aligned after merged PR #1. Those two defects can be closed. This is **not** confirmation of full v0.1.0 UAT; backup/restore, offline startup, archive/delete and broader device checks still need manual evidence.
-- The user merged CP-011A in PR #4; main is 0.1.1-alpha.1, schema 2 and backup format 2/legacy 1. The user reported all five CP-011A iPhone smoke checks passed. Extended fault/quota/migration qualification retains separate evidence requirements.
-- CP-011A.1 is authorized on fix/cp-011a-ui-brand-polish as 0.1.1-alpha.2 for shared UI stabilization and selected branding. No data contract change or new module screens. CP-011B is paused pending merge and iPhone acceptance. See [UI audit](UI_AUDIT_CP_011A_1.md) and [CP-011A contracts](CP_011A_MIGRATION_RECOVERY.md).
+- The user merged CP-011A in PR #4; it introduced 0.1.1-alpha.1, schema 2 and backup format 2/legacy 1. The user reported all five CP-011A iPhone smoke checks passed. Extended fault/quota/migration qualification retains separate evidence requirements.
+- CP-011A.1 was merged in PR #5; current main is 0.1.1-alpha.2. The user's iPhone review found remaining date-field overflow, focus/context and navigation/footer density issues. CP-011A.2 is authorized on `fix/cp-011a2-ios-form-nav-density` as 0.1.1-alpha.3, preserving branding and all schema/backup/date/recovery contracts. CP-011B remains paused for review, merge and explicit iPhone acceptance. See [correction report](IOS_FORM_NAV_REFINEMENT.md).
+- The user reported missing local records after removing the installed PWA; the cause is not independently verified. This correction performs no recovery/reset/import or achievement seeding. Removing/reinstalling the iPhone PWA may delete local data; first export, validate/preview without replacing, and securely store a backup outside the app before removing it solely to refresh its icon.
 
 ## 2. Decision register
 
@@ -43,6 +44,7 @@
 | DEC-023 | Historical achievements migrate Confidential | No automatic external-sharing approval; full private backup still includes confidential data |
 | DEC-024 | CP-011A.1 precedes CP-011B | Stabilize every existing screen, responsive tokens, dialogs and icons without changing schema/backup contracts |
 | DEC-025 | User-selected Concept 1 Modern Monogram and supplied nav family | Latest selection supersedes earlier rejected concepts; editable vector plus platform PNG assets; no automatic merge/deploy |
+| DEC-026 | CP-011A.2 precedes CP-011B; Wealth OS density reference | Native date presentation reset, compact 60px navigation, shared dialog context/spacing; preserve selected branding and every data contract; user verifies iPhone before B |
 | DEC-020 | Use GitHub documentation as durable Codex source of truth | Do not assume Codex has full past chat history |
 
 ## 3. Design artifacts and precedence

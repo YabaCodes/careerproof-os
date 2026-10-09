@@ -110,6 +110,10 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430,768,1024
 test('dialog focus, scroll lock, dirty confirmation and hash events preserve input',async({page})=>{
   await start(page);
   await page.locator('.mobile-nav [data-action="capture"]').click();
+  await expect(page.getByRole('dialog')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.close-dialog')).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(page.locator('#title')).toBeFocused();
   await expect(page.locator('.content-wrap')).toHaveAttribute('inert','');
   await expect(page.locator('.mobile-nav')).toHaveAttribute('inert','');

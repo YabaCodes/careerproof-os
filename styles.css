@@ -13,6 +13,9 @@
   --type-section: 20px; --type-title: 28px;
   --radius-control: 10px; --radius-card: 12px; --radius-modal: 16px;
   --sidebar-width: 248px;
+  --nav-content-height: 60px;
+  --safe-bottom: env(safe-area-inset-bottom,0px);
+  --dialog-safe-bottom: var(--safe-bottom);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
   font-size: var(--type-body);
 }
@@ -187,22 +190,28 @@ p { overflow-wrap: anywhere; }
 /* Fixed dialog chrome surrounds an independently scrollable body. */
 .modal-backdrop { position: fixed; top: var(--visual-top,0px); left: 0; width: 100%; height: var(--visual-height,100dvh); z-index: 50; background: rgb(8 22 33 / 62%); display: flex; justify-content: center; align-items: center; padding: var(--space-5); backdrop-filter: blur(3px); }
 body.dialog-open { position: fixed; top: var(--page-scroll-lock,0px); width: 100%; overflow: hidden; }
-.modal { width: min(100%,640px); max-height: 100%; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-modal); box-shadow: 0 20px 70px rgb(1 10 20 / 26%); overflow: hidden; }
+.modal { width: min(100%,640px); min-width: 0; min-height: 0; max-height: 100%; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-modal); box-shadow: 0 20px 70px rgb(1 10 20 / 26%); overflow: hidden; }
 .modal-header { flex: none; display: flex; align-items: start; justify-content: space-between; gap: var(--space-4); padding: var(--space-6); border-bottom: 1px solid var(--line); }
 .modal-header > div { min-width: 0; }
 .modal-header h2 { font-size: 22px; letter-spacing: -.4px; margin: var(--space-1) 0; }
 .modal-header p:not(.eyebrow) { font-size: var(--type-meta); color: var(--muted); margin: 0; }
 .modal-header .icon-button { flex-shrink: 0; }
 .modal-body { flex: 1 1 auto; min-height: 0; padding: var(--space-6); overflow-y: auto; overscroll-behavior: contain; scroll-padding: var(--space-4); }
-.form-grid { display: grid; gap: var(--space-5); align-content: start; }
+.form-grid { display: grid; gap: var(--space-4); align-content: start; }
 .field { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .field label { font-size: var(--type-meta); font-weight: 600; color: var(--text); }
 .required { color: var(--danger); }
 .optional { color: var(--muted); font-weight: 400; font-size: var(--type-small); }
-.field input, .field textarea, .field select { background: var(--canvas); border: 1px solid var(--control-line); color: var(--text); width: 100%; border-radius: var(--radius-control); padding: var(--space-3); font-size: var(--type-body); min-height: 48px; }
+.field input, .field textarea, .field select { box-sizing: border-box; min-width: 0; max-width: 100%; background: var(--canvas); border: 1px solid var(--control-line); color: var(--text); width: 100%; border-radius: var(--radius-control); padding: var(--space-3); font-size: var(--type-body); min-height: 48px; }
+.field input, .field select { height: 48px; line-height: 1.5; padding-block: 10px; }
+/* iOS native date theming can force content-box sizing and intrinsic width.
+   Reset presentation only: the real input, label, value and native picker remain. */
+.field input:is([type=date],[type=month],[type=week],[type=time],[type=datetime-local]) { -webkit-appearance: none; appearance: none; display: block; min-inline-size: 0; max-inline-size: 100%; text-align: left; }
+.field input:is([type=date],[type=month],[type=week],[type=time],[type=datetime-local])::-webkit-date-and-time-value { text-align: left; min-height: 1.5em; }
+.field input:is([type=date],[type=month],[type=week],[type=time],[type=datetime-local])::-webkit-datetime-edit { padding: 0; }
 .field textarea { resize: vertical; min-height: 112px; line-height: 1.5; }
 input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
-.field-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-4); }
+.field-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); min-width: 0; max-width: 100%; gap: var(--space-4); }
 .field-hint { font-size: var(--type-small); color: var(--muted); margin: 0; }
 .form-guidance { background: var(--teal-soft); color: var(--teal); border-radius: var(--radius-control); padding: var(--space-4); display: flex; gap: var(--space-2); align-items: start; }
 .form-guidance p { font-size: var(--type-meta); margin: 0; color: var(--muted); }
@@ -266,7 +275,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   .topbar-mark img { width: 36px; height: 36px; display: block; border-radius: var(--radius-control); }
   .breadcrumb { font-size: var(--type-small); }
   .breadcrumb .workspace-label, .local-pill, .top-capture, .version-chip, .desktop-add { display: none; }
-  .page { padding: var(--space-6) max(16px,env(safe-area-inset-right)) calc(112px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+  .page { padding: var(--space-6) max(16px,env(safe-area-inset-right)) calc(var(--nav-content-height) + 25px + var(--safe-bottom)) max(16px,env(safe-area-inset-left)); }
   .hero-card { padding: var(--space-6); }
   .hero-symbol { display: none; }
   .stats-grid { gap: var(--space-2); margin: var(--space-4) 0; }
@@ -281,20 +290,24 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   .vault-panel { padding: 0; }
   .vault-toolbar { padding: var(--space-4); }
   .vault-panel .achievement-list { padding: 0 var(--space-4); }
-  .mobile-nav { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); align-items: center; gap: var(--space-1); position: fixed; bottom: 0; left: 0; right: 0; padding: var(--space-2) max(8px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); background: var(--surface); z-index: 22; border-top: 1px solid var(--line); }
-  .mobile-nav .nav-item, .mobile-create { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-1); padding: var(--space-1) 0; font-size: var(--type-small); line-height: 1.25; text-align: center; border-radius: var(--radius-control); min-width: 0; width: 100%; height: 68px; }
-  .nav-icon { width: 40px; height: 40px; display: grid; place-items: center; }
+  .mobile-nav { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); align-items: center; gap: 0; position: fixed; bottom: 0; left: 0; right: 0; padding: 0 max(8px,env(safe-area-inset-right)) var(--safe-bottom) max(8px,env(safe-area-inset-left)); background: var(--surface); z-index: 22; border-top: 1px solid var(--line); }
+  .mobile-nav .nav-item, .mobile-create { display: grid; grid-template-rows: 34px auto; align-items: center; align-content: center; justify-items: center; gap: 3px; padding: 0; font-size: 10.5px; line-height: 1.05; text-align: center; border-radius: var(--radius-control); min-width: 44px; width: 100%; min-height: 44px; height: var(--nav-content-height); }
+  .mobile-nav .nav-item.active { background: transparent; }
+  .nav-icon { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
+  .mobile-nav svg { width: 20px; height: 20px; stroke-width: 1.8; position: relative; }
   .mobile-create { background: transparent; border: 0; color: var(--teal); font-weight: 600; margin: 0; }
-  .mobile-create .nav-icon { background: #176b73; color: #fff; border-radius: 50%; }
-  .mobile-create:hover .nav-icon { background: #0c5961; }
+  .mobile-create .nav-icon { color: #fff; }
+  .mobile-create .nav-icon::before { content: ''; position: absolute; width: 34px; height: 34px; border-radius: 50%; background: #176b73; }
+  .mobile-create:hover .nav-icon::before { background: #0c5961; }
+  /* The shared row accommodates Add without raising its icon or label. */
   .modal-backdrop { padding: 0; align-items: flex-end; }
   .modal { border-radius: var(--radius-modal) var(--radius-modal) 0 0; max-height: 96%; width: 100%; border-bottom: 0; }
   .capture-modal { max-height: 100%; border-radius: 0; height: 100%; }
-  .modal-header { padding: calc(16px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 16px max(16px,env(safe-area-inset-left)); }
-  .modal-body { padding: var(--space-5) max(16px,env(safe-area-inset-right)) var(--space-5) max(16px,env(safe-area-inset-left)); }
-  .modal-footer { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); padding: var(--space-4) max(16px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
-  .modal-footer .button { width: 100%; padding: var(--space-3) var(--space-2); }
-  .toast:not(.toast-in-dialog) { bottom: calc(100px + env(safe-area-inset-bottom)); left: 16px; right: 16px; max-width: none; }
+  .modal-header { padding: calc(12px + env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left)); }
+  .modal-body { padding: var(--space-4) max(16px,env(safe-area-inset-right)) var(--space-4) max(16px,env(safe-area-inset-left)); }
+  .modal-footer { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); padding: var(--space-3) max(16px,env(safe-area-inset-right)) calc(12px + var(--dialog-safe-bottom)) max(16px,env(safe-area-inset-left)); }
+  .modal-footer .button { width: 100%; min-height: 44px; padding: var(--space-2); }
+  .toast:not(.toast-in-dialog) { bottom: calc(var(--nav-content-height) + 13px + var(--safe-bottom)); left: 16px; right: 16px; max-width: none; }
   .detail-actions .button { flex: 1 1 80px; }
 }
 @media (max-width:479px) {
@@ -303,21 +316,29 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   .settings-line .button, .settings-line select { width: 100%; }
   .profile-top { flex-direction: column; }
 }
+@media (max-width:390px) {
+  .mobile-nav svg { width: 19px; height: 19px; }
+}
 @media (max-width:359px) {
   .topbar .breadcrumb { display: none; }
-  .mobile-nav .nav-item, .mobile-create { font-size: 11px; }
+  .modal-footer .button { padding-inline: var(--space-1); }
+  .modal-footer .button svg { display: none; }
 }
 @media (max-height:500px) {
   .modal-header { padding-top: var(--space-3); padding-bottom: var(--space-3); }
   .modal-header .eyebrow, .modal-header p:not(.eyebrow) { display: none; }
   .modal-header h2 { font-size: 18px; }
-  .modal-footer { padding-top: var(--space-2); padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  .modal-footer { padding-top: var(--space-2); padding-bottom: calc(8px + var(--dialog-safe-bottom)); }
 }
 :root[data-compact-dialog=true] .modal-header { padding-top: var(--space-3); padding-bottom: var(--space-3); }
 :root[data-compact-dialog=true] .modal-header .eyebrow,
 :root[data-compact-dialog=true] .modal-header p:not(.eyebrow) { display: none; }
 :root[data-compact-dialog=true] .modal-header h2 { font-size: 18px; }
-:root[data-compact-dialog=true] .modal-footer { padding-top: var(--space-2); padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+:root[data-compact-dialog=true] .modal-footer { padding-top: var(--space-2); padding-bottom: calc(8px + var(--dialog-safe-bottom)); }
+:root[data-compact-dialog=true] .field textarea { height: 88px; min-height: 88px; }
+/* A keyboard already protects the bottom edge; do not reserve the home-indicator
+   inset again inside the reduced visual viewport. Navigation owns its own inset. */
+:root[data-keyboard-open=true] { --dialog-safe-bottom: 0px; }
 @media (prefers-reduced-motion:reduce) {
   *, *:before, *:after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
