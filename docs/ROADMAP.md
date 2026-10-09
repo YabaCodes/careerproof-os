@@ -25,7 +25,7 @@ The first builds are useful but **not certified for irreplaceable data** until P
 | v0.1.6 | Job Fit Analyzer: paste description, parse/classify, map, inspect sources and edit overrides | Transparent requirement matrix; explicit unknowns and qualifications |
 | v0.1.7 | Cross-module integration, regression, migration compatibility, privacy, UX and release checks | No critical data loss, confidentiality or relationship defects; P0/P1 acceptance passed |
 
-**No new feature until v0.1.0 is manually verified after merged PR #1**. Read DECISIONS_AND_STATUS.md for the most recent status.
+**Update 2026-10-09:** The user verified on iPhone that achievement input fields work and the mobile bottom navigation is aligned after PR #1. Those two UI defects are accepted. Remaining backup/recovery, offline, and destructive-action UAT stays open; see DECISIONS_AND_STATUS.md and [the v0.1.1 implementation brief](V0.1.1_IMPLEMENTATION_BRIEF.md).
 
 ## 3. Requirements traceability
 
@@ -57,7 +57,7 @@ The first builds are useful but **not certified for irreplaceable data** until P
 6. Export valid backup; modify demo data; preview/restore; reject malformed JSON without losing data.
 7. Open installed PWA offline after initial cache; confirm no missing actionRouting module.
 
-The merged hotfix added automated regression tests, **but iPhone manual results are still pending**; don't assert success without user verification.
+The merged hotfix added automated regression tests; **iPhone input and nav alignment were subsequently confirmed by the user**. The other v0.1.0 manual scenarios are not automatically passed.
 
 ## 4. Multi-level quality gates
 
