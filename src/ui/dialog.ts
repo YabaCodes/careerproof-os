@@ -7,11 +7,17 @@ export class DialogController {
   private revealTimer=0;
   private restingViewportHeight=0;
   private revealWantsLabel=false;
+  private pendingLayoutReveal=false;
 
   trackViewport():void {
     const refresh=(event?:Event)=>{
+      // iOS often dispatches scroll immediately after resize. A later scroll
+      // must not cancel the keyboard resize's post-layout reveal request.
+      if(event?.type!=='scroll')this.pendingLayoutReveal=true;
       cancelAnimationFrame(this.viewportFrame);
       this.viewportFrame=requestAnimationFrame(()=>{
+        const settleKeyboardLayout=this.pendingLayoutReveal;
+        this.pendingLayoutReveal=false;
         const viewport=window.visualViewport;
         const height=viewport?.height??window.innerHeight;
         const editable=Boolean(document.activeElement?.matches('input:not([type=file]),textarea,select'));
@@ -27,7 +33,7 @@ export class DialogController {
         // Updating the visual-height/footer changes the flex scrollport.
         // Measure the focused field on a *later* frame, not against its old
         // geometry. iOS keyboard animation can send several resize events.
-        this.queueReveal(event?.type!=='scroll');
+        this.queueReveal(settleKeyboardLayout);
       });
     };
     window.addEventListener('resize',refresh,{passive:true});
