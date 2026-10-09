@@ -67,8 +67,8 @@ export function richAchievementFields(a:AchievementView|undefined,c:CareerCollec
   const confidentiality='<div class="field"><label for="rich-confidentiality">Confidentiality</label><select name="confidentiality" id="rich-confidentiality">'+
     [['confidential','Confidential (default)'],['standard-private','Standard private']].map(([v,l])=>
       '<option value="'+v+'" '+((a?.confidentiality??'confidential')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></div>';
-  return '<details class="rich-panel" id="rich-detail-panel"><summary>More details, experience & evidence <span class="rich-summary-hint">Optional</span></summary>'+
-    '<div class="rich-panel-body">'+
+  return '<div class="rich-panel" id="rich-detail-panel"><button type="button" class="rich-expander" data-action="toggle-rich-panel" aria-expanded="false" aria-controls="rich-panel-content">More details, experience & evidence <span class="rich-summary-hint">Optional</span></button>'+
+    '<div class="rich-panel-body" id="rich-panel-content" hidden>'+
     field('situation','Situation / challenge',a?.situation??'',true)+
     field('actions','Actions taken',a?.actions??'',true)+field('notes','Additional notes',a?.notes??'',true)+
     confidentiality+roleSelect+
@@ -81,7 +81,7 @@ export function richAchievementFields(a:AchievementView|undefined,c:CareerCollec
     '<div id="rich-metrics">'+metrics.map(m=>metricRow(m)).join('')+'</div><p class="field-hint">Use measured values and state their source or context. Never estimate results as facts.</p></section>'+
     '<section><div class="rich-section-heading"><h3>Evidence references</h3><button type="button" class="button button-outline" data-action="add-rich-evidence">Add reference</button></div>'+
     '<div id="rich-evidence">'+references.map(e=>evidenceRow(e)).join('')+'</div></section>'+
-    '</div></details>';
+    '</div></div>';
 }
 const str=(fd:FormData,key:string)=>String(fd.get(key)??'').trim();
 const numeric=(fd:FormData,key:string):number|null=>{
