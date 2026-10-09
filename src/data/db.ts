@@ -151,6 +151,16 @@ export class CareerDatabase {
   async saveProfile(input:ProfileWrite):Promise<Profile> {
     return this.write((tx,data)=>this.upsert(tx,data,'profiles',{...data.collections.profiles[0]!,...input},input.revision));
   }
+  /** Update role and profile.primaryRoleId in one validated IndexedDB transaction. */
+  async saveCareerRole(input:Omit<P0RecordMap['roles'],'createdAt'|'updatedAt'>,makePrimary:boolean):Promise<P0RecordMap['roles']> {
+    return this.write((tx,data)=>{
+      const record=this.upsert(tx,data,'roles',input as P0RecordMap['roles'],input.revision);
+      const profile=data.collections.profiles[0]!;
+      const nextPrimary=makePrimary?record.id:profile.primaryRoleId===record.id?null:profile.primaryRoleId;
+      if(nextPrimary!==profile.primaryRoleId)this.upsert(tx,data,'profiles',{...profile,primaryRoleId:nextPrimary},profile.revision);
+      return record;
+    });
+  }
   async saveAchievement(input:AchievementWrite):Promise<AchievementView> {
     return this.write((tx,data)=>{
       const current=data.collections.achievements.find(r=>r.id===input.id);
