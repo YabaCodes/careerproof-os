@@ -3,29 +3,72 @@ export class DialogController {
   private lockedScroll:number|null=null;
   private invoker:{selector:string,index:number}|null=null;
   private viewportFrame=0;
+  private revealFrame=0;
+  private revealTimer=0;
+  private restingViewportHeight=0;
+  private revealWantsLabel=false;
+  private pendingLayoutReveal=false;
 
   trackViewport():void {
     const refresh=(event?:Event)=>{
+      // iOS often dispatches scroll immediately after resize. A later scroll
+      // must not cancel the keyboard resize's post-layout reveal request.
+      if(event?.type!=='scroll')this.pendingLayoutReveal=true;
       cancelAnimationFrame(this.viewportFrame);
       this.viewportFrame=requestAnimationFrame(()=>{
+        const settleKeyboardLayout=this.pendingLayoutReveal;
+        this.pendingLayoutReveal=false;
         const viewport=window.visualViewport;
         const height=viewport?.height??window.innerHeight;
+        const editable=Boolean(document.activeElement?.matches('input:not([type=file]),textarea,select'));
+        // iOS standalone PWAs can shrink the layout viewport *as well* as
+        // VisualViewport. Keep the last unobstructed height as a second signal.
+        if(!editable&&height>0)this.restingViewportHeight=Math.max(this.restingViewportHeight,height);
+        const unobstructedHeight=Math.max(this.restingViewportHeight,document.documentElement.clientHeight);
+        const keyboardOpen=editable&&(viewport?.scale??1)===1&&unobstructedHeight-height>150;
         document.documentElement.style.setProperty('--visual-height',height+'px');
         document.documentElement.style.setProperty('--visual-top',(viewport?.offsetTop??0)+'px');
         document.documentElement.dataset.compactDialog=String(height<500);
-        const editable=document.activeElement?.matches('input:not([type=file]),textarea,select');
-        // Browser toolbars and pinch zoom are not a software keyboard. The
-        // threshold is deliberately larger than ordinary browser chrome.
-        document.documentElement.dataset.keyboardOpen=String(Boolean(editable&&(viewport?.scale??1)===1&&document.documentElement.clientHeight-height>150));
-        if(event?.type!=='scroll')this.revealFocusedField();
+        document.documentElement.dataset.keyboardOpen=String(keyboardOpen);
+        // Updating the visual-height/footer changes the flex scrollport.
+        // Measure the focused field on a *later* frame, not against its old
+        // geometry. iOS keyboard animation can send several resize events.
+        this.queueReveal(settleKeyboardLayout);
       });
     };
     window.addEventListener('resize',refresh,{passive:true});
     window.visualViewport?.addEventListener('resize',refresh,{passive:true});
     window.visualViewport?.addEventListener('scroll',refresh,{passive:true});
+    window.addEventListener('orientationchange',()=>{
+      this.restingViewportHeight=0;
+      refresh();
+    },{passive:true});
     document.addEventListener('focusin',refresh);
     document.addEventListener('focusout',refresh);
+    // The browser scrolls the caret inside a textarea; keep the textarea's
+    // outer scrollport visible as text accumulates, without scrolling the page.
+    document.addEventListener('input',event=>{
+      if(event.target instanceof HTMLTextAreaElement&&event.target===document.activeElement)this.queueReveal(false);
+    });
     refresh();
+  }
+
+  private queueReveal(delayed:boolean,preferLabel=delayed):void {
+    this.revealWantsLabel ||= preferLabel;
+    cancelAnimationFrame(this.revealFrame);
+    this.revealFrame=requestAnimationFrame(()=>{
+      this.revealFrame=requestAnimationFrame(()=>{
+        const alignLabel=this.revealWantsLabel;
+        this.revealWantsLabel=false;
+        this.revealFocusedField(alignLabel);
+      });
+    });
+    if(delayed){
+      window.clearTimeout(this.revealTimer);
+      // Safari may finish animating the keyboard after its last resize event.
+      // This is a fallback, not a fixed scroll offset or a polling loop.
+      this.revealTimer=window.setTimeout(()=>this.queueReveal(false,true),180);
+    }
   }
 
   rememberInvoker():void {
@@ -63,17 +106,42 @@ export class DialogController {
     });
   }
 
-  private revealFocusedField():void {
-    const field=document.activeElement?.closest<HTMLElement>('.field');
+  private revealFocusedField(preferLabel:boolean):void {
+    const active=document.activeElement;
+    if(!(active instanceof HTMLElement)||!active.matches('input:not([type=file]),textarea,select'))return;
+    const field=active.closest<HTMLElement>('.field');
     const body=field?.closest<HTMLElement>('.modal-body');
     if(!field||!body)return;
-    const context=field.getBoundingClientRect(),viewport=body.getBoundingClientRect();
-    const top=context.top-viewport.top-8;
-    const bottom=context.bottom-viewport.bottom+8;
-    // Scroll this body only, keeping its label with the control. Oversized
-    // textareas start at the label; manual scrolling/caret movement remain native.
-    if(top<0)body.scrollTop+=top;
-    else if(bottom>0)body.scrollTop+=Math.min(top,bottom);
+
+    const fieldRect=field.getBoundingClientRect();
+    const bodyRect=body.getBoundingClientRect();
+    const bodyStyle=getComputedStyle(body);
+    const top=bodyRect.top+Math.min(parseFloat(bodyStyle.paddingTop)||0,12)+4;
+    const bottom=bodyRect.bottom-Math.min(parseFloat(bodyStyle.paddingBottom)||0,12)-4;
+    const available=bottom-top;
+    if(available<40)return;
+
+    let delta=0;
+    if(fieldRect.height<=available){
+      // If the entire field (label + control) fits, show both.
+      if(fieldRect.top<top)delta=fieldRect.top-top;
+      else if(fieldRect.bottom>bottom)delta=fieldRect.bottom-bottom;
+    }else{
+      // In a short keyboard viewport the full Outcome textarea may be taller
+      // than the remaining form scrollport. The old Math.min(top,bottom)
+      // could yield zero and leave the active control covered. Show the field
+      // label and at least the first lines; let the native textarea scroll
+      // its own caret as more text is entered.
+      const control=active.getBoundingClientRect();
+      const label=field.querySelector('label')?.getBoundingClientRect();
+      const visible=Math.max(0,Math.min(control.bottom,bottom)-Math.max(control.top,top));
+      const minimumVisible=Math.min(56,Math.max(28,available/2));
+      const labelHidden=Boolean(label&&(label.top<top||label.bottom>bottom-minimumVisible));
+      if(visible<minimumVisible||(preferLabel&&labelHidden)){
+        delta=fieldRect.top-top;
+      }
+    }
+    if(Math.abs(delta)>1)body.scrollTop+=delta;
   }
 
   restoreFocus():void {
