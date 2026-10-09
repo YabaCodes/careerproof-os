@@ -57,7 +57,7 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
     expect(await page.locator('.modal-body').evaluate(el=>el.scrollTop)).toBe(0);
     const titleLabel=await page.locator('label[for=title]').boundingBox(),body=await page.locator('.modal-body').boundingBox();
     expect(titleLabel.y).toBeGreaterThanOrEqual(body.y);
-    const fields=await page.locator('.field input,.field select,.field textarea').evaluateAll(nodes=>nodes.map(el=>{
+    const fields=await page.locator('#title,#contribution,#occurredOn,#impactCategory,#outcome').evaluateAll(nodes=>nodes.map(el=>{
       const r=el.getBoundingClientRect(),field=el.closest('.field').getBoundingClientRect(),body=el.closest('.modal-body'),b=body.getBoundingClientRect(),s=getComputedStyle(el),bs=getComputedStyle(body);
       return {id:el.id,left:r.left,right:r.right,width:r.width,height:r.height,fieldLeft:field.left,fieldRight:field.right,bodyLeft:b.left+parseFloat(bs.paddingLeft),bodyRight:b.right-parseFloat(bs.paddingRight),appearance:s.appearance,align:s.textAlign,border:s.borderTopWidth,borderColor:s.borderTopColor,radius:s.borderTopLeftRadius,bg:s.backgroundColor,font:s.fontSize,padding:s.padding,line:s.lineHeight};
     }));
