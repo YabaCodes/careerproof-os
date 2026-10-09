@@ -29,6 +29,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **CP-011A.3 correction:** User found that iPhone keyboard obscures the Outcome textarea after CP-011A.2. A focused alpha.4 bugfix is required, with real-device UAT before CP-011B. See [the keyboard acceptance report](IOS_KEYBOARD_OUTCOME_CP_011A_3.md).
 
+**CP-011B development (2026-10-09):** Career Profile employer/role/education/credential interfaces are in a feature-branch PR; not yet merged or device-accepted. Existing schema-v2 stores, backup format-2 compatibility, and iPhone design rules are retained. See [CP-011B release gate](CP_011B_HISTORY_QUALIFICATIONS.md). CP-011C remains paused.
+
 ## 3. Requirements traceability
 
 | Functional ID | Capability | Main UI | Stores / services | Acceptance |
