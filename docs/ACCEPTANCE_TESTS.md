@@ -9,6 +9,19 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-011B.1 — compact timeline (alpha.6) iPhone gate
+
+After merging CP-011B, the user reported the employment history rendered full employer and role descriptions, making the timeline difficult to scan. Alpha.6 is a presentation-only correction; **CP-011B remains subject to iPhone acceptance**.
+
+- [ ] **CP-B211 Compact overview:** Career Profile / Employment History immediately shows each employer and each role title, duration/current status, employment type and primary-role badge. Long descriptions use at most two visible lines with an ellipsis on mobile. Multiple roles can be scanned without scrolling through entire descriptions.
+- [ ] **CP-B212 Expand/collapse:** Tap **… More** for an employer and a role. The complete description and optional secondary details appear; **Less** collapses the same record. Other entries do not unexpectedly expand. Brief descriptions do not offer a needless More control.
+- [ ] **CP-B213 Data integrity:** Check existing saved roles/descriptions before and after expansion, a safe reload and backup export. Details are never truncated in IndexedDB or the backup; edits reopen full text.
+- [ ] **CP-B214 Mobile:** Confirm 320–430px layouts, both themes, 44px touch targets, native keyboard behavior and no horizontal overflow. Navigation, date picker, and prior Outcome keyboard fix remain intact.
+- [ ] **CP-B215 Offline:** Following successful alpha.6 PWA worker update, existing installation reopens offline and retains history and More/Less functionality. Do not reinstall the Home Screen PWA or clear website data.
+
+Chromium tests simulate sizing but **do not certify iOS Safari**. CP-011C remains paused pending acceptance of this correction and the outstanding CP-011B workflow checks.
+
+
 ## CP-011B Career Profile — alpha.5 (iPhone UAT pending)
 
 CP-011A.3 Outcome focus/keyboard issue was accepted by the user on a physical iPhone on v0.1.1-alpha.4. CP-011B is a distinct development increment and remains a draft PR until browser CI is green and user review is complete.
