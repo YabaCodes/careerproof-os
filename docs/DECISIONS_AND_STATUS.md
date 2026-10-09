@@ -122,3 +122,8 @@ After merging CP-011A.2 / PR #6, the user reported the Outcome textarea is cover
 ## CP-011B — Career history and qualifications under review
 
 The user confirmed CP-011A.3 iPhone keyboard/Outcome visibility on alpha.4. CP-011B uses preexisting schema-v2 employer/role/education/credential stores, with mobile-first Career Profile entry forms and transactional primary-role updates; currently a draft feature PR, not deployed. Do not mark it accepted until CI and the user's iPhone UAT in [CP-011B report](CP_011B_HISTORY_QUALIFICATIONS.md) pass. CP-011C remains on hold.
+
+
+## 2026-10-09 — CP-011B.1 compact Career Profile correction
+
+The user's physical iPhone CP-011B check found that expanded employer biographies and long role responsibilities made it impossible to glance at the full employment timeline. The corrective alpha.6 PR clamps the descriptions to two lines, keeps titles, dates, employment types and primary-role badges immediately visible, and adds scoped **… More / Less** expansion. All original content and data contracts remain intact. Physical iPhone acceptance and CP-011B sign-off remain pending, so CP-011C is not authorized yet.
