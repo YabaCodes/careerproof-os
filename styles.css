@@ -338,6 +338,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 :root[data-compact-dialog=true] .field textarea { height: 88px; min-height: 88px; }
 /* A keyboard already protects the bottom edge; do not reserve the home-indicator
    inset again inside the reduced visual viewport. Navigation owns its own inset. */
+/* When the keyboard occupies the visual viewport, reclaim the phone
+   dialog's decorative top gap for actual editable form content. */
+@media (max-width:767px) {
+  :root[data-keyboard-open=true] .modal { max-height: 100%; }
+  :root[data-keyboard-open=true] .modal-body { scroll-padding-block: 12px; }
+}
 :root[data-keyboard-open=true] { --dialog-safe-bottom: 0px; }
 @media (prefers-reduced-motion:reduce) {
   *, *:before, *:after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
