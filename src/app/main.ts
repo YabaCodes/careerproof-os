@@ -8,9 +8,12 @@ import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
+import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,achievementEnrichmentDetails} from '../ui/achievementIntelligence.js';
+import {competencyPage,customCompetencyForm,readCustomCompetency} from '../ui/competencyLibrary.js';
+import {dateBounds} from '../domain/dates.js';
 
-type Screen='home'|'vault'|'profile'|'portfolio';
-type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|null;
+type Screen='home'|'vault'|'profile'|'portfolio'|'competencies';
+type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|null;
 const root=document.getElementById('app')!;
 let profile:Profile;
 let achievements:Achievement[]=[];
@@ -29,6 +32,13 @@ let pendingBackup:PreparedBackup|null=null;
 let saving=false;
 let searchText='';
 let filterStatus='active';
+let filterRole='';
+let filterProject='';
+let filterCompetency='';
+let filterDateStart='';
+let filterDateEnd='';
+let skillQuery='';
+let skillCategory='';
 let sortOrder='recent';
 let theme=localStorage.getItem('careerproof-theme')||'system';
 let lastExportAt:string|null=null;
@@ -47,10 +57,10 @@ function relativeDate(v:string):string {if(!v)return 'Never';return new Intl.Dat
 function titleCase(v:string):string {return v.charAt(0).toUpperCase()+v.slice(1);}
 function statusBadge(status:AchievementStatus):string {return `<span class="status-tag status-${status}">${status==='recorded'?'Recorded':titleCase(status)}</span>`;}
 function initials():string {return profile.displayName.trim().split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()??'').join('') || 'CP';}
-function currentNav():Screen {const name=location.hash.replace('#/','');return name==='vault'||name==='profile'||name==='portfolio'?name:'home';}
+function currentNav():Screen {const name=location.hash.replace('#/','');return name==='vault'||name==='profile'||name==='portfolio'||name==='competencies'?name:'home';}
 function applyTheme(){document.documentElement.dataset.theme=theme;}
 async function setTheme(value:string){if(!['system','light','dark'].includes(value))return;try{await setMeta('preferences',{theme:value});theme=value;localStorage.setItem('careerproof-theme',theme);applyTheme();}catch(err){notify(errorMessage(err),'error');}}
-function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${(screen===id||(id==='profile'&&screen==='portfolio'))?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
+function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${(screen===id||(id==='profile'&&(screen==='portfolio'||screen==='competencies')))?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
 function pwaUpdateNotice():string {
   return pwaUpdateReady?'<div id="pwa-update-notice" class="pwa-update-notice" role="status" aria-live="polite"><div><strong>New version ready</strong><p>Restart CareerProof to load the update. Your saved career records stay on this device.</p></div><button class="button button-primary" data-action="reload-update">Restart app</button></div>':'';
 }
@@ -114,14 +124,14 @@ function shell():string {
     <aside class="sidebar" aria-label="Primary navigation">
       <div class="brand"><img class="brand-mark" src="./icon.svg" alt="" width="44" height="44"/><div class="brand-copy"><strong>CareerProof</strong><small>Personal career OS</small></div></div>
       <p class="sidebar-caption">WORKSPACE</p>
-      <nav class="side-links" aria-label="Main navigation">${navButton('home','Home','home')}${navButton('vault','Vault','vault')}${navButton('profile','Profile','user')}${navButton('portfolio','Experience','layers')}</nav>
-      <div class="sidebar-future"><span class="future-label">COMING IN FUTURE RELEASES</span><p>${icon('layers',17)} Competency Intelligence</p><p>${icon('sparkle',17)} Career Studio</p></div>
+      <nav class="side-links" aria-label="Main navigation">${navButton('home','Home','home')}${navButton('vault','Vault','vault')}${navButton('profile','Profile','user')}${navButton('portfolio','Experience','layers')}${navButton('competencies','Competencies','sparkle')}</nav>
+      <div class="sidebar-future"><span class="future-label">COMING IN FUTURE RELEASES</span><p>${icon('sparkle',17)} Career Studio</p></div>
       <div class="sidebar-bottom"><button class="sidebar-settings" data-action="settings">${icon('settings',24)} Settings ${icon('chevron',16)}</button><div class="sidebar-version">CareerProof OS <span>v${APP_VERSION}</span></div></div>
     </aside>
     <div class="content-wrap">
-      <header class="topbar"><div class="topbar-left"><span class="topbar-mark"><img src="./icon.svg" alt="CareerProof" width="36" height="36"/></span><span class="breadcrumb"><span class="workspace-label">Workspace /</span> ${screen==='home'?'Home':screen==='vault'?'Vault':screen==='portfolio'?'Experience':'Profile'}</span></div>
+      <header class="topbar"><div class="topbar-left"><span class="topbar-mark"><img src="./icon.svg" alt="CareerProof" width="36" height="36"/></span><span class="breadcrumb"><span class="workspace-label">Workspace /</span> ${screen==='home'?'Home':screen==='vault'?'Vault':screen==='portfolio'?'Experience':screen==='competencies'?'Competencies':'Profile'}</span></div>
       <div class="topbar-actions"><span class="local-pill">${icon('lock',13)} Local & private</span><button class="icon-button" data-action="settings" title="Settings" aria-label="Settings">${icon('settings',19)}</button><button class="button button-primary top-capture" data-action="capture">${icon('plus',17)} <span>New achievement</span></button></div></header>
-      <main class="page" id="main-content">${screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?portfolioPage(careerCollections,portfolioFilters):profileView()}</main>
+      <main class="page" id="main-content">${screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?portfolioPage(careerCollections,portfolioFilters):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory):profileView()}</main>
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">${navButton('home','Home','home',true)}${navButton('vault','Vault','vault',true)}<button class="mobile-create" data-action="capture" aria-label="New achievement"><span class="nav-icon">${icon('plus',24)}</span><span>Add</span></button>${navButton('profile','Profile','user',true)}<button class="nav-item mobile-nav-item" data-action="settings"><span class="nav-icon">${icon('settings',24)}</span><span>Settings</span></button></nav>
     <div id="modal-layer">${modalView()}</div>${modal?'':toastView()}
@@ -162,7 +172,7 @@ function profileView():string {
   const has=Boolean(profile.displayName||profile.headline||profile.summary||profile.location||profile.email);
   return `<div class="page-heading page-heading-flex"><div><p class="eyebrow">YOUR PROFESSIONAL IDENTITY</p><h1>Career Profile</h1><p class="page-subtitle">Build a foundation that grows with your experience.</p></div><button class="button button-outline desktop-add" data-action="edit-profile">${icon('edit',17)} Edit profile</button></div>
   <div class="profile-grid"><section class="panel profile-card"><div class="profile-top"><div class="avatar">${escape(initials())}</div><div><h2>${escape(profile.displayName||'Your name')}</h2><p>${escape(profile.headline||'Add your current professional headline')}</p>${profile.location?`<span class="profile-location">${escape(profile.location)}</span>`:''}</div></div><div class="profile-section"><p class="section-kicker">ABOUT</p>${profile.summary?`<p class="profile-summary">${escape(profile.summary)}</p>`:`<p class="muted">Describe the expertise, responsibilities, and career direction that define you.</p>`}</div>${profile.email?`<div class="profile-section"><p class="section-kicker">CONTACT</p><p>${escape(profile.email)}</p></div>`:''}<button class="button button-outline" data-action="edit-profile">${icon('edit',16)} ${has?'Edit your profile':'Complete profile'}</button></section>
-  <aside class="profile-aside"><div class="panel"><div class="mini-heading">${icon('trophy',20)}<h2>Your professional story</h2></div><p class="muted">The Achievement Vault is where you can start building evidence of your experience today.</p><button class="text-action" data-action="nav" data-screen="vault">Open Vault ${icon('arrow',16)}</button></div><div class="panel"><div class="mini-heading">${icon('layers',20)}<h2>Experience Portfolio</h2></div><p class="muted">Organize projects, initiatives and ongoing responsibilities, then connect evidence-backed achievements.</p><button class="button button-outline" data-action="nav" data-screen="portfolio">Open Experience Portfolio ${icon('arrow',16)}</button></div></aside></div>${careerCollections?careerSections(profile,careerCollections):''}`;
+  <aside class="profile-aside"><div class="panel"><div class="mini-heading">${icon('trophy',20)}<h2>Your professional story</h2></div><p class="muted">The Achievement Vault is where you can start building evidence of your experience today.</p><button class="text-action" data-action="nav" data-screen="vault">Open Vault ${icon('arrow',16)}</button></div><div class="panel"><div class="mini-heading">${icon('layers',20)}<h2>Experience Portfolio</h2></div><p class="muted">Organize projects, initiatives and ongoing responsibilities, then connect evidence-backed achievements.</p><button class="button button-outline" data-action="nav" data-screen="portfolio">Open Experience Portfolio ${icon('arrow',16)}</button></div><div class="panel"><div class="mini-heading">${icon('sparkle',20)}<h2>Competency Library</h2></div><p class="muted">Explore your professional skills and the achievements that support them. No proficiency rating is implied.</p><button class="button button-outline" data-action="nav" data-screen="competencies">Open Competency Library ${icon('arrow',16)}</button></div></aside></div>${careerCollections?careerSections(profile,careerCollections):''}`;
 }
 function modalView():string {
   if(!modal)return '';
@@ -178,6 +188,8 @@ function modalView():string {
     const record=careerCollections.projects.find(r=>r.id===selectedId);
     content=portfolioForm(record,careerCollections);
   }
+  if(modal==='competency'&&careerCollections)content=customCompetencyForm(careerCollections,
+    careerCollections.competencies.find(x=>x.id===selectedId));
   if(modal==='settings')content=settingsView();
   if(modal==='restore')content=restoreView();
   return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1" class="modal ${modal==='capture'?'capture-modal':''}">${content}</section></div>`;
@@ -195,6 +207,7 @@ function achievementForm():string {
     <div class="field"><label for="contribution">What did you do? <span class="required">*</span></label><textarea id="contribution" name="contribution" rows="5" maxlength="6000" placeholder="Describe your personal contribution, decisions, or actions...">${escape(existing?.contribution??'')}</textarea><p class="field-hint">Required for a recorded achievement. Optional for a draft.</p></div>
     <div class="field-row"><div class="field"><label for="occurredOn">Occurrence date${dateType==='text'?' (year)':''}</label><input id="occurredOn" type="${dateType}" ${dateType==='text'?'inputmode="numeric" maxlength="4"':''} name="occurredOn" value="${escape(existing?.occurredOn??localDate())}"/></div><div class="field"><label for="impactCategory">Impact category</label><select name="impactCategory" id="impactCategory">${Object.entries(IMPACT_CATEGORIES).map(([key,value])=>`<option value="${key}" ${existing?.impactCategory===key?'selected':''}>${value}</option>`).join('')}</select></div></div>
     <div class="field"><label for="outcome">Outcome <span class="optional">optional</span></label><textarea id="outcome" name="outcome" rows="3" maxlength="6000" placeholder="What changed as a result? Add measurable results if known.">${escape(existing?.outcome??'')}</textarea></div>
+    ${careerCollections?richAchievementFields(existing,careerCollections,captureProjectId):''}
     <div class="form-guidance">${icon('info',18)} <p>Capture the facts as you know them. Don't invent metrics or outcomes; you can complete your record later.</p></div>
   </form><div class="modal-footer"><button class="button button-outline" data-action="save-achievement" data-status="draft">Save draft</button><button class="button button-primary" data-action="save-achievement" data-status="recorded">${icon('check',17)} ${existing?'Save changes':'Save achievement'}</button></div>`;
 }
@@ -205,6 +218,7 @@ function achievementDetail():string {
   <div class="detail-section"><p class="section-kicker">YOUR CONTRIBUTION</p><p class="readable-text">${escape(a.contribution||'Not added yet. Edit this draft to describe what you contributed.')}</p></div>
   <div class="detail-section"><p class="section-kicker">OUTCOME</p><p class="readable-text ${!a.outcome?'muted':''}">${escape(a.outcome||'Not recorded yet')}</p></div>
   <div class="detail-section"><p class="section-kicker">IMPACT CATEGORY</p><span class="pill">${escape(IMPACT_CATEGORIES[a.impactCategory])}</span></div>
+  ${careerCollections?achievementEnrichmentDetails(a,careerCollections):''}
   <div class="detail-section"><p class="section-kicker">RECORD INFORMATION</p><p class="fine-text">Created ${relativeDate(a.createdAt)} · Last updated ${relativeDate(a.updatedAt)}</p></div>
   <div class="detail-actions"><button class="button button-outline" data-action="edit-achievement">${icon('edit',16)} Edit</button><button class="button button-outline" data-action="toggle-archive">${icon(a.status==='archived'?'refresh':'archive',16)} ${a.status==='archived'?'Restore':'Archive'}</button><button class="button button-danger-soft" data-action="delete-achievement">${icon('trash',16)} Delete</button></div></div>`;
 }
@@ -247,8 +261,19 @@ async function saveAchievementForm(status:'draft'|'recorded'){
   if(saving)return;setSaving(true);
   try{const input=readAchieveInput(status);const errors=validateAchievementInput(input);if(errors.length){showError(errors.join(' '));return;}
     const existing=editing&&selectedId?achievements.find(x=>x.id===selectedId):undefined;
-    const record=await saveAchievement({id:existing?.id??crypto.randomUUID(),revision:existing?.revision??0,title:input.title,contribution:input.contribution,occurredOn:input.occurredOn,status,preArchiveStatus:null,outcome:input.outcome,impactCategory:input.impactCategory as Achievement['impactCategory']},captureProjectId??undefined);
-    achievements=await listAchievements();if(captureProjectId)await loadCareerCollections();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
+    if(!careerCollections)throw new ValidationError('Career records are unavailable.');
+    const form=document.getElementById('achievement-form') as HTMLFormElement;
+    const rich=parseRichFields(form);
+    if(captureProjectId&&!rich.projectIds.includes(captureProjectId))rich.projectIds.push(captureProjectId);
+    const record=await database.saveAchievementBundle({
+      id:existing?.id??crypto.randomUUID(),revision:existing?.revision??0,
+      title:input.title,contribution:input.contribution,occurredOn:input.occurredOn,
+      status,preArchiveStatus:existing?.status==='archived'?null:existing?.preArchiveStatus??null,
+      outcome:input.outcome,impactCategory:input.impactCategory as Achievement['impactCategory'],
+      roleId:rich.roleId,situation:rich.situation,actions:rich.actions,notes:rich.notes,
+      confidentiality:rich.confidentiality
+    },rich.projectIds,rich.primaryProjectId,rich.competencyIds,rich.metrics,rich.references);
+    achievements=await listAchievements();await loadCareerCollections();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
 async function saveProfileForm(){if(saving)return;setSaving(true);try{
@@ -321,6 +346,27 @@ function refreshPortfolioCards(){
   const target=document.getElementById('portfolio-results');
   if(target&&careerCollections)target.innerHTML=portfolioCards(careerCollections,portfolioFilters);
 }
+async function saveCustomSkill(){
+  if(saving||!careerCollections)return;
+  setSaving(true);
+  try{
+    const form=document.getElementById('competency-form') as HTMLFormElement|null;
+    if(!form)throw new ValidationError('Competency editor unavailable.');
+    const existing=careerCollections.competencies.find(r=>r.id===selectedId);
+    if(existing?.isBuiltIn)throw new ValidationError('Built-in competencies cannot be edited.');
+    const input=readCustomCompetency(form,careerCollections,existing);
+    await database.saveRecord('competencies',input);
+    await loadCareerCollections();closeModal(true);notify('Competency saved.');
+  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+}
+async function archiveCustomSkill(id:string){
+  if(!careerCollections||saving)return;
+  const skill=careerCollections.competencies.find(r=>r.id===id);
+  if(!skill||skill.isBuiltIn)return notify('Only custom competencies can be archived.','error');
+  if(!window.confirm('Archive custom competency "'+skill.name+'"? Linked achievements will remain recorded.'))return;
+  try{await database.saveRecord('competencies',{...skill,status:'archived'});await loadCareerCollections();render();notify('Custom competency archived.');}
+  catch(err){notify(errorMessage(err),'error');}
+}
 function errorMessage(err:unknown):string{return err instanceof Error?err.message:'An unexpected error occurred.';}
 async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;if(modal==='settings')render(true);notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
 async function doFileRestore(file:File){try{pendingBackup=await parseBackupFile(file);openModal('restore');}catch(err){notify(`Cannot restore: ${errorMessage(err)}`,'error');}}
@@ -338,6 +384,14 @@ function runAction(node:HTMLElement){
   const action=node.dataset.action;switch(action){
     case 'nav':navigate(node.dataset.screen as Screen);break;
     case 'capture':captureProjectId=null;openModal('capture');break;
+    case 'add-competency':openModal('competency');break;
+    case 'edit-competency':openModal('competency',node.dataset.id??null,true);break;
+    case 'save-competency':void saveCustomSkill();break;
+    case 'archive-competency':void archiveCustomSkill(node.dataset.id??'');break;
+    case 'competency-achievement':openModal('detail',node.dataset.id??null);break;
+    case 'add-rich-metric':document.getElementById('rich-metrics')?.insertAdjacentHTML('beforeend',metricRow());isDirty=true;break;
+    case 'add-rich-evidence':document.getElementById('rich-evidence')?.insertAdjacentHTML('beforeend',evidenceRow());isDirty=true;break;
+    case 'remove-rich-row':node.closest('.rich-row')?.remove();isDirty=true;break;
     case 'add-project':openModal('project');break;
     case 'edit-project':openModal('project',node.dataset.id??null,true);break;
     case 'save-project':void saveProjectForm();break;
@@ -369,7 +423,7 @@ function runAction(node:HTMLElement){
     case 'export':void doExport();break;
     case 'choose-restore':(document.getElementById('restore-file') as HTMLInputElement|null)?.click();break;
     case 'confirm-restore':void doConfirmRestore();break;
-    case 'clear-filters':searchText='';filterStatus='active';sortOrder='recent';render();break;
+    case 'clear-filters':searchText='';filterStatus='active';sortOrder='recent';filterRole='';filterProject='';filterCompetency='';filterDateStart='';filterDateEnd='';render();break;
   }
 }
 document.addEventListener('click',e=>{
@@ -377,8 +431,16 @@ document.addEventListener('click',e=>{
   const actionTarget=resolveActionTarget(e.target);
   if(actionTarget)runAction(actionTarget);
 });
-document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
-document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='portfolio-filter-type'){portfolioFilters.type=t.value;refreshPortfolioCards();}if(t.id==='portfolio-filter-status'){portfolioFilters.status=t.value;refreshPortfolioCards();}if(t.id==='portfolio-employerId'){const form=t.closest('form');if(form)updatePortfolioRoleChoices(form);}if(t.dataset.action==='portfolio-date-precision'){const target=t.dataset.target??'';const input=document.getElementById('portfolio-'+target) as HTMLInputElement|null;if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}}if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){void setTheme(t.value);}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.dataset.action==='career-date-precision'){
+document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;render(true);}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
+document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;render();}
+  if(t.id==='rich-primaryProjectId'||t.name==='projectId')isDirty=true;
+  if(t.name==='projectId'){const form=t.closest('form');if(form)updatePrimaryOptions(form);}
+  if(t.id==='role-filter'){filterRole=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}
+  if(t.id==='project-filter'){filterProject=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}
+  if(t.id==='competency-filter'){filterCompetency=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}
+  if(t.id==='date-start-filter'){filterDateStart=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}
+  if(t.id==='date-end-filter'){filterDateEnd=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}
+  if(t.id==='portfolio-filter-type'){portfolioFilters.type=t.value;refreshPortfolioCards();}if(t.id==='portfolio-filter-status'){portfolioFilters.status=t.value;refreshPortfolioCards();}if(t.id==='portfolio-employerId'){const form=t.closest('form');if(form)updatePortfolioRoleChoices(form);}if(t.dataset.action==='portfolio-date-precision'){const target=t.dataset.target??'';const input=document.getElementById('portfolio-'+target) as HTMLInputElement|null;if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}}if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){void setTheme(t.value);}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.dataset.action==='career-date-precision'){
     const target=t.dataset.target??'';
     const input=document.getElementById('career-'+target) as HTMLInputElement|null;
     if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}
@@ -386,8 +448,8 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
   if(t.id==='career-isCurrent'&&t instanceof HTMLInputElement&&t.checked){
     const end=document.getElementById('career-endDate') as HTMLInputElement|null;if(end)end.value='';
   }
-  if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form'))isDirty=true;});
-document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}});
+  if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form,#competency-form'))isDirty=true;});
+document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}});
 document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('resize',()=>syncCareerDisclosures(root),{passive:true});
 window.addEventListener('hashchange',()=>{const next=currentNav();if(next===screen)return;screen=next;if(!modal)render();});
