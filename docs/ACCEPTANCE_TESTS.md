@@ -9,6 +9,23 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-011C Experience Portfolio — alpha.8, iPhone acceptance pending
+
+The user accepted CP-011B education, credentials, exports and alpha.7 updates on the physical iPhone; next milestone CP-011C focuses on the Portfolio and cross-record integrity.
+
+- [ ] CP-C201: Settings alpha.8 and all pre-existing career records remain intact.
+- [ ] CP-C202: Profile → Experience Portfolio; compact five-slot navigation remains unchanged.
+- [ ] CP-C203: Create a project, initiative and ongoing responsibility; compact two-line summaries and disclosure work.
+- [ ] CP-C204: Precision date, status and privacy persist after save/reload.
+- [ ] CP-C205: Employer and multiple role IDs are linked consistently; incompatible roles are rejected.
+- [ ] CP-C206: Capture a synthetic achievement from a project and verify its project association survives reload.
+- [ ] CP-C207: Linked project deletion is blocked; a synthetic unlinked project requires confirmation.
+- [ ] CP-C208: Format-2 private backup includes projects and links; avoid restoring into live records.
+- [ ] CP-C209: iPhone keyboard, theme, offline launch and update control checks.
+
+See [CP-011C report](CP_011C_EXPERIENCE_PORTFOLIO.md). Do not remove the Home Screen PWA, reset browser storage, or commit real employment details to test fixtures.
+
+
 ## CP-011B.2 — installed PWA update behavior (alpha.7, iPhone UAT pending)
 
 - [ ] **CP-B221:** With an internet connection, the *existing* iPhone Home Screen app eventually loads alpha.7 via service-worker activation and a restart. Do not remove the installed app; older app versions cannot retroactively show new Check now controls.
