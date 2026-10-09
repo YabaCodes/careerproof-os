@@ -1,8 +1,8 @@
-import { type Achievement, type Profile, type AchievementStatus, IMPACT_CATEGORIES, APP_VERSION, localDate, PROFILE_ID } from '../domain/models.js';
+import { type AchievementView as Achievement, type Profile, type AchievementStatus, type P0Store, IMPACT_CATEGORIES, APP_VERSION, SCHEMA_VERSION, P0_STORES, localDate, PROFILE_ID } from '../domain/models.js';
 import { validateAchievementInput, validateProfileInput, summarizeAchievements, ValidationError } from '../domain/validation.js';
 import { initialize, getProfile, saveProfile, listAchievements, getAchievement, saveAchievement, removeAchievement, getMeta, setMeta } from '../data/db.js';
-import { createBackup, downloadBackup, parseBackupFile, restoreBackup } from '../data/backup.js';
-import type { CareerBackup } from '../domain/models.js';
+import { createBackup, downloadBackup, parseBackupFile, restoreBackup, type PreparedBackup } from '../data/backup.js';
+import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 
@@ -17,22 +17,25 @@ let selectedId:string|null=null;
 let editing=false;
 let isDirty=false;
 let openInvoker:HTMLElement|null=null;
-let pendingBackup:CareerBackup|null=null;
+let pendingBackup:PreparedBackup|null=null;
+let saving=false;
 let searchText='';
 let filterStatus='active';
 let sortOrder='recent';
 let theme=localStorage.getItem('careerproof-theme')||'system';
 let lastExportAt:string|null=null;
 let toastTimer:number|undefined;
+const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships'};
 
 function escape(value:unknown):string {return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]!));}
-function formatDate(v:string):string {if(!v)return 'Date not set';const d=new Date(`${v}T12:00:00`);return Number.isFinite(d.valueOf())?new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(d):v;}
+const formatDate=formatPrecisionDate;
 function relativeDate(v:string):string {if(!v)return 'Never';return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(new Date(v));}
 function titleCase(v:string):string {return v.charAt(0).toUpperCase()+v.slice(1);}
 function statusBadge(status:AchievementStatus):string {return `<span class="status-tag status-${status}">${status==='recorded'?'Recorded':titleCase(status)}</span>`;}
 function initials():string {return profile.displayName.trim().split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()??'').join('') || 'CP';}
 function currentNav():Screen {const name=location.hash.replace('#/','');return name==='vault'||name==='profile'?name:'home';}
 function applyTheme(){document.documentElement.dataset.theme=theme;}
+async function setTheme(value:string){if(!['system','light','dark'].includes(value))return;try{await setMeta('preferences',{theme:value});theme=value;localStorage.setItem('careerproof-theme',theme);applyTheme();}catch(err){notify(errorMessage(err),'error');}}
 function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${screen===id?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${icon(glyph,mobile?21:19)}<span>${label}</span></button>`;}
 function shell():string {
   return `<div class="app-shell">
@@ -103,12 +106,13 @@ function dialogHeader(title:string,subtitle:string):string {return `<div class="
 function achievementForm():string {
   const existing=editing&&selectedId?achievements.find(a=>a.id===selectedId):undefined;
   const status=existing?.status==='archived'?existing.preArchiveStatus:existing?.status;
+  const dateType=existing?.occurredStart?.precision==='year'?'text':existing?.occurredStart?.precision==='month'?'month':'date';
   return `${dialogHeader(existing?'Edit achievement':'Capture an achievement',existing?'Update the details of your contribution.':'Start with what you accomplished. Refine the details later.')}
   <form id="achievement-form" class="modal-body form-grid" novalidate>
     <div id="form-error" class="form-error" role="alert" hidden></div>
     <div class="field"><label for="title">Achievement title <span class="required">*</span></label><input id="title" name="title" maxlength="160" placeholder="e.g., Resolved a critical technical issue" value="${escape(existing?.title??'')}" required/><p class="field-hint">Write a short, action-focused title.</p></div>
     <div class="field"><label for="contribution">What did you do? <span class="required">*</span></label><textarea id="contribution" name="contribution" rows="5" maxlength="6000" placeholder="Describe your personal contribution, decisions, or actions...">${escape(existing?.contribution??'')}</textarea><p class="field-hint">Required for a recorded achievement. Optional for a draft.</p></div>
-    <div class="field-row"><div class="field"><label for="occurredOn">Occurrence date</label><input id="occurredOn" type="date" name="occurredOn" value="${escape(existing?.occurredOn??localDate())}"/></div><div class="field"><label for="impactCategory">Impact category</label><select name="impactCategory" id="impactCategory">${Object.entries(IMPACT_CATEGORIES).map(([key,value])=>`<option value="${key}" ${existing?.impactCategory===key?'selected':''}>${value}</option>`).join('')}</select></div></div>
+    <div class="field-row"><div class="field"><label for="occurredOn">Occurrence date${dateType==='text'?' (year)':''}</label><input id="occurredOn" type="${dateType}" ${dateType==='text'?'inputmode="numeric" maxlength="4"':''} name="occurredOn" value="${escape(existing?.occurredOn??localDate())}"/></div><div class="field"><label for="impactCategory">Impact category</label><select name="impactCategory" id="impactCategory">${Object.entries(IMPACT_CATEGORIES).map(([key,value])=>`<option value="${key}" ${existing?.impactCategory===key?'selected':''}>${value}</option>`).join('')}</select></div></div>
     <div class="field"><label for="outcome">Outcome <span class="optional">optional</span></label><textarea id="outcome" name="outcome" rows="3" maxlength="6000" placeholder="What changed as a result? Add measurable results if known.">${escape(existing?.outcome??'')}</textarea></div>
     <div class="form-guidance">${icon('info',18)} <p>Capture the facts as you know them. Don't invent metrics or outcomes; you can complete your record later.</p></div>
   </form><div class="modal-footer"><button class="button button-outline" data-action="save-achievement" data-status="draft">Save draft</button><button class="button button-primary" data-action="save-achievement" data-status="recorded">${icon('check',17)} ${existing?'Save changes':'Save achievement'}</button></div>`;
@@ -136,20 +140,20 @@ function profileForm():string {
 function settingsView():string {
   return `${dialogHeader('Settings & data','Your workspace preferences and data controls.')}
   <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line"><div><strong>Color theme</strong><p>Choose your preferred display style.</p></div><select id="theme-select" aria-label="Color theme"><option value="system" ${theme==='system'?'selected':''}>System</option><option value="light" ${theme==='light'?'selected':''}>Light</option><option value="dark" ${theme==='dark'?'selected':''}>Dark</option></select></div></div>
-  <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all your achievements and profile as a JSON file.</p></div><button class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
-  <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema 1</p></div>${icon('shield',20)}</div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
+  <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
+  <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
 }
 function restoreView():string {
   if(!pendingBackup)return '';
-  const m=pendingBackup.manifest;
-  return `${dialogHeader('Restore career data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This replaces your current data</strong><p>All existing local profile and achievement records will be replaced. Export your current data before proceeding.</p></div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p><p><span>Profiles</span><strong>${m.counts.profiles}</strong></p><p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
+  const m=pendingBackup.backup.manifest;
+  return `${dialogHeader('Restore career data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This replaces your current data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
 }
 function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';root.classList.remove('app-loading');root.innerHTML=shell();if(modal){document.body.classList.add('dialog-open');if(!preserveFocus){requestAnimationFrame(()=>{(root.querySelector('.modal input:not([type="file"]),.modal button') as HTMLElement|null)?.focus();});}}else{document.body.classList.remove('dialog-open');}
   if(focusId){const el=document.getElementById(focusId);el?.focus();}
 }
 function notify(message:string,kind:'success'|'error'='success'){const el=document.getElementById('toast');if(!el)return;window.clearTimeout(toastTimer);el.innerHTML=`${icon(kind==='success'?'check':'alert',17)} <span>${escape(message)}</span>`;el.className=`toast visible toast-${kind}`;toastTimer=window.setTimeout(()=>el.classList.remove('visible'),4000);}
 function openModal(kind:Modal,id:string|null=null,edit=false){openInvoker=document.activeElement instanceof HTMLElement?document.activeElement:null;modal=kind;selectedId=id;editing=edit;isDirty=false;render();}
-function closeModal(force=false){if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;render();openInvoker?.focus();openInvoker=null;}
+function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;render();openInvoker?.focus();openInvoker=null;}
 function showError(message:string){const el=document.getElementById('form-error');if(el){el.hidden=false;el.textContent=message;el.scrollIntoView({block:'nearest',behavior:'smooth'});}else notify(message,'error');}
 function readAchieveInput(status:'draft'|'recorded') {
   const form=document.getElementById('achievement-form') as HTMLFormElement|null;
@@ -157,21 +161,22 @@ function readAchieveInput(status:'draft'|'recorded') {
   return {title:String(values.get('title')??'').trim(),contribution:String(values.get('contribution')??'').trim(),occurredOn:String(values.get('occurredOn')??''),status,outcome:String(values.get('outcome')??'').trim(),impactCategory:String(values.get('impactCategory')??'')};
 }
 async function saveAchievementForm(status:'draft'|'recorded'){
+  if(saving)return;saving=true;
   try{const input=readAchieveInput(status);const errors=validateAchievementInput(input);if(errors.length){showError(errors.join(' '));return;}
     const existing=editing&&selectedId?achievements.find(x=>x.id===selectedId):undefined;
     const record=await saveAchievement({id:existing?.id??crypto.randomUUID(),revision:existing?.revision??0,title:input.title,contribution:input.contribution,occurredOn:input.occurredOn,status,preArchiveStatus:null,outcome:input.outcome,impactCategory:input.impactCategory as Achievement['impactCategory']});
     achievements=await listAchievements();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
-  }catch(err){showError(errorMessage(err));}
+  }catch(err){showError(errorMessage(err));}finally{saving=false;}
 }
-async function saveProfileForm(){try{
+async function saveProfileForm(){if(saving)return;saving=true;try{
   const form=document.getElementById('profile-form') as HTMLFormElement;const fd=new FormData(form);const input={displayName:String(fd.get('displayName')??'').trim(),headline:String(fd.get('headline')??'').trim(),summary:String(fd.get('summary')??'').trim(),email:String(fd.get('email')??'').trim(),location:String(fd.get('location')??'').trim()};
   const errors=validateProfileInput(input);if(errors.length){showError(errors.join(' '));return;}
   profile=await saveProfile({...input,id:PROFILE_ID,revision:profile.revision});closeModal(true);notify('Profile updated.');
-}catch(err){showError(errorMessage(err));}}
+}catch(err){showError(errorMessage(err));}finally{saving=false;}}
 function errorMessage(err:unknown):string{return err instanceof Error?err.message:'An unexpected error occurred.';}
 async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;render();notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
 async function doFileRestore(file:File){try{pendingBackup=await parseBackupFile(file);openModal('restore');}catch(err){notify(`Cannot restore: ${errorMessage(err)}`,'error');}}
-async function doConfirmRestore(){if(!pendingBackup)return;try{await restoreBackup(pendingBackup);profile=await getProfile();achievements=await listAchievements();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}}
+async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;saving=true;try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{saving=false;}}
 async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;try{
   const isArchived=a.status==='archived';await saveAchievement({...a,revision:a.revision,status:isArchived?a.preArchiveStatus??'draft':'archived',preArchiveStatus:isArchived?null:a.status as 'draft'|'recorded'});
   achievements=await listAchievements();closeModal(true);notify(isArchived?'Achievement restored.':'Achievement archived.');
@@ -207,13 +212,13 @@ document.addEventListener('click',e=>{
   if(actionTarget)runAction(actionTarget);
 });
 document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form'))isDirty=true;if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
-document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){theme=t.value;localStorage.setItem('careerproof-theme',theme);applyTheme();}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.closest('#achievement-form,#profile-form'))isDirty=true;});
+document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){void setTheme(t.value);}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.closest('#achievement-form,#profile-form'))isDirty=true;});
 document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}});
 document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('hashchange',()=>{screen=currentNav();render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof couldn't open your local database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{
-  applyTheme();await initialize();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);screen=currentNav();render();
+  applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);screen=currentNav();render();
   if('serviceWorker' in navigator&&location.protocol!=='file:'){navigator.serviceWorker.register('./sw.js').catch(()=>{/* app remains usable online */});}
 }catch(err){renderStartupError(err);}}
 void start();
