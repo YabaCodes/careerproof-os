@@ -11,7 +11,7 @@
 - Implemented from README/source: basic Profile; Quick Capture (draft/recorded); Vault search/filter/sort/edit/archive/restore/delete; basic home stats; local persistence; JSON backup and restore; responsive themes/PWA shell.
 - The original deployment selected **branch root** and served source `index.html` without compiled `app/app/main.js`, leaving users at 'Opening CareerProof…'. The GitHub Pages source was corrected to Actions, and the build/deploy completed successfully.
 - Original v0.1.0 had dialog click-through behavior and visually uneven mobile navigation. **PR #1** (`v0.1.0 UI Hotfix 1: dialogs stay open while typing, even mobile nav`) was merged into `main` on 2026-10-09. It introduced scoped direct-backdrop interaction and nav alignment fixes plus regression tests and service-worker cache update.
-- **Verification gap:** User has *not yet confirmed* on-device acceptance of the merged hotfix in this conversation. Treat v0.1.0 UI as **needs manual acceptance**, not 'fully validated'.
+- **iPhone hotfix acceptance (user-confirmed 2026-10-09):** Input fields in the achievement editor work, and the bottom navigation is aligned after merged PR #1. Those two defects can be closed. This is **not** confirmation of full v0.1.0 UAT; backup/restore, offline startup, archive/delete and broader device checks still need manual evidence.
 - At this handover, **v0.1.1 has NOT begun**. Existing source might advance after this documentation PR; always inspect current code/history at task start.
 
 ## 2. Decision register
@@ -80,9 +80,9 @@ Do not silently reconcile contradictions when they affect persistent data or use
 - SVG PWA icon installation support may vary across devices.
 - UI hotfix automated tests do not prove keyboard/iPhone interaction.
 
-**Before v0.1.1**: On an actual iPhone, test entering achievement title/contribution/date/outcome and opening Settings without the modal closing; verify evenly spaced navigation and safe-area layout; save/edit/archive/reopen; test backup restore with synthetic data. If issues persist, create a targeted bugfix PR first. **Do not assume acceptance from merged status.**
+**Before v0.1.1 implementation**: The user has confirmed achievement input fields and aligned mobile navigation on iPhone. Remaining v0.1.0 checks (Settings interactions, save/edit/archive/reopen, backup restore with synthetic data, offline installed startup) are **not yet confirmed** and should be verified or explicitly tracked without claiming completion. See [the implementation brief](V0.1.1_IMPLEMENTATION_BRIEF.md) for migration and acceptance safeguards.
 
-**For v0.1.1**: Formal acceptance of v1→v2 IndexedDB migration design; role/project reference behavior, date precision handling, old backup migration or clearly scoped compatibility; verify no data loss. Treat these as work to implement, not already tested.
+**For v0.1.1**: Obtain formal acceptance of v1→v2 IndexedDB migration design; role/project reference behavior, date precision handling, **legacy format-1 backup import compatibility**; verify no data loss. Use [CP-IMP-011](V0.1.1_IMPLEMENTATION_BRIEF.md) as the approved implementation planning brief, not evidence of completed work.
 
 **Later open implementation choices** (do not block documentation PR):
 - Exact technical mechanism for target precision-date representation and on-disk upgrade adapters.
@@ -95,11 +95,11 @@ Do not silently reconcile contradictions when they affect persistent data or use
 
 Use this prompt after the documentation PR is merged:
 
-> Read AGENTS.md and all linked CareerProof documentation. Inspect the current code, schemas, tests, README and merged PR history. Compare planned requirements with **actually implemented** functionality. Report your understanding of the eight modules, approved P0/P1 scope, current state and next implementable milestone. Flag any contradictions, migration risks or missing acceptance evidence, especially real-device acceptance of v0.1.0 UI hotfix. **Do not modify any files yet.** We will confirm your assessment before authorizing v0.1.1.
+> Read AGENTS.md and all linked CareerProof documentation. Inspect the current code, schemas, tests, README and merged PR history. Compare planned requirements with **actually implemented** functionality. Report your understanding of the eight modules, approved P0/P1 scope, current state and next implementable milestone. Flag any contradictions, migration risks or missing acceptance evidence. The user confirmed the two original iPhone UI defects are corrected, but broader backup, offline and deletion UAT remains unverified. **Do not modify any files yet.** We will confirm your assessment before authorizing v0.1.1.
 
 ## 7. Future workflow
 
-Plan/review here in ChatGPT; sync approved design decisions into GitHub docs; use Codex to implement/test on a branch and open PR; user reviews/merges; GitHub Actions deploys; then test on an actual device. Keep this status document and ROADMAP.md updated as part of each feature PR.
+Plan/review here in ChatGPT; sync approved design decisions into GitHub docs; use Codex to implement/test on a branch and open PR; user reviews/merges; GitHub Actions deploys; then test on an actual device. Next implementable plan: [CP-IMP-011](V0.1.1_IMPLEMENTATION_BRIEF.md). Keep this status document and ROADMAP.md updated as part of each feature PR.
 
 ## 8. Privacy reminder
 
