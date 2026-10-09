@@ -9,6 +9,21 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-011B Career Profile — alpha.5 (iPhone UAT pending)
+
+CP-011A.3 Outcome focus/keyboard issue was accepted by the user on a physical iPhone on v0.1.1-alpha.4. CP-011B is a distinct development increment and remains a draft PR until browser CI is green and user review is complete.
+
+- [ ] **CP-B201:** Updated version, preexisting achievements, profile and local data remain intact.
+- [ ] **CP-B202:** Add/edit employer; add two roles under one employer including overlapping/current roles.
+- [ ] **CP-B203:** Save/edit/clear primary role without losing other records; test partial dates.
+- [ ] **CP-B204:** Add/edit education and credential without expiration; verify URL errors.
+- [ ] **CP-B205:** Referenced employer/role deletion blocks; unreferenced test records require confirmation.
+- [ ] **CP-B206:** Export format-2 backup, verify counts without replacing actual data.
+- [ ] **CP-B207:** iPhone forms keyboard/scroll/date inputs, theme, offline, compact navigation.
+
+See [CP-011B report](CP_011B_HISTORY_QUALIFICATIONS.md). Use synthetic records for destructive tests and do not uninstall the PWA or clear storage.
+
+
 ## CP-011A.2 automated evidence — alpha.3
 
 On 2026-10-09: **37/37 Node and 52/52 Chromium tests passed**, zero skipped; separate typecheck, production build and diff whitespace check passed. Twenty-two focused cases add date/control alignment and appearance at 320/375/390/430px in both themes, exact compact navigation geometry and touch targets, label/footer reachability at reduced visual heights, synthetic safe-area accounting, precision/blank-draft edit and archive round-trips. All earlier recovery tests remain. Alpha.2-cache fixture → alpha.3 and offline native-date editing are tested. See [root cause, dimensions, comparisons and limits](IOS_FORM_NAV_REFINEMENT.md).
