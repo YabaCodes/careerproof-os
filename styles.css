@@ -390,3 +390,34 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   .career-date-control { grid-template-columns: minmax(96px,0.34fr) minmax(0,1fr); }
   .career-role-list { padding-left: var(--space-3); }
 }
+
+
+/* CP-011B.1 — compact, scannable employment history. Details expand in place. */
+.career-disclosure { min-width: 0; }
+.career-description.career-clamped:not(.is-expanded) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.career-hidden-extra[hidden], .career-more[hidden] { display: none !important; }
+.career-hidden-extra { margin-top: var(--space-2); }
+.career-hidden-extra .career-link { display: inline-block; margin-top: var(--space-1); }
+.career-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 44px;
+  padding: 4px 10px 4px 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  color: var(--teal);
+  font-size: var(--type-meta);
+  font-weight: 650;
+  cursor: pointer;
+}
+.career-more:hover { text-decoration: underline; }
+.career-more:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 3px; }
