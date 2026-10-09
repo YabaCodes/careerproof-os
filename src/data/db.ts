@@ -161,14 +161,55 @@ export class CareerDatabase {
       return record;
     });
   }
-  async saveAchievement(input:AchievementWrite):Promise<AchievementView> {
+  /**
+   * Save project details and its role associations in one transaction.
+   * Existing link identities/notes survive edits; unrelated links are untouched.
+   * A failed employer/role relationship validation aborts the entire write.
+   */
+  async savePortfolioProject(input:Omit<P0RecordMap['projects'],'createdAt'|'updatedAt'>,roleIds:string[]):Promise<P0RecordMap['projects']> {
+    return this.write((tx,data)=>{
+      const selected=[...new Set(roleIds)];
+      if(selected.length!==roleIds.length)throw new ValidationError('Duplicate role selection.');
+      const current=data.collections.projects.find(r=>r.id===input.id);
+      if(current?current.revision!==input.revision:input.revision!==0)throw new ConflictError('This project changed. Reload before saving.');
+      if(current?.revision===Number.MAX_SAFE_INTEGER)throw new ValidationError('Record revision limit reached.');
+      const now=nowIso();
+      const project={...input,createdAt:current?.createdAt??now,updatedAt:now,revision:(current?.revision??0)+1};
+      const position=data.collections.projects.findIndex(r=>r.id===input.id);
+      if(position>=0)data.collections.projects[position]=project;
+      else data.collections.projects.push(project);
+      const prior=data.collections.recordLinks.filter(r=>r.linkType==='role-project'&&r.targetId===input.id);
+      const priorMap=new Map(prior.map(r=>[r.sourceId,r]));
+      const kept=prior.filter(r=>selected.includes(r.sourceId));
+      const added=selected.filter(id=>!priorMap.has(id)).map(id=>({
+        id:crypto.randomUUID(),sourceId:id,targetId:input.id,linkType:'role-project' as const,
+        isPrimary:false,note:'',createdAt:now,updatedAt:now,revision:1
+      }));
+      const removed=prior.filter(r=>!selected.includes(r.sourceId));
+      data.collections.recordLinks=data.collections.recordLinks.filter(r=>!prior.includes(r)).concat(kept,added);
+      validateCollections(data.collections);
+      tx.objectStore('projects').put(project);
+      for(const r of removed)tx.objectStore('recordLinks').delete(r.id);
+      for(const r of added)tx.objectStore('recordLinks').put(r);
+      return project;
+    });
+  }
+  async saveAchievement(input:AchievementWrite,projectId?:string):Promise<AchievementView> {
     return this.write((tx,data)=>{
       const current=data.collections.achievements.find(r=>r.id===input.id);
       const {occurredOn,...canonical}=input;
       if(occurredOn!==undefined&&canonical.occurredStart!==undefined&&occurredOn!==(canonical.occurredStart?.value??''))throw new ValidationError('Conflicting achievement date representations.');
       const record={occurredStart:null,occurredEnd:null,roleId:null,situation:'',actions:'',confidentiality:'confidential' as const,notes:'',...current,...canonical};
       if(occurredOn!==undefined)record.occurredStart=precisionDateFromInput(occurredOn);
-      return achievementView(this.upsert(tx,data,'achievements',record as Achievement,input.revision));
+      if(projectId&&!data.collections.projects.some(p=>p.id===projectId))throw new ValidationError('The selected project no longer exists.');
+      const achievement=this.upsert(tx,data,'achievements',record as Achievement,input.revision);
+      if(projectId&&!data.collections.recordLinks.some(r=>r.linkType==='achievement-project'&&r.sourceId===achievement.id&&r.targetId===projectId)){
+        const now=nowIso();
+        const link={id:crypto.randomUUID(),createdAt:now,updatedAt:now,revision:1,
+          linkType:'achievement-project' as const,sourceId:achievement.id,targetId:projectId,isPrimary:false,note:''};
+        this.upsert(tx,data,'recordLinks',link,0);
+      }
+      return achievementView(achievement);
     });
   }
   async removeRecord(store:P0Store,id:string,revision:number):Promise<void> {
