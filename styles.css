@@ -514,3 +514,6 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 @media(prefers-reduced-motion:reduce) {
   .portfolio-summary-hint svg { transition:none; }
 }
+
+.portfolio-capture-context { display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:var(--space-3);border:1px solid var(--line);border-radius:var(--radius-control);font-size:var(--type-meta);color:var(--muted); }
+.portfolio-capture-context strong { color:var(--text);overflow-wrap:anywhere; }
