@@ -70,7 +70,7 @@ for(const width of [320,375,390,430]){
     await expect(employer.locator('button.career-more').first()).toBeVisible();
     await expect(roles.nth(0).locator('button.career-more')).toBeVisible();
     await expect(roles.nth(0).locator('.career-hidden-extra')).toBeHidden();
-    await expect(employer.locator('.career-hidden-extra')).toBeHidden();
+    await expect(employer.locator('.career-employer-head .career-hidden-extra')).toBeHidden();
 
     const bounds=await panel.evaluate(el=>({scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
     expect(bounds.scrollWidth).toBeLessThanOrEqual(bounds.clientWidth);
