@@ -17,7 +17,44 @@ const action=(kind:CareerKind,id:string,verb:'edit'|'delete'):string=>
   '<button class="career-action" type="button" data-action="'+verb+'-career" data-kind="'+kind+'" data-id="'+html(id)+'" aria-label="'+(verb==='edit'?'Edit':'Delete')+' '+kind.slice(0,-1)+'">'+icon(verb==='edit'?'edit':'trash',15)+'<span>'+(verb==='edit'?'Edit':'Delete')+'</span></button>';
 const dateRange=(start:PrecisionDate|null,end:PrecisionDate|null,current=false):string=>
   dateLabel(start)+' – '+(current?'Present':dateLabel(end));
-const paragraph=(value:string):string=>value?'<p class="career-description">'+html(value)+'</p>':'';
+/**
+ * A two-line preview is the default for every saved career description.
+ * Details stay in the DOM (and in IndexedDB) and can be expanded individually.
+ * Buttons are enabled only when text is actually clipped or secondary details exist.
+ */
+function disclosure(kind:CareerKind,id:string,label:string,description:string,extras=''):string {
+  if(!description&&!extras)return '';
+  const target='career-detail-'+kind+'-'+id;
+  return '<div class="career-disclosure" data-career-disclosure><div id="'+html(target)+'" class="career-detail-content">'+
+    (description?'<p class="career-description career-clamped">'+html(description)+'</p>':'')+
+    (extras?'<div class="career-hidden-extra" hidden>'+extras+'</div>':'')+
+    '</div><button type="button" class="career-more" data-action="toggle-career-details" aria-controls="'+html(target)+
+    '" aria-expanded="false" data-detail-label="'+html(label)+'" hidden>… More</button></div>';
+}
+
+export function syncCareerDisclosures(root:ParentNode):void {
+  for(const group of root.querySelectorAll<HTMLElement>('.career-disclosure')){
+    const description=group.querySelector<HTMLElement>('.career-description');
+    const extras=group.querySelector<HTMLElement>('.career-hidden-extra');
+    const button=group.querySelector<HTMLButtonElement>('.career-more');
+    if(!button)continue;
+    const clipped=Boolean(description&&description.scrollHeight>description.clientHeight+2);
+    button.hidden=!(clipped||extras);
+  }
+}
+
+export function toggleCareerDisclosure(button:HTMLElement):void {
+  const group=button.closest<HTMLElement>('.career-disclosure');
+  if(!group)return;
+  const content=group.querySelector<HTMLElement>('.career-description');
+  const extras=group.querySelector<HTMLElement>('.career-hidden-extra');
+  const expanded=button.getAttribute('aria-expanded')==='true';
+  content?.classList.toggle('is-expanded',!expanded);
+  if(extras)extras.hidden=expanded;
+  button.setAttribute('aria-expanded',String(!expanded));
+  button.textContent=expanded?'… More':'Less';
+  button.setAttribute('aria-label',(expanded?'Show':'Hide')+' full details for '+(button.dataset.detailLabel??'career record'));
+}
 const empty=(title:string):string=>'<p class="career-empty">'+html(title)+'</p>';
 const heading=(label:string,kind:CareerKind):string=>
   '<div class="career-section-heading"><h2>'+html(label)+'</h2><button class="button button-outline" data-action="add-career" data-kind="'+kind+'">'+icon('plus',16)+' Add</button></div>';
@@ -27,9 +64,9 @@ function roleCard(role:Role,primaryRoleId:string|null):string {
   return '<article class="career-entry career-role"><div class="career-entry-main"><div class="career-title-row"><h3>'+html(role.title)+'</h3>'+
     (role.id===primaryRoleId?'<span class="career-primary">Primary role</span>':'')+'</div>'+
     meta(dateRange(role.startDate,role.endDate,role.isCurrent)+(role.employmentType?' · '+role.employmentType:''))+
-    paragraph(role.responsibilities)+
-    (role.leadershipScope?'<p class="career-note"><strong>Leadership:</strong> '+html(role.leadershipScope)+'</p>':'')+
-    (role.technologies.length?'<p class="career-note"><strong>Technologies:</strong> '+html(role.technologies.join(', '))+'</p>':'')+
+    disclosure('roles',role.id,role.title,role.responsibilities,
+      (role.leadershipScope?'<p class="career-note"><strong>Leadership:</strong> '+html(role.leadershipScope)+'</p>':'')+
+      (role.technologies.length?'<p class="career-note"><strong>Technologies:</strong> '+html(role.technologies.join(', '))+'</p>':''))+
     '</div><div class="career-entry-actions">'+action('roles',role.id,'edit')+action('roles',role.id,'delete')+'</div></article>';
 }
 
@@ -38,8 +75,9 @@ export function careerSections(profile:Profile,collections:CareerCollections):st
   const employerContent=employers.map(e=>{
     const roles=collections.roles.filter(r=>r.employerId===e.id).sort((a,b)=>b.startDate.value.localeCompare(a.startDate.value));
     return '<article class="career-employer"><div class="career-employer-head"><div><h3>'+html(e.name)+'</h3>'+
-      meta([e.industry,e.location].filter(Boolean).join(' · '))+paragraph(e.description)+
-      (e.website?'<a class="career-link" href="'+html(e.website)+'" target="_blank" rel="noopener noreferrer">Employer website</a>':'')+
+      meta([e.industry,e.location].filter(Boolean).join(' · '))+
+      disclosure('employers',e.id,e.name,e.description,
+        e.website?'<a class="career-link" href="'+html(e.website)+'" target="_blank" rel="noopener noreferrer">Employer website</a>':'')+
       '</div><div class="career-entry-actions">'+action('employers',e.id,'edit')+action('employers',e.id,'delete')+'</div></div>'+
       (roles.length?'<div class="career-role-list">'+roles.map(r=>roleCard(r,profile.primaryRoleId)).join('')+'</div>':empty('No roles recorded yet.'))+
       '<button class="career-inline-add" data-action="add-career" data-kind="roles" data-employer="'+html(e.id)+'">'+icon('plus',15)+' Add role</button></article>';
@@ -47,14 +85,16 @@ export function careerSections(profile:Profile,collections:CareerCollections):st
   const education=[...collections.education].sort((a,b)=>(b.completionDate?.value??b.startDate?.value??'').localeCompare(a.completionDate?.value??a.startDate?.value??''));
   const qualifications=education.map(r=>'<article class="career-entry"><div class="career-entry-main"><h3>'+html(r.qualification)+'</h3>'+
     meta(r.institution+(r.discipline?' · '+r.discipline:''))+
-    meta(dateRange(r.startDate,r.completionDate))+paragraph(r.description)+
-    (r.honors?'<p class="career-note"><strong>Honors:</strong> '+html(r.honors)+'</p>':'')+
+    meta(dateRange(r.startDate,r.completionDate))+
+    disclosure('education',r.id,r.qualification,r.description,
+      r.honors?'<p class="career-note"><strong>Honors:</strong> '+html(r.honors)+'</p>':'')+
     '</div><div class="career-entry-actions">'+action('education',r.id,'edit')+action('education',r.id,'delete')+'</div></article>').join('');
   const credentials=[...collections.credentials].sort((a,b)=>(b.issuedDate?.value??'').localeCompare(a.issuedDate?.value??''));
   const credentialContent=credentials.map(r=>'<article class="career-entry"><div class="career-entry-main"><h3>'+html(r.name)+'</h3>'+
     meta(r.issuer)+meta('Issued: '+dateLabel(r.issuedDate)+' · Expires: '+(r.expirationDate?dateLabel(r.expirationDate):'No expiry recorded'))+
-    (r.credentialId?'<p class="career-note"><strong>Credential ID:</strong> '+html(r.credentialId)+'</p>':'')+
-    paragraph(r.notes)+(r.verificationUrl?'<a class="career-link" target="_blank" rel="noopener noreferrer" href="'+html(r.verificationUrl)+'">Verification link (user provided)</a>':'')+
+    disclosure('credentials',r.id,r.name,r.notes,
+      (r.credentialId?'<p class="career-note"><strong>Credential ID:</strong> '+html(r.credentialId)+'</p>':'')+
+      (r.verificationUrl?'<a class="career-link" target="_blank" rel="noopener noreferrer" href="'+html(r.verificationUrl)+'">Verification link (user provided)</a>':''))+
     '</div><div class="career-entry-actions">'+action('credentials',r.id,'edit')+action('credentials',r.id,'delete')+'</div></article>').join('');
   return '<div class="career-sections" aria-label="Career history and qualifications">'+
     '<section class="panel career-panel">'+heading('Employment history','employers')+
