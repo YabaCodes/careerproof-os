@@ -409,6 +409,13 @@ function runAction(node:HTMLElement){
     case 'archive-competency':void changeCustomSkillStatus(node.dataset.id??'','archived');break;
     case 'restore-competency':void changeCustomSkillStatus(node.dataset.id??'','active');break;
     case 'competency-achievement':openModal('detail',node.dataset.id??null);break;
+    case 'toggle-rich-panel':{
+      const body=document.getElementById('rich-panel-content');
+      if(!body)return;
+      body.hidden=!body.hidden;
+      node.setAttribute('aria-expanded',String(!body.hidden));
+      break;
+    }
     case 'add-rich-metric':document.getElementById('rich-metrics')?.insertAdjacentHTML('beforeend',metricRow());isDirty=true;break;
     case 'add-rich-evidence':document.getElementById('rich-evidence')?.insertAdjacentHTML('beforeend',evidenceRow());isDirty=true;break;
     case 'remove-rich-row':node.closest('.rich-row')?.remove();isDirty=true;break;
