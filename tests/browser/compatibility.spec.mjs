@@ -103,7 +103,7 @@ test('cached PWA opens offline with stored records and all foundation modules',a
     return Promise.all(files.map(async file=>({file,ok:(await fetch('./'+file)).ok})));
   });
   expect(cachedAssets.every(asset=>asset.ok)).toBe(true);
-  await expect(page.getByRole('dialog')).toContainText('0.1.1-alpha.3');
+  await expect(page.getByRole('dialog')).toContainText('0.1.1-alpha.4');
   await page.locator('[data-action=close]').click();
   expect(await page.locator('.mobile-nav').evaluate(el=>el.getBoundingClientRect().height)).toBe(61);
   await page.locator('[data-action=detail]').first().click();await page.locator('[data-action=edit-achievement]').click();
