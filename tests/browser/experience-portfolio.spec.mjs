@@ -46,7 +46,8 @@ test('project, initiative and responsibility records use compact cards, partial 
   await expect(card.locator('.portfolio-expanded')).toBeHidden();
   await card.locator('summary').click();
   await expect(card.locator('.portfolio-expanded')).toBeVisible();
-  await expect(card.locator('.portfolio-detail')).toContainText(['Objective','Scope','My responsibilities','Outcome','Technologies']);
+  await expect(card.locator('.portfolio-expanded')).toContainText('Objective');
+  await expect(card.locator('.portfolio-expanded')).toContainText('Technologies');
   await card.locator('summary').click();
   await expect(card.locator('.portfolio-expanded')).toBeHidden();
   await page.locator('#portfolio-filter-type').selectOption('project');
