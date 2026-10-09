@@ -136,8 +136,10 @@ test('competency library displays 32 built-in skills plus custom skills and link
   await page.locator('#competency-search').fill('Industrialization');
   await expect(page.locator('details.skill-entry')).toHaveCount(1);
   await page.locator('details.skill-entry summary').click();
-  await page.locator('[data-action=archive-competency]').click();
   page.once('dialog',d=>d.accept());
+  await page.locator('[data-action=archive-competency]').click();
+  await expect(page.locator('details.skill-entry')).toHaveCount(0);
+  expect((await snapshot(page)).competencies.find(x=>x.name==='Industrialization Strategy').status).toBe('archived');
 });
 
 test('Vault filters support role, project, competency and date without changing source records',async({page})=>{
@@ -172,4 +174,23 @@ test('save transaction rejects invalid skill reference without modifying any col
   });
   expect(result.error).toMatch(/competency/i);
   expect(result.unchanged).toBe(true);
+});
+
+test('archived competency remains linked to historical achievement through edit/save',async({page})=>{
+  await start(page);
+  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('[data-screen=competencies][data-action=nav]').filter({hasText:'Open Competency Library'}).click();
+  await page.locator('#competency-search').fill('Synthetic Skill');
+  await page.locator('details.skill-entry summary').click();
+  page.once('dialog',d=>d.accept());
+  await page.locator('[data-action=archive-competency]').click();
+  const previous=(await snapshot(page)).recordLinks;
+  await page.locator('.mobile-nav [data-screen=vault]').click();
+  await page.locator('[data-action=detail][data-id=achievement-1]').click();
+  await page.locator('[data-action=edit-achievement]').click();
+  await page.locator('#rich-detail-panel summary').click();
+  await expect(page.locator('input[name=competencyId][value=custom-competency]')).toBeChecked();
+  await expect(page.locator('.rich-check')).toContainText('archived historical link');
+  await save(page);
+  expect((await snapshot(page)).recordLinks).toEqual(previous);
 });
