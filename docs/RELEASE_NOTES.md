@@ -1,5 +1,16 @@
 # CareerProof release notes
 
+## 0.1.1-alpha.8 — CP-011C Experience Portfolio (PR review)
+
+- Adds a compact Profile-linked Experience Portfolio for projects, initiatives and ongoing responsibilities, with independent expandable details, search and type/status filters.
+- Supports purpose/scope/personal responsibilities, outcomes, technologies, optional employer, precision-aware dates, and conservative Confidential-by-default records.
+- Allows multiple employer-matched roles to associate through stable typed links, with atomic project-and-links transactions and no duplicate names or IDs.
+- Shows previously linked achievements and permits starting a new achievement from project context; achievement/link creation is atomic.
+- Blocks deletion of projects referenced by roles or achievements. No silent cascade, task tracking, timelines or vendor meeting features.
+- Preserves schema 2, full private backup format 2, existing employer/role records, compact navigation, and iOS keyboard behavior. Adds browser regression checks; physical iPhone acceptance still required.
+- [Scope and iPhone acceptance](CP_011C_EXPERIENCE_PORTFOLIO.md). CP-011D not authorized until user approval.
+
+
 ## 0.1.1-alpha.7 — CP-011B.2 Installed PWA update controls (review)
 
 - Investigated an iPhone Home Screen PWA staying on alpha.5 for ~30 minutes while Safari already displayed alpha.6. The alpha.6 Pages deployment was successful; the app uses an offline cache-first service worker, without a controlled client update notification.

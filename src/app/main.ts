@@ -2,20 +2,23 @@ import { type AchievementView as Achievement, type Profile, type AchievementStat
 import { validateAchievementInput, validateProfileInput, summarizeAchievements, ValidationError } from '../domain/validation.js';
 import { initialize, getProfile, saveProfile, listAchievements, getAchievement, saveAchievement, removeAchievement, getMeta, setMeta, database } from '../data/db.js';
 import { careerSections, careerForm, readCareerForm, dependentCareerRecords, syncCareerDisclosures, toggleCareerDisclosure, type CareerKind, type CareerRecord } from '../ui/careerHistory.js';
+import { portfolioPage,portfolioCards,portfolioForm,readPortfolioForm,updatePortfolioRoleChoices,type PortfolioFilters } from '../ui/experiencePortfolio.js';
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup, type PreparedBackup } from '../data/backup.js';
 import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
 
-type Screen='home'|'vault'|'profile';
-type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|null;
+type Screen='home'|'vault'|'profile'|'portfolio';
+type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|null;
 const root=document.getElementById('app')!;
 let profile:Profile;
 let achievements:Achievement[]=[];
 let careerCollections:CareerCollections|null=null;
 let careerKind:CareerKind='employers';
 let careerEmployerId:string|undefined;
+let captureProjectId:string|null=null;
+let portfolioFilters:PortfolioFilters={query:'',type:'',status:''};
 let screen:Screen='home';
 let modal:Modal=null;
 let selectedId:string|null=null;
@@ -44,10 +47,10 @@ function relativeDate(v:string):string {if(!v)return 'Never';return new Intl.Dat
 function titleCase(v:string):string {return v.charAt(0).toUpperCase()+v.slice(1);}
 function statusBadge(status:AchievementStatus):string {return `<span class="status-tag status-${status}">${status==='recorded'?'Recorded':titleCase(status)}</span>`;}
 function initials():string {return profile.displayName.trim().split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()??'').join('') || 'CP';}
-function currentNav():Screen {const name=location.hash.replace('#/','');return name==='vault'||name==='profile'?name:'home';}
+function currentNav():Screen {const name=location.hash.replace('#/','');return name==='vault'||name==='profile'||name==='portfolio'?name:'home';}
 function applyTheme(){document.documentElement.dataset.theme=theme;}
 async function setTheme(value:string){if(!['system','light','dark'].includes(value))return;try{await setMeta('preferences',{theme:value});theme=value;localStorage.setItem('careerproof-theme',theme);applyTheme();}catch(err){notify(errorMessage(err),'error');}}
-function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${screen===id?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
+function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${(screen===id||(id==='profile'&&screen==='portfolio'))?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
 function pwaUpdateNotice():string {
   return pwaUpdateReady?'<div id="pwa-update-notice" class="pwa-update-notice" role="status" aria-live="polite"><div><strong>New version ready</strong><p>Restart CareerProof to load the update. Your saved career records stay on this device.</p></div><button class="button button-primary" data-action="reload-update">Restart app</button></div>':'';
 }
@@ -111,14 +114,14 @@ function shell():string {
     <aside class="sidebar" aria-label="Primary navigation">
       <div class="brand"><img class="brand-mark" src="./icon.svg" alt="" width="44" height="44"/><div class="brand-copy"><strong>CareerProof</strong><small>Personal career OS</small></div></div>
       <p class="sidebar-caption">WORKSPACE</p>
-      <nav class="side-links" aria-label="Main navigation">${navButton('home','Home','home')}${navButton('vault','Vault','vault')}${navButton('profile','Profile','user')}</nav>
-      <div class="sidebar-future"><span class="future-label">COMING IN FUTURE RELEASES</span><p>${icon('layers',17)} Experience & competencies</p><p>${icon('sparkle',17)} Career Studio</p></div>
+      <nav class="side-links" aria-label="Main navigation">${navButton('home','Home','home')}${navButton('vault','Vault','vault')}${navButton('profile','Profile','user')}${navButton('portfolio','Experience','layers')}</nav>
+      <div class="sidebar-future"><span class="future-label">COMING IN FUTURE RELEASES</span><p>${icon('layers',17)} Competency Intelligence</p><p>${icon('sparkle',17)} Career Studio</p></div>
       <div class="sidebar-bottom"><button class="sidebar-settings" data-action="settings">${icon('settings',24)} Settings ${icon('chevron',16)}</button><div class="sidebar-version">CareerProof OS <span>v${APP_VERSION}</span></div></div>
     </aside>
     <div class="content-wrap">
-      <header class="topbar"><div class="topbar-left"><span class="topbar-mark"><img src="./icon.svg" alt="CareerProof" width="36" height="36"/></span><span class="breadcrumb"><span class="workspace-label">Workspace /</span> ${screen==='home'?'Home':screen==='vault'?'Vault':'Profile'}</span></div>
+      <header class="topbar"><div class="topbar-left"><span class="topbar-mark"><img src="./icon.svg" alt="CareerProof" width="36" height="36"/></span><span class="breadcrumb"><span class="workspace-label">Workspace /</span> ${screen==='home'?'Home':screen==='vault'?'Vault':screen==='portfolio'?'Experience':'Profile'}</span></div>
       <div class="topbar-actions"><span class="local-pill">${icon('lock',13)} Local & private</span><button class="icon-button" data-action="settings" title="Settings" aria-label="Settings">${icon('settings',19)}</button><button class="button button-primary top-capture" data-action="capture">${icon('plus',17)} <span>New achievement</span></button></div></header>
-      <main class="page" id="main-content">${screen==='home'?homeView():screen==='vault'?vaultView():profileView()}</main>
+      <main class="page" id="main-content">${screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?portfolioPage(careerCollections,portfolioFilters):profileView()}</main>
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">${navButton('home','Home','home',true)}${navButton('vault','Vault','vault',true)}<button class="mobile-create" data-action="capture" aria-label="New achievement"><span class="nav-icon">${icon('plus',24)}</span><span>Add</span></button>${navButton('profile','Profile','user',true)}<button class="nav-item mobile-nav-item" data-action="settings"><span class="nav-icon">${icon('settings',24)}</span><span>Settings</span></button></nav>
     <div id="modal-layer">${modalView()}</div>${modal?'':toastView()}
@@ -159,7 +162,7 @@ function profileView():string {
   const has=Boolean(profile.displayName||profile.headline||profile.summary||profile.location||profile.email);
   return `<div class="page-heading page-heading-flex"><div><p class="eyebrow">YOUR PROFESSIONAL IDENTITY</p><h1>Career Profile</h1><p class="page-subtitle">Build a foundation that grows with your experience.</p></div><button class="button button-outline desktop-add" data-action="edit-profile">${icon('edit',17)} Edit profile</button></div>
   <div class="profile-grid"><section class="panel profile-card"><div class="profile-top"><div class="avatar">${escape(initials())}</div><div><h2>${escape(profile.displayName||'Your name')}</h2><p>${escape(profile.headline||'Add your current professional headline')}</p>${profile.location?`<span class="profile-location">${escape(profile.location)}</span>`:''}</div></div><div class="profile-section"><p class="section-kicker">ABOUT</p>${profile.summary?`<p class="profile-summary">${escape(profile.summary)}</p>`:`<p class="muted">Describe the expertise, responsibilities, and career direction that define you.</p>`}</div>${profile.email?`<div class="profile-section"><p class="section-kicker">CONTACT</p><p>${escape(profile.email)}</p></div>`:''}<button class="button button-outline" data-action="edit-profile">${icon('edit',16)} ${has?'Edit your profile':'Complete profile'}</button></section>
-  <aside class="profile-aside"><div class="panel"><div class="mini-heading">${icon('trophy',20)}<h2>Your professional story</h2></div><p class="muted">The Achievement Vault is where you can start building evidence of your experience today.</p><button class="text-action" data-action="nav" data-screen="vault">Open Vault ${icon('arrow',16)}</button></div></aside></div>${careerCollections?careerSections(profile,careerCollections):''}`;
+  <aside class="profile-aside"><div class="panel"><div class="mini-heading">${icon('trophy',20)}<h2>Your professional story</h2></div><p class="muted">The Achievement Vault is where you can start building evidence of your experience today.</p><button class="text-action" data-action="nav" data-screen="vault">Open Vault ${icon('arrow',16)}</button></div><div class="panel"><div class="mini-heading">${icon('layers',20)}<h2>Experience Portfolio</h2></div><p class="muted">Organize projects, initiatives and ongoing responsibilities, then connect evidence-backed achievements.</p><button class="button button-outline" data-action="nav" data-screen="portfolio">Open Experience Portfolio ${icon('arrow',16)}</button></div></aside></div>${careerCollections?careerSections(profile,careerCollections):''}`;
 }
 function modalView():string {
   if(!modal)return '';
@@ -170,6 +173,10 @@ function modalView():string {
   if(modal==='career'&&careerCollections){
     const record=careerCollections[careerKind].find(r=>r.id===selectedId) as CareerRecord|undefined;
     content=careerForm(careerKind,record,careerCollections,careerEmployerId);
+  }
+  if(modal==='project'&&careerCollections){
+    const record=careerCollections.projects.find(r=>r.id===selectedId);
+    content=portfolioForm(record,careerCollections);
   }
   if(modal==='settings')content=settingsView();
   if(modal==='restore')content=restoreView();
@@ -183,6 +190,7 @@ function achievementForm():string {
   return `${dialogHeader(existing?'Edit achievement':'Capture an achievement',existing?'Update the details of your contribution.':'Start with what you accomplished. Refine the details later.')}
   <form id="achievement-form" class="modal-body form-grid" novalidate>
     <div id="form-error" class="form-error" role="alert" hidden></div>
+    ${captureProjectId&&careerCollections?.projects.some(p=>p.id===captureProjectId)?`<p class="portfolio-capture-context">${icon('layers',16)} Linked experience: <strong>${escape(careerCollections.projects.find(p=>p.id===captureProjectId)?.name)}</strong></p>`:''}
     <div class="field"><label for="title">Achievement title <span class="required">*</span></label><input id="title" name="title" maxlength="160" placeholder="e.g., Resolved a critical technical issue" value="${escape(existing?.title??'')}" required/><p class="field-hint">Write a short, action-focused title.</p></div>
     <div class="field"><label for="contribution">What did you do? <span class="required">*</span></label><textarea id="contribution" name="contribution" rows="5" maxlength="6000" placeholder="Describe your personal contribution, decisions, or actions...">${escape(existing?.contribution??'')}</textarea><p class="field-hint">Required for a recorded achievement. Optional for a draft.</p></div>
     <div class="field-row"><div class="field"><label for="occurredOn">Occurrence date${dateType==='text'?' (year)':''}</label><input id="occurredOn" type="${dateType}" ${dateType==='text'?'inputmode="numeric" maxlength="4"':''} name="occurredOn" value="${escape(existing?.occurredOn??localDate())}"/></div><div class="field"><label for="impactCategory">Impact category</label><select name="impactCategory" id="impactCategory">${Object.entries(IMPACT_CATEGORIES).map(([key,value])=>`<option value="${key}" ${existing?.impactCategory===key?'selected':''}>${value}</option>`).join('')}</select></div></div>
@@ -221,13 +229,13 @@ function restoreView():string {
   const m=pendingBackup.backup.manifest;
   return `${dialogHeader('Restore career data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This replaces your current data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
 }
-function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();dialogs.update(Boolean(modal));syncCareerDisclosures(root);
+function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();dialogs.update(Boolean(modal));syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}
   if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(modal){dialogs.focusFirst();}
 }
 function toastView(inDialog=false):string{return `<div id="toast" role="status" aria-live="polite" class="toast ${inDialog?'toast-in-dialog':''} ${toastMessage?'visible':''} toast-${toastKind}">${toastMessage?`${icon(toastKind==='success'?'check':'alert',20)}<span>${escape(toastMessage)}</span>`:''}</div>`;}
 function notify(message:string,kind:'success'|'error'='success'){toastMessage=message;toastKind=kind;window.clearTimeout(toastTimer);const el=document.getElementById('toast');if(el){el.innerHTML=`${icon(kind==='success'?'check':'alert',20)}<span>${escape(message)}</span>`;el.classList.add('visible');el.classList.toggle('toast-error',kind==='error');el.classList.toggle('toast-success',kind==='success');}toastTimer=window.setTimeout(()=>{toastMessage='';document.getElementById('toast')?.classList.remove('visible');},kind==='error'?10000:5000);}
 function openModal(kind:Modal,id:string|null=null,edit=false){if(!modal)dialogs.rememberInvoker();modal=kind;selectedId=id;editing=edit;isDirty=false;render();}
-function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;render();dialogs.restoreFocus();}
+function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;captureProjectId=null;render();dialogs.restoreFocus();}
 function showError(message:string){const el=document.getElementById('form-error');if(el){el.hidden=false;el.textContent=message;el.scrollIntoView({block:'nearest',behavior:'smooth'});}else notify(message,'error');}
 function setSaving(value:boolean){saving=value;const dialog=document.querySelector<HTMLElement>('.modal');dialog?.setAttribute('aria-busy',String(value));for(const button of dialog?.querySelectorAll<HTMLButtonElement>('button[data-action]')??[])button.disabled=value;}
 function readAchieveInput(status:'draft'|'recorded') {
@@ -239,8 +247,8 @@ async function saveAchievementForm(status:'draft'|'recorded'){
   if(saving)return;setSaving(true);
   try{const input=readAchieveInput(status);const errors=validateAchievementInput(input);if(errors.length){showError(errors.join(' '));return;}
     const existing=editing&&selectedId?achievements.find(x=>x.id===selectedId):undefined;
-    const record=await saveAchievement({id:existing?.id??crypto.randomUUID(),revision:existing?.revision??0,title:input.title,contribution:input.contribution,occurredOn:input.occurredOn,status,preArchiveStatus:null,outcome:input.outcome,impactCategory:input.impactCategory as Achievement['impactCategory']});
-    achievements=await listAchievements();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
+    const record=await saveAchievement({id:existing?.id??crypto.randomUUID(),revision:existing?.revision??0,title:input.title,contribution:input.contribution,occurredOn:input.occurredOn,status,preArchiveStatus:null,outcome:input.outcome,impactCategory:input.impactCategory as Achievement['impactCategory']},captureProjectId??undefined);
+    achievements=await listAchievements();if(captureProjectId)await loadCareerCollections();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
 async function saveProfileForm(){if(saving)return;setSaving(true);try{
@@ -282,6 +290,37 @@ async function deleteCareer(kind:CareerKind,id:string){
   catch(err){notify(errorMessage(err),'error');}
 }
 
+async function saveProjectForm(){
+  if(saving||!careerCollections)return;
+  setSaving(true);
+  try{
+    const form=document.getElementById('portfolio-form') as HTMLFormElement|null;
+    if(!form)throw new ValidationError('Experience form is unavailable.');
+    const prior=careerCollections.projects.find(r=>r.id===selectedId);
+    const input=readPortfolioForm(form,prior);
+    await database.savePortfolioProject(input.record,input.roleIds);
+    await loadCareerCollections();
+    closeModal(true);notify('Experience saved.');
+  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+}
+async function removeProject(id:string){
+  if(saving||!careerCollections)return;
+  const project=careerCollections.projects.find(p=>p.id===id);
+  if(!project){notify('Experience no longer exists. Reload the page.','error');return;}
+  const linked=careerCollections.recordLinks.filter(l=>l.targetId===id&&(l.linkType==='role-project'||l.linkType==='achievement-project'));
+  if(linked.length){
+    const roles=linked.filter(l=>l.linkType==='role-project').length,achievements=linked.length-roles;
+    notify('Cannot delete: '+roles+' linked role(s) and '+achievements+' linked achievement(s). Unlink them before deleting this experience.','error');
+    return;
+  }
+  if(!window.confirm('Permanently delete "'+project.name+'"? This cannot be undone.'))return;
+  try{await database.removeRecord('projects',id,project.revision);await loadCareerCollections();render();notify('Experience deleted.');}
+  catch(err){notify(errorMessage(err),'error');}
+}
+function refreshPortfolioCards(){
+  const target=document.getElementById('portfolio-results');
+  if(target&&careerCollections)target.innerHTML=portfolioCards(careerCollections,portfolioFilters);
+}
 function errorMessage(err:unknown):string{return err instanceof Error?err.message:'An unexpected error occurred.';}
 async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;if(modal==='settings')render(true);notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
 async function doFileRestore(file:File){try{pendingBackup=await parseBackupFile(file);openModal('restore');}catch(err){notify(`Cannot restore: ${errorMessage(err)}`,'error');}}
@@ -298,7 +337,13 @@ function focusables():HTMLElement[]{return Array.from(document.querySelectorAll<
 function runAction(node:HTMLElement){
   const action=node.dataset.action;switch(action){
     case 'nav':navigate(node.dataset.screen as Screen);break;
-    case 'capture':openModal('capture');break;
+    case 'capture':captureProjectId=null;openModal('capture');break;
+    case 'add-project':openModal('project');break;
+    case 'edit-project':openModal('project',node.dataset.id??null,true);break;
+    case 'save-project':void saveProjectForm();break;
+    case 'remove-project':void removeProject(node.dataset.id??'');break;
+    case 'portfolio-achievement':openModal('detail',node.dataset.id??null);break;
+    case 'project-capture':captureProjectId=node.dataset.id??null;openModal('capture');break;
     case 'edit-profile':openModal('profile');break;
     case 'add-career':openCareer(node.dataset.kind as CareerKind,null,node.dataset.employer);break;
     case 'edit-career':openCareer(node.dataset.kind as CareerKind,node.dataset.id??null);break;
@@ -332,8 +377,8 @@ document.addEventListener('click',e=>{
   const actionTarget=resolveActionTarget(e.target);
   if(actionTarget)runAction(actionTarget);
 });
-document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form'))isDirty=true;if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
-document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){void setTheme(t.value);}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.dataset.action==='career-date-precision'){
+document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
+document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='portfolio-filter-type'){portfolioFilters.type=t.value;refreshPortfolioCards();}if(t.id==='portfolio-filter-status'){portfolioFilters.status=t.value;refreshPortfolioCards();}if(t.id==='portfolio-employerId'){const form=t.closest('form');if(form)updatePortfolioRoleChoices(form);}if(t.dataset.action==='portfolio-date-precision'){const target=t.dataset.target??'';const input=document.getElementById('portfolio-'+target) as HTMLInputElement|null;if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}}if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){void setTheme(t.value);}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.dataset.action==='career-date-precision'){
     const target=t.dataset.target??'';
     const input=document.getElementById('career-'+target) as HTMLInputElement|null;
     if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}
@@ -341,8 +386,8 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
   if(t.id==='career-isCurrent'&&t instanceof HTMLInputElement&&t.checked){
     const end=document.getElementById('career-endDate') as HTMLInputElement|null;if(end)end.value='';
   }
-  if(t.closest('#achievement-form,#profile-form,#career-form'))isDirty=true;});
-document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}});
+  if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form'))isDirty=true;});
+document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}});
 document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('resize',()=>syncCareerDisclosures(root),{passive:true});
 window.addEventListener('hashchange',()=>{const next=currentNav();if(next===screen)return;screen=next;if(!modal)render();});
