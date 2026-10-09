@@ -1,0 +1,16 @@
+{
+  "name": "careerproof-os",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "CareerProof OS — local-first career achievement PWA",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "preview": "npx http-server dist -p 4173 -c-1"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
