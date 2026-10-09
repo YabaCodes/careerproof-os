@@ -46,7 +46,7 @@ test('employers group multiple overlapping roles; primary role stays consistent'
   expect(before.employers).toHaveLength(1);
   expect(before.roles).toHaveLength(2);
   expect(before.roles.every(r=>r.employerId===before.employers[0].id&&r.isCurrent&&r.endDate===null)).toBe(true);
-  await page.locator('[data-action=edit-career][data-kind=roles][data-id='+before.roles[1].id+']').click();
+  await page.locator('[data-action="edit-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
   await page.locator('#career-isPrimary').check();
   await save(page);
   const after=await snapshot(page);
@@ -60,14 +60,14 @@ test('employers group multiple overlapping roles; primary role stays consistent'
   await page.locator('[data-action=delete-career][data-kind=employers]').click();
   const present=await snapshot(page);expect(present.employers).toHaveLength(1);
   // A designated primary role must be explicitly cleared before deletion.
-  await page.locator('[data-action=delete-career][data-kind=roles][data-id='+before.roles[1].id+']').click();
+  await page.locator('[data-action="delete-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
   expect((await snapshot(page)).roles).toHaveLength(2);
-  await page.locator('[data-action=edit-career][data-kind=roles][data-id='+before.roles[1].id+']').click();
+  await page.locator('[data-action="edit-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
   await page.locator('#career-isPrimary').uncheck();
   await save(page);
   expect((await snapshot(page)).profiles[0].primaryRoleId).toBeNull();
   page.once('dialog',dialog=>dialog.accept());
-  await page.locator('[data-action=delete-career][data-kind=roles][data-id='+before.roles[1].id+']').click();
+  await page.locator('[data-action="delete-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
   await expect.poll(async()=>(await snapshot(page)).roles.length).toBe(1);
 });
 
@@ -164,9 +164,9 @@ test('career forms stay contained on mobile and preserve unsaved edits',async({p
   const geometry=await page.locator('#career-form').evaluate(el=>({scrollWidth:el.scrollWidth,width:el.clientWidth}));
   expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.width);
   page.once('dialog',d=>d.dismiss());
-  await page.locator('[data-action=close]').click();
+  await page.locator('.modal .close-dialog').click();
   await expect(page.locator('#career-institution')).toHaveValue('Unsaved University');
   page.once('dialog',d=>d.accept());
-  await page.locator('[data-action=close]').click();
+  await page.locator('.modal .close-dialog').click();
   await expect(page.locator('#career-form')).toHaveCount(0);
 });
