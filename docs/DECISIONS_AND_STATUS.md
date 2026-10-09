@@ -132,3 +132,8 @@ The user's physical iPhone CP-011B check found that expanded employer biographie
 ## 2026-10-09 — CP-011B.2 iPhone PWA update visibility
 
 PR #10 (alpha.6) deployed successfully, but the user's installed iPhone Home Screen PWA continued running an older version for roughly 30 minutes while Safari showed alpha.6. The app had no controlled update notification, explicit service-worker update check or user-safe restart action. Proposed alpha.7 adds resume/check/restart controls, without automatic page reload, data migration, schema or backup changes. This PR remains subject to CI and physical iPhone verification. Do not uninstall the installed PWA to update it.
+
+
+## CP-011C — Experience Portfolio awaiting merge and device acceptance
+
+The user verified CP-011B education, certification, backup export and installed PWA operation on their iPhone and authorized CP-011C. Proposed alpha.8 adds a compact Portfolio screen under Profile plus desktop navigation, precise Project/Initiative/Ongoing Responsibility forms, transactional role-project links and project-context achievement capture. It must not create duplicate employer names or expose confidential company data. Schema 2 and backup 2 remain unchanged. User merge and CP-C201–209 acceptance must precede CP-011D.
