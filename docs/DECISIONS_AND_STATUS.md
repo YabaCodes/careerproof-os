@@ -127,3 +127,8 @@ The user confirmed CP-011A.3 iPhone keyboard/Outcome visibility on alpha.4. CP-0
 ## 2026-10-09 — CP-011B.1 compact Career Profile correction
 
 The user's physical iPhone CP-011B check found that expanded employer biographies and long role responsibilities made it impossible to glance at the full employment timeline. The corrective alpha.6 PR clamps the descriptions to two lines, keeps titles, dates, employment types and primary-role badges immediately visible, and adds scoped **… More / Less** expansion. All original content and data contracts remain intact. Physical iPhone acceptance and CP-011B sign-off remain pending, so CP-011C is not authorized yet.
+
+
+## 2026-10-09 — CP-011B.2 iPhone PWA update visibility
+
+PR #10 (alpha.6) deployed successfully, but the user's installed iPhone Home Screen PWA continued running an older version for roughly 30 minutes while Safari showed alpha.6. The app had no controlled update notification, explicit service-worker update check or user-safe restart action. Proposed alpha.7 adds resume/check/restart controls, without automatic page reload, data migration, schema or backup changes. This PR remains subject to CI and physical iPhone verification. Do not uninstall the installed PWA to update it.

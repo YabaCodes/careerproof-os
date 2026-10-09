@@ -29,6 +29,10 @@ let filterStatus='active';
 let sortOrder='recent';
 let theme=localStorage.getItem('careerproof-theme')||'system';
 let lastExportAt:string|null=null;
+let pwaUpdateReady=false;
+let pwaRegistration:ServiceWorkerRegistration|null=null;
+let pwaLastCheck=0;
+let pwaHadController=false;
 let toastTimer:number|undefined;
 let toastMessage='';
 let toastKind:'success'|'error'='success';
@@ -44,6 +48,64 @@ function currentNav():Screen {const name=location.hash.replace('#/','');return n
 function applyTheme(){document.documentElement.dataset.theme=theme;}
 async function setTheme(value:string){if(!['system','light','dark'].includes(value))return;try{await setMeta('preferences',{theme:value});theme=value;localStorage.setItem('careerproof-theme',theme);applyTheme();}catch(err){notify(errorMessage(err),'error');}}
 function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${screen===id?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
+function pwaUpdateNotice():string {
+  return pwaUpdateReady?'<div id="pwa-update-notice" class="pwa-update-notice" role="status" aria-live="polite"><div><strong>New version ready</strong><p>Restart CareerProof to load the update. Your saved career records stay on this device.</p></div><button class="button button-primary" data-action="reload-update">Restart app</button></div>':'';
+}
+function displayPwaUpdateNotice(){
+  pwaUpdateReady=true;
+  // Never rerender an active editor merely because a new worker activated.
+  if(!document.getElementById('pwa-update-notice'))root.insertAdjacentHTML('beforeend',pwaUpdateNotice());
+  const message=document.getElementById('pwa-update-status');
+  if(message)message.textContent='Update ready. Close Settings to access Restart app.';
+}
+async function checkPwaUpdates(userInitiated=false):Promise<void>{
+  if(!('serviceWorker' in navigator)){
+    if(userInitiated)notify('Updates are unavailable in this browser.','error');return;
+  }
+  if(!navigator.onLine){
+    if(userInitiated)notify('Connect to the internet to check for app updates.','error');return;
+  }
+  if(!userInitiated&&Date.now()-pwaLastCheck<5*60*1000)return;
+  pwaLastCheck=Date.now();
+  try {
+    // The service-worker script is fetched outside the app's cache-first
+    // handler. updateViaCache:none ensures an HTTP-cache bypass where supported.
+    const registration=pwaRegistration??await navigator.serviceWorker.getRegistration('./');
+    if(!registration){
+      if(userInitiated)notify('No app update registration found. Try reopening CareerProof.','error');
+      return;
+    }
+    pwaRegistration=registration;
+    await registration.update();
+    if(userInitiated){
+      const status=document.getElementById('pwa-update-status');
+      if(status)status.textContent=pwaUpdateReady?'Update ready. Close Settings to restart.':'Update check completed. We will show a restart button when a newer version is ready.';
+      notify(pwaUpdateReady?'New version ready. Close Settings to restart.':'Update check completed. We will notify you if a newer version activates.');
+    }
+  }catch{
+    if(userInitiated)notify('Update check failed. Keep your data and try again with an internet connection.','error');
+  }
+}
+function configurePwaUpdates():void {
+  if(!('serviceWorker' in navigator)||location.protocol==='file:')return;
+  pwaHadController=Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    // Initial SW installation also raises controllerchange. It is NOT an
+    // application update and must not prompt users to restart.
+    if(pwaHadController)displayPwaUpdateNotice();
+    pwaHadController=true;
+  });
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(registration=>{
+    pwaRegistration=registration;
+    void checkPwaUpdates();
+  }).catch(()=>{/* Local records and offline usage remain available. */});
+  // Installed iOS PWAs often stay suspended in memory. Explicitly check on
+  // foreground/resume, throttled to avoid repeated network requests.
+  document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden)void checkPwaUpdates();
+  });
+  window.addEventListener('pageshow',()=>{void checkPwaUpdates();});
+}
 function shell():string {
   return `<div class="app-shell">
     <aside class="sidebar" aria-label="Primary navigation">
@@ -152,14 +214,14 @@ function settingsView():string {
   return `${dialogHeader('Settings & data','Your workspace preferences and data controls.')}
   <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line"><div><strong>Color theme</strong><p>Choose your preferred display style.</p></div><select id="theme-select" aria-label="Color theme"><option value="system" ${theme==='system'?'selected':''}>System</option><option value="light" ${theme==='light'?'selected':''}>Light</option><option value="dark" ${theme==='dark'?'selected':''}>Dark</option></select></div></div>
   <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
-  <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
+  <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="settings-line"><div><strong>Check for updates</strong><p id="pwa-update-status">Checks for a new release without removing the installed app or local records.</p></div><button class="button button-outline" data-action="check-updates">Check now</button></div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
 }
 function restoreView():string {
   if(!pendingBackup)return '';
   const m=pendingBackup.backup.manifest;
   return `${dialogHeader('Restore career data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This replaces your current data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
 }
-function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';root.classList.remove('app-loading');root.innerHTML=shell();dialogs.update(Boolean(modal));syncCareerDisclosures(root);
+function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();dialogs.update(Boolean(modal));syncCareerDisclosures(root);
   if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(modal){dialogs.focusFirst();}
 }
 function toastView(inDialog=false):string{return `<div id="toast" role="status" aria-live="polite" class="toast ${inDialog?'toast-in-dialog':''} ${toastMessage?'visible':''} toast-${toastKind}">${toastMessage?`${icon(toastKind==='success'?'check':'alert',20)}<span>${escape(toastMessage)}</span>`:''}</div>`;}
@@ -244,6 +306,13 @@ function runAction(node:HTMLElement){
     case 'delete-career':void deleteCareer(node.dataset.kind as CareerKind,node.dataset.id??'');break;
     case 'save-career':void saveCareerForm();break;
     case 'settings':openModal('settings');break;
+    case 'check-updates':void checkPwaUpdates(true);break;
+    case 'reload-update':
+      if(!pwaUpdateReady)return;
+      if(saving){notify('Finish the current save before restarting.','error');return;}
+      if(isDirty&&!window.confirm('You have unsaved changes. Discard them and restart to update?'))return;
+      window.location.reload();
+      break;
     case 'close':closeModal();break;
     case 'backdrop':if(node.classList.contains('modal-backdrop'))closeModal();break;
     case 'detail':openModal('detail',node.dataset.id??null);break;
@@ -281,6 +350,6 @@ function renderStartupError(err:unknown){root.classList.remove('app-loading');ro
 async function start(){try{
   dialogs.trackViewport();
   applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);await loadCareerCollections();screen=currentNav();render();
-  if('serviceWorker' in navigator&&location.protocol!=='file:'){navigator.serviceWorker.register('./sw.js').catch(()=>{/* app remains usable online */});}
+  configurePwaUpdates();
 }catch(err){renderStartupError(err);}}
 void start();

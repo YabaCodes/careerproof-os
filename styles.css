@@ -421,3 +421,38 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 }
 .career-more:hover { text-decoration: underline; }
 .career-more:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 3px; }
+
+
+/* CP-011B.2 — Explicit PWA updates; do not cover editing dialogs or mobile nav. */
+.pwa-update-notice {
+  position: fixed;
+  z-index: 35;
+  right: 20px;
+  bottom: 20px;
+  width: min(450px,calc(100vw - 32px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--teal);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.pwa-update-notice strong { font-size: var(--type-body); }
+.pwa-update-notice p { margin: 3px 0 0; color: var(--muted); line-height: 1.45; font-size: var(--type-meta); }
+.pwa-update-notice .button { flex: none; min-height: 44px; }
+@media(max-width:767px) {
+  .pwa-update-notice {
+    left: 16px;
+    right: 16px;
+    bottom: calc(var(--nav-content-height) + 12px + var(--safe-bottom));
+    width: auto;
+  }
+}
+@media(max-width:359px) {
+  .pwa-update-notice { align-items: stretch; flex-direction: column; }
+  .pwa-update-notice .button { width: 100%; }
+}
