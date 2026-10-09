@@ -1,5 +1,15 @@
 # CareerProof release notes
 
+## 0.1.1-alpha.6 — CP-011B.1 Compact Career Timeline (review)
+
+- Addresses iPhone feedback that full employer descriptions and role responsibilities make Employment History too long to scan.
+- Shows employer name, industry/location, role title, start/end/current dates, employment type and primary-role badge immediately. Each description is clamped to **two visible lines** by default.
+- Adds an independent, keyboard-accessible **… More / Less** action only when the description is visibly truncated or the record has optional hidden details. Expansion reveals the complete original text and associated secondary details without opening a modal or modifying persisted data.
+- Applies the same disclosure pattern to education descriptions and credential notes. Employer website, leadership scope, technologies, honors and verification details are available on expansion instead of crowding the overview.
+- Preserves compact mobile navigation, approved branding, form input behavior, IndexedDB schema 2, JSON backup format 2, stable record IDs and all previously entered descriptions.
+- Bumps app and service-worker cache to alpha.6; adds synthetic mobile/theme/regression coverage. Native iPhone acceptance is required before continuing CP-011C.
+
+
 ## 0.1.1-alpha.5 — CP-011B Career History & Qualifications (PR review)
 
 - Adds employer/role history with multiple promotions/overlapping current roles, a primary-role setting, optional qualifications and credential data to Career Profile. No new mobile nav destination.
