@@ -35,3 +35,8 @@ The authoritative tokens and component rules live in `styles.css`. Reuse them fo
 `public/icon.svg` is the selected editable monogram. `npm run brand:assets` regenerates 192/512 PNGs, opaque maskable 512, opaque Apple touch 180 and transparent-corner 16/32 favicons. The separately generated `icon-maskable.svg` scales the symbol inward; its important content fits within the central 80% mask-safe circle. Platforms apply their own corner masks.
 
 App/runtime dependencies remain unchanged. Rendering tools are development-only. Run `npm run brand:review` to refresh the selected-logo/icon-family review sheet.
+
+
+## CP-011A.3 keyboard-visible content rule
+
+With the iPhone keyboard visible, the modal-body is the **only** scrollport moved to reveal the active form field. Keep a label and enough of the editable control visible, preserve the fixed footer, and do not pan the locked background. Use VisualViewport dimensions and a post-layout adjustment rather than hardcoding keyboard heights or model-specific offsets. Native textarea caret scrolling remains independent. See [keyboard-specific acceptance](IOS_KEYBOARD_OUTCOME_CP_011A_3.md).
