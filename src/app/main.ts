@@ -39,6 +39,7 @@ let filterDateStart='';
 let filterDateEnd='';
 let skillQuery='';
 let skillCategory='';
+let skillShowArchived=false;
 let sortOrder='recent';
 let theme=localStorage.getItem('careerproof-theme')||'system';
 let lastExportAt:string|null=null;
@@ -131,7 +132,7 @@ function shell():string {
     <div class="content-wrap">
       <header class="topbar"><div class="topbar-left"><span class="topbar-mark"><img src="./icon.svg" alt="CareerProof" width="36" height="36"/></span><span class="breadcrumb"><span class="workspace-label">Workspace /</span> ${screen==='home'?'Home':screen==='vault'?'Vault':screen==='portfolio'?'Experience':screen==='competencies'?'Competencies':'Profile'}</span></div>
       <div class="topbar-actions"><span class="local-pill">${icon('lock',13)} Local & private</span><button class="icon-button" data-action="settings" title="Settings" aria-label="Settings">${icon('settings',19)}</button><button class="button button-primary top-capture" data-action="capture">${icon('plus',17)} <span>New achievement</span></button></div></header>
-      <main class="page" id="main-content">${screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?portfolioPage(careerCollections,portfolioFilters):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory):profileView()}</main>
+      <main class="page" id="main-content">${screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?portfolioPage(careerCollections,portfolioFilters):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived):profileView()}</main>
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">${navButton('home','Home','home',true)}${navButton('vault','Vault','vault',true)}<button class="mobile-create" data-action="capture" aria-label="New achievement"><span class="nav-icon">${icon('plus',24)}</span><span>Add</span></button>${navButton('profile','Profile','user',true)}<button class="nav-item mobile-nav-item" data-action="settings"><span class="nav-icon">${icon('settings',24)}</span><span>Settings</span></button></nav>
     <div id="modal-layer">${modalView()}</div>${modal?'':toastView()}
@@ -357,7 +358,7 @@ async function removeProject(id:string){
 }
 function refreshCompetencies(){
   const target=document.querySelector<HTMLElement>('.skill-groups');
-  if(target&&careerCollections)target.innerHTML=competencyGroups(careerCollections,skillQuery,skillCategory);
+  if(target&&careerCollections)target.innerHTML=competencyGroups(careerCollections,skillQuery,skillCategory,skillShowArchived);
 }
 function refreshPortfolioCards(){
   const target=document.getElementById('portfolio-results');
@@ -376,12 +377,13 @@ async function saveCustomSkill(){
     await loadCareerCollections();closeModal(true);notify('Competency saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
-async function archiveCustomSkill(id:string){
+async function changeCustomSkillStatus(id:string,status:'active'|'archived'){
   if(!careerCollections||saving)return;
   const skill=careerCollections.competencies.find(r=>r.id===id);
-  if(!skill||skill.isBuiltIn)return notify('Only custom competencies can be archived.','error');
-  if(!window.confirm('Archive custom competency "'+skill.name+'"? Linked achievements will remain recorded.'))return;
-  try{await database.saveRecord('competencies',{...skill,status:'archived'});await loadCareerCollections();render();notify('Custom competency archived.');}
+  if(!skill||skill.isBuiltIn)return notify('Only custom competencies can change archive status.','error');
+  if(skill.status===status)return;
+  if(status==='archived'&&!window.confirm('Archive custom competency "'+skill.name+'"? Linked achievements will remain recorded.'))return;
+  try{await database.saveRecord('competencies',{...skill,status});await loadCareerCollections();render();notify(status==='archived'?'Custom competency archived.':'Custom competency restored.');}
   catch(err){notify(errorMessage(err),'error');}
 }
 function errorMessage(err:unknown):string{return err instanceof Error?err.message:'An unexpected error occurred.';}
@@ -404,7 +406,8 @@ function runAction(node:HTMLElement){
     case 'add-competency':openModal('competency');break;
     case 'edit-competency':openModal('competency',node.dataset.id??null,true);break;
     case 'save-competency':void saveCustomSkill();break;
-    case 'archive-competency':void archiveCustomSkill(node.dataset.id??'');break;
+    case 'archive-competency':void changeCustomSkillStatus(node.dataset.id??'','archived');break;
+    case 'restore-competency':void changeCustomSkillStatus(node.dataset.id??'','active');break;
     case 'competency-achievement':openModal('detail',node.dataset.id??null);break;
     case 'add-rich-metric':document.getElementById('rich-metrics')?.insertAdjacentHTML('beforeend',metricRow());isDirty=true;break;
     case 'add-rich-evidence':document.getElementById('rich-evidence')?.insertAdjacentHTML('beforeend',evidenceRow());isDirty=true;break;
@@ -449,7 +452,7 @@ document.addEventListener('click',e=>{
   if(actionTarget)runAction(actionTarget);
 });
 document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
-document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;refreshCompetencies();}
+document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;refreshCompetencies();}if(t.id==='competency-archived'){skillShowArchived=(t as HTMLInputElement).checked;refreshCompetencies();}
   if(t.id==='rich-primaryProjectId'||t.name==='projectId')isDirty=true;
   if(t.name==='projectId'){const form=t.closest('form');if(form)updatePrimaryOptions(form);}
   if(t.id==='role-filter'){filterRole=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}
