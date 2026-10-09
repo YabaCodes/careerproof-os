@@ -1,5 +1,15 @@
 # CareerProof release notes
 
+## 0.1.1-alpha.7 — CP-011B.2 Installed PWA update controls (review)
+
+- Investigated an iPhone Home Screen PWA staying on alpha.5 for ~30 minutes while Safari already displayed alpha.6. The alpha.6 Pages deployment was successful; the app uses an offline cache-first service worker, without a controlled client update notification.
+- Check the service worker on PWA launch, foreground return and pageshow (with five-minute throttle); register with HTTP-cache-bypassing update policy where supported.
+- Add **Check now** in Settings and an optional **New version ready → Restart app** banner when a newer controller activates. Never automatically reload or remove the PWA; protect an unsaved editor with a confirmation and block during pending saves.
+- Keep the service-worker cache-first offline strategy, schema version 2, backup format 2, achievements and all Career History data unchanged. Bump app and offline shell to alpha.7.
+- This is a prevention mechanism for future releases; it cannot retroactively make an old alpha.5 app expose a Check now button before its next update. Close/reopen the existing installed PWA to trigger the first update, not reinstall it.
+- Physical Safari/Home Screen app verification remains required before accepting the hotfix.
+
+
 ## 0.1.1-alpha.6 — CP-011B.1 Compact Career Timeline (review)
 
 - Addresses iPhone feedback that full employer descriptions and role responsibilities make Employment History too long to scan.
