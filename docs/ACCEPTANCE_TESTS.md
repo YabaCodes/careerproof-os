@@ -9,6 +9,23 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-011D — rich achievements and competencies (alpha.9, device gate)
+
+User confirmed that CP-011C Experience creation/editing, role association and linked achievement capture work on their physical iPhone before authorizing this checkpoint.
+
+- [ ] D201: Settings alpha.9 and all previous source records remain intact.
+- [ ] D202: Expand optional advanced achievement fields; the quick-entry path and Outcome keyboard remain usable.
+- [ ] D203: Edit pre-existing achievement, metric and evidence; invalid URLs/numbers reject edits with no data loss.
+- [ ] D204: Select employment role, multiple Experiences, primary project and competencies; linked examples remain correct after reload.
+- [ ] D205: Browse seeded competency taxonomy, add/edit/archive custom skill; no proficiency claims.
+- [ ] D206: Vault role/project/skill/date/status filters correctly narrow records without altering them.
+- [ ] D207: Archive/restore maintains all links and evidence; destructive tests use synthetic records only.
+- [ ] D208: Backup format 2 contains enriched achievements, metrics, evidence and links; never restore into live data merely to check.
+- [ ] D209: Light/dark, 320–430px layout, keyboard, offline PWA and update controls pass.
+
+See [CP-011D implementation and iPhone guide](CP_011D_ACHIEVEMENT_INTELLIGENCE.md). No Home Screen PWA reinstall, browser storage reset, or real employer information in public test fixtures.
+
+
 ## CP-011C Experience Portfolio — alpha.8, iPhone acceptance pending
 
 The user accepted CP-011B education, credentials, exports and alpha.7 updates on the physical iPhone; next milestone CP-011C focuses on the Portfolio and cross-record integrity.
