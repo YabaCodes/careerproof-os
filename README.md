@@ -1,8 +1,8 @@
-# CareerProof OS — v0.1.1-alpha.1 (CP-011A)
+# CareerProof OS — v0.1.1-alpha.2 (CP-011A.1)
 
 **Own your experience. Prove your impact.**
 
-A privacy-first, local-only professional achievement PWA. This branch adds the database migration and recovery foundation to the existing capture PWA. The complete v0.1.1 feature milestone remains in progress; deployment requires user review and merge.
+A privacy-first, local-only professional achievement PWA. This branch stabilizes the existing UI and applies selected branding on top of the merged migration and recovery foundation. The complete v0.1.1 feature milestone remains in progress; deployment requires user review and merge.
 
 ## Existing workflows retained
 - Personal career profile: display name, headline, summary, professional email, location.
@@ -31,6 +31,8 @@ npm run preview
 
 The compiled static site is in `dist/`. Open the preview URL (typically `http://127.0.0.1:4173`). Do not open `dist/index.html` directly as a `file://` URL: browser modules, service workers and persistence may not work as expected.
 
+Regenerate selected platform icons with `npm run brand:assets`, the review sheet with `npm run brand:review`, and synthetic UI screenshots with `npm run audit:ui`.
+
 ## Review and deployment
 
 Work on a feature branch and open a PR targeting main. PR checks build and run all automated tests without publishing. **The user reviews and merges**; do not deploy directly. After an approved merge, the existing GitHub Actions workflow deploys compiled dist/ to GitHub Pages. Pages must use GitHub Actions, not the repository root.
@@ -58,13 +60,16 @@ Restoring a backup **replaces** all local career collections and portable prefer
 - `src/domain`: stable record types, validation rules, application-independent logic.
 - `src/data`: IndexedDB repositories and backup logic.
 - `src/app`: UI, navigation and event management.
-- `src/ui`: reusable icon helpers.
+- `src/ui`: shared icons, action routing and dialog lifecycle.
 - `styles.css`: centralized responsive design system.
-- `public/`: PWA manifest, offline worker, icon.
+- `public/`: PWA manifest, offline worker and platform icon assets.
 - `tests/`: automated validation and backup-format tests.
 
-App version `0.1.1-alpha.1` · database schema version `2` · JSON backup format `2` (also imports legacy format `1`).
+App version `0.1.1-alpha.2` · database schema version `2` · JSON backup format `2` (also imports legacy format `1`).
 
 ## Next increment
+
+CP-011B is paused until this UI checkpoint is merged and verified on iPhone. Review the [UI audit](docs/UI_AUDIT_CP_011A_1.md), [screenshots](docs/UI_VISUAL_REVIEW.md), [branding](docs/BRANDING_REVIEW.md) and [test results](docs/UI_REGRESSION_REPORT.md).
+
 
 **v0.1.1 — Professional Experience & Evidence:** roles/employers, education, credentials, portfolio, competency tags and related achievement links. Schema changes will use migrations and must preserve existing data.

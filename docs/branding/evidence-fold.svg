@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Evidence Fold concept">
+ <rect width="512" height="512" rx="112" fill="#142C40"/>
+ <path d="M144 136h160l64 64v176H144Z" fill="#FFFFFF"/>
+ <path d="M304 136v64h64" fill="#6FD0C2"/>
+ <path d="m193 279 41 41 83-90" fill="none" stroke="#176B73" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

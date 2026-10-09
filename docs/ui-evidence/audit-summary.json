@@ -1,0 +1,32 @@
+{
+  "baselineCommit": "35e676f4b1ec5474f719007a09acee3aaed62ee5",
+  "proposedVersion": "0.1.1-alpha.2",
+  "widths": [
+    320,
+    375,
+    390,
+    430,
+    768,
+    1024,
+    1440
+  ],
+  "height": 900,
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "before": {
+    "screenshots": 252,
+    "navigationGapEncounters": 6,
+    "overflowingStates": 80,
+    "outsideViewportStates": 28,
+    "undersizedTargetStates": 252
+  },
+  "after": {
+    "screenshots": 252,
+    "navigationGapEncounters": 0,
+    "overflowingStates": 0,
+    "outsideViewportStates": 0,
+    "undersizedTargetStates": 0
+  }
+}

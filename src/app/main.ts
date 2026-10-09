@@ -5,6 +5,7 @@ import { createBackup, downloadBackup, parseBackupFile, restoreBackup, type Prep
 import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
+import { DialogController } from '../ui/dialog.js';
 
 type Screen='home'|'vault'|'profile';
 type Modal='capture'|'detail'|'profile'|'settings'|'restore'|null;
@@ -16,7 +17,7 @@ let modal:Modal=null;
 let selectedId:string|null=null;
 let editing=false;
 let isDirty=false;
-let openInvoker:HTMLElement|null=null;
+const dialogs=new DialogController();
 let pendingBackup:PreparedBackup|null=null;
 let saving=false;
 let searchText='';
@@ -25,6 +26,8 @@ let sortOrder='recent';
 let theme=localStorage.getItem('careerproof-theme')||'system';
 let lastExportAt:string|null=null;
 let toastTimer:number|undefined;
+let toastMessage='';
+let toastKind:'success'|'error'='success';
 const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships'};
 
 function escape(value:unknown):string {return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]!));}
@@ -36,23 +39,23 @@ function initials():string {return profile.displayName.trim().split(/\s+/).slice
 function currentNav():Screen {const name=location.hash.replace('#/','');return name==='vault'||name==='profile'?name:'home';}
 function applyTheme(){document.documentElement.dataset.theme=theme;}
 async function setTheme(value:string){if(!['system','light','dark'].includes(value))return;try{await setMeta('preferences',{theme:value});theme=value;localStorage.setItem('careerproof-theme',theme);applyTheme();}catch(err){notify(errorMessage(err),'error');}}
-function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${screen===id?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${icon(glyph,mobile?21:19)}<span>${label}</span></button>`;}
+function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${screen===id?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
 function shell():string {
   return `<div class="app-shell">
     <aside class="sidebar" aria-label="Primary navigation">
-      <div class="brand"><div class="brand-mark">${icon('shield',25)}</div><div class="brand-copy"><strong>CareerProof</strong><small>PERSONAL CAREER OS</small></div></div>
+      <div class="brand"><img class="brand-mark" src="./icon.svg" alt="" width="44" height="44"/><div class="brand-copy"><strong>CareerProof</strong><small>Personal career OS</small></div></div>
       <p class="sidebar-caption">WORKSPACE</p>
-      <nav class="side-links" aria-label="Main navigation">${navButton('home','Home','home')}${navButton('vault','Achievement Vault','vault')}${navButton('profile','Career Profile','user')}</nav>
+      <nav class="side-links" aria-label="Main navigation">${navButton('home','Home','home')}${navButton('vault','Vault','vault')}${navButton('profile','Profile','user')}</nav>
       <div class="sidebar-future"><span class="future-label">COMING IN FUTURE RELEASES</span><p>${icon('layers',17)} Experience & competencies</p><p>${icon('sparkle',17)} Career Studio</p></div>
-      <div class="sidebar-bottom"><button class="sidebar-settings" data-action="settings">${icon('settings',18)} Settings ${icon('chevron',15)}</button><div class="sidebar-version">CareerProof OS <span>v${APP_VERSION}</span></div></div>
+      <div class="sidebar-bottom"><button class="sidebar-settings" data-action="settings">${icon('settings',24)} Settings ${icon('chevron',16)}</button><div class="sidebar-version">CareerProof OS <span>v${APP_VERSION}</span></div></div>
     </aside>
     <div class="content-wrap">
-      <header class="topbar"><div class="topbar-left"><span class="topbar-mark">CP<span class="topbar-mark-dot">.</span></span><span class="breadcrumb">Workspace <span>/</span> ${screen==='home'?'Home':screen==='vault'?'Achievement Vault':'Career Profile'}</span></div>
+      <header class="topbar"><div class="topbar-left"><span class="topbar-mark"><img src="./icon.svg" alt="CareerProof" width="36" height="36"/></span><span class="breadcrumb"><span class="workspace-label">Workspace /</span> ${screen==='home'?'Home':screen==='vault'?'Vault':'Profile'}</span></div>
       <div class="topbar-actions"><span class="local-pill">${icon('lock',13)} Local & private</span><button class="icon-button" data-action="settings" title="Settings" aria-label="Settings">${icon('settings',19)}</button><button class="button button-primary top-capture" data-action="capture">${icon('plus',17)} <span>New achievement</span></button></div></header>
       <main class="page" id="main-content">${screen==='home'?homeView():screen==='vault'?vaultView():profileView()}</main>
     </div>
-    <nav class="mobile-nav" aria-label="Mobile navigation">${navButton('home','Home','home',true)}${navButton('vault','Vault','vault',true)}<button class="mobile-create" data-action="capture" aria-label="New achievement">${icon('plus',25)}</button>${navButton('profile','Profile','user',true)}<button class="nav-item mobile-nav-item" data-action="settings">${icon('settings',21)}<span>Settings</span></button></nav>
-    <div id="modal-layer">${modalView()}</div><div id="toast" role="status" aria-live="polite"></div>
+    <nav class="mobile-nav" aria-label="Mobile navigation">${navButton('home','Home','home',true)}${navButton('vault','Vault','vault',true)}<button class="mobile-create" data-action="capture" aria-label="New achievement"><span class="nav-icon">${icon('plus',24)}</span><span>Add</span></button>${navButton('profile','Profile','user',true)}<button class="nav-item mobile-nav-item" data-action="settings"><span class="nav-icon">${icon('settings',24)}</span><span>Settings</span></button></nav>
+    <div id="modal-layer">${modalView()}</div>${modal?'':toastView()}
   </div>`;
 }
 function statCard(label:string,value:number,glyph:string,sub:string):string {return `<div class="stat-card"><div class="stat-top"><span>${label}</span><span class="stat-icon">${icon(glyph,18)}</span></div><strong class="stat-value">${value}</strong><p>${sub}</p></div>`;}
@@ -100,9 +103,9 @@ function modalView():string {
   if(modal==='profile')content=profileForm();
   if(modal==='settings')content=settingsView();
   if(modal==='restore')content=restoreView();
-  return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-label="${modal==='capture'?'Achievement editor':modal==='detail'?'Achievement details':modal==='profile'?'Edit career profile':modal==='settings'?'Settings':'Restore backup'}" class="modal ${modal==='capture'?'capture-modal':''}">${content}</section></div>`;
+  return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1" class="modal ${modal==='capture'?'capture-modal':''}">${content}</section></div>`;
 }
-function dialogHeader(title:string,subtitle:string):string {return `<div class="modal-header"><div><p class="eyebrow">CAREERPROOF OS</p><h2>${title}</h2>${subtitle?`<p>${subtitle}</p>`:''}</div><button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">${icon('close',21)}</button></div>`;}
+function dialogHeader(title:string,subtitle:string):string {return `<div class="modal-header"><div><p class="eyebrow">CAREERPROOF OS</p><h2 id="dialog-title">${title}</h2><p id="dialog-description">${subtitle}</p></div><button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">${icon('close',24)}</button></div>${toastView(true)}`;}
 function achievementForm():string {
   const existing=editing&&selectedId?achievements.find(a=>a.id===selectedId):undefined;
   const status=existing?.status==='archived'?existing.preArchiveStatus:existing?.status;
@@ -140,7 +143,7 @@ function profileForm():string {
 function settingsView():string {
   return `${dialogHeader('Settings & data','Your workspace preferences and data controls.')}
   <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line"><div><strong>Color theme</strong><p>Choose your preferred display style.</p></div><select id="theme-select" aria-label="Color theme"><option value="system" ${theme==='system'?'selected':''}>System</option><option value="light" ${theme==='light'?'selected':''}>Light</option><option value="dark" ${theme==='dark'?'selected':''}>Dark</option></select></div></div>
-  <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
+  <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
   <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
 }
 function restoreView():string {
@@ -148,35 +151,37 @@ function restoreView():string {
   const m=pendingBackup.backup.manifest;
   return `${dialogHeader('Restore career data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This replaces your current data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
 }
-function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';root.classList.remove('app-loading');root.innerHTML=shell();if(modal){document.body.classList.add('dialog-open');if(!preserveFocus){requestAnimationFrame(()=>{(root.querySelector('.modal input:not([type="file"]),.modal button') as HTMLElement|null)?.focus();});}}else{document.body.classList.remove('dialog-open');}
-  if(focusId){const el=document.getElementById(focusId);el?.focus();}
+function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';root.classList.remove('app-loading');root.innerHTML=shell();dialogs.update(Boolean(modal));
+  if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(modal){dialogs.focusFirst();}
 }
-function notify(message:string,kind:'success'|'error'='success'){const el=document.getElementById('toast');if(!el)return;window.clearTimeout(toastTimer);el.innerHTML=`${icon(kind==='success'?'check':'alert',17)} <span>${escape(message)}</span>`;el.className=`toast visible toast-${kind}`;toastTimer=window.setTimeout(()=>el.classList.remove('visible'),4000);}
-function openModal(kind:Modal,id:string|null=null,edit=false){openInvoker=document.activeElement instanceof HTMLElement?document.activeElement:null;modal=kind;selectedId=id;editing=edit;isDirty=false;render();}
-function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;render();openInvoker?.focus();openInvoker=null;}
+function toastView(inDialog=false):string{return `<div id="toast" role="status" aria-live="polite" class="toast ${inDialog?'toast-in-dialog':''} ${toastMessage?'visible':''} toast-${toastKind}">${toastMessage?`${icon(toastKind==='success'?'check':'alert',20)}<span>${escape(toastMessage)}</span>`:''}</div>`;}
+function notify(message:string,kind:'success'|'error'='success'){toastMessage=message;toastKind=kind;window.clearTimeout(toastTimer);const el=document.getElementById('toast');if(el){el.innerHTML=`${icon(kind==='success'?'check':'alert',20)}<span>${escape(message)}</span>`;el.classList.add('visible');el.classList.toggle('toast-error',kind==='error');el.classList.toggle('toast-success',kind==='success');}toastTimer=window.setTimeout(()=>{toastMessage='';document.getElementById('toast')?.classList.remove('visible');},kind==='error'?10000:5000);}
+function openModal(kind:Modal,id:string|null=null,edit=false){if(!modal)dialogs.rememberInvoker();modal=kind;selectedId=id;editing=edit;isDirty=false;render();}
+function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;render();dialogs.restoreFocus();}
 function showError(message:string){const el=document.getElementById('form-error');if(el){el.hidden=false;el.textContent=message;el.scrollIntoView({block:'nearest',behavior:'smooth'});}else notify(message,'error');}
+function setSaving(value:boolean){saving=value;const dialog=document.querySelector<HTMLElement>('.modal');dialog?.setAttribute('aria-busy',String(value));for(const button of dialog?.querySelectorAll<HTMLButtonElement>('button[data-action]')??[])button.disabled=value;}
 function readAchieveInput(status:'draft'|'recorded') {
   const form=document.getElementById('achievement-form') as HTMLFormElement|null;
   if(!form)throw new Error('Achievement form not available');const values=new FormData(form);
   return {title:String(values.get('title')??'').trim(),contribution:String(values.get('contribution')??'').trim(),occurredOn:String(values.get('occurredOn')??''),status,outcome:String(values.get('outcome')??'').trim(),impactCategory:String(values.get('impactCategory')??'')};
 }
 async function saveAchievementForm(status:'draft'|'recorded'){
-  if(saving)return;saving=true;
+  if(saving)return;setSaving(true);
   try{const input=readAchieveInput(status);const errors=validateAchievementInput(input);if(errors.length){showError(errors.join(' '));return;}
     const existing=editing&&selectedId?achievements.find(x=>x.id===selectedId):undefined;
     const record=await saveAchievement({id:existing?.id??crypto.randomUUID(),revision:existing?.revision??0,title:input.title,contribution:input.contribution,occurredOn:input.occurredOn,status,preArchiveStatus:null,outcome:input.outcome,impactCategory:input.impactCategory as Achievement['impactCategory']});
     achievements=await listAchievements();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
-  }catch(err){showError(errorMessage(err));}finally{saving=false;}
+  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
-async function saveProfileForm(){if(saving)return;saving=true;try{
+async function saveProfileForm(){if(saving)return;setSaving(true);try{
   const form=document.getElementById('profile-form') as HTMLFormElement;const fd=new FormData(form);const input={displayName:String(fd.get('displayName')??'').trim(),headline:String(fd.get('headline')??'').trim(),summary:String(fd.get('summary')??'').trim(),email:String(fd.get('email')??'').trim(),location:String(fd.get('location')??'').trim()};
   const errors=validateProfileInput(input);if(errors.length){showError(errors.join(' '));return;}
   profile=await saveProfile({...input,id:PROFILE_ID,revision:profile.revision});closeModal(true);notify('Profile updated.');
-}catch(err){showError(errorMessage(err));}finally{saving=false;}}
+}catch(err){showError(errorMessage(err));}finally{setSaving(false);}}
 function errorMessage(err:unknown):string{return err instanceof Error?err.message:'An unexpected error occurred.';}
-async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;render();notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
+async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;if(modal==='settings')render(true);notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
 async function doFileRestore(file:File){try{pendingBackup=await parseBackupFile(file);openModal('restore');}catch(err){notify(`Cannot restore: ${errorMessage(err)}`,'error');}}
-async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;saving=true;try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{saving=false;}}
+async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;setSaving(true);try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();dialogs.restoreFocus();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{setSaving(false);}}
 async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;try{
   const isArchived=a.status==='archived';await saveAchievement({...a,revision:a.revision,status:isArchived?a.preArchiveStatus??'draft':'archived',preArchiveStatus:isArchived?null:a.status as 'draft'|'recorded'});
   achievements=await listAchievements();closeModal(true);notify(isArchived?'Achievement restored.':'Achievement archived.');
@@ -184,7 +189,7 @@ async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);i
 async function deleteCurrent(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;if(!window.confirm(`Permanently delete "${a.title}"? This cannot be undone.`))return;
   try{await removeAchievement(a.id,a.revision);achievements=await listAchievements();closeModal(true);notify('Achievement deleted.');}catch(err){notify(errorMessage(err),'error');}
 }
-function navigate(to:Screen){if(modal)closeModal(true);screen=to;location.hash=`/${to}`;render();window.scrollTo(0,0);}
+function navigate(to:Screen){if(modal)closeModal(true);screen=to;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
 function focusables():HTMLElement[]{return Array.from(document.querySelectorAll<HTMLElement>('.modal button:not([disabled]),.modal input:not([disabled]):not([type="hidden"]),.modal textarea:not([disabled]),.modal select:not([disabled])')).filter(x=>x.offsetParent!==null);}
 function runAction(node:HTMLElement){
   const action=node.dataset.action;switch(action){
@@ -214,10 +219,11 @@ document.addEventListener('click',e=>{
 document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form'))isDirty=true;if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
 document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){void setTheme(t.value);}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.closest('#achievement-form,#profile-form'))isDirty=true;});
 document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}});
-document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
-window.addEventListener('hashchange',()=>{screen=currentNav();render();});
+document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+window.addEventListener('hashchange',()=>{const next=currentNav();if(next===screen)return;screen=next;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof couldn't open your local database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{
+  dialogs.trackViewport();
   applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);screen=currentNav();render();
   if('serviceWorker' in navigator&&location.protocol!=='file:'){navigator.serviceWorker.register('./sw.js').catch(()=>{/* app remains usable online */});}
 }catch(err){renderStartupError(err);}}

@@ -1,5 +1,22 @@
 # CareerProof — Acceptance test plan
 
+## CP-011A.1 automated evidence — alpha.2
+
+On 2026-10-09: **37/37 Node and 30/30 Chromium tests passed**, plus separate typecheck and production build. The new 14-case viewport/theme matrix covers every existing destination and dialog, long/empty content, labels, focus, target sizes and overflow. Focus/scroll/hash/notification/busy-state tests, simulated keyboard geometry, contrast and platform assets augment all retained recovery tests. 252 before and 252 after screenshots are audited; proposed states have zero horizontal overflow, horizontal clipping, undersized targets or missing navigation. See [full evidence](UI_REGRESSION_REPORT.md) and [screenshots](UI_VISUAL_REVIEW.md).
+
+### CP-011A.1 device acceptance — pending after approved merge
+
+The user confirmed all five earlier CP-011A iPhone smoke checks on alpha.1. The following checks apply to the newly changed alpha.2 UI. Use synthetic fixtures on a disposable test origin for destructive restores; keep a securely saved real backup before updating an existing installation.
+
+- [ ] **CP-UI101 Upgrade/branding:** Reopen installed iPhone PWA online; Settings shows alpha.2. Confirm profile, achievements, archive statuses and dates remain. Sidebar/header/favicon/install icon use the chosen CP monogram. Check Apple icon refresh by reopening/reloading the existing installed app without clearing browser storage. **Removing or reinstalling the iPhone Home Screen PWA may delete its locally stored data; do not remove it solely to refresh the icon without first exporting, verifying and securely storing a backup outside the app.** Verify through backup validation/preview, then cancel before confirming replacement.
+- [ ] **CP-UI102 All windows:** Review Home, Vault, Profile, capture/edit/details, profile editor, Settings and both restore previews in light/dark. Check long title/contact/summary, no-results, empty states and validation. No horizontal drag or clipped controls.
+- [ ] **CP-UI103 Keyboard/scroll:** Tap every achievement/profile field, including date and category. With keyboard open, scroll to Outcome/contact and reach both footer actions and Close. Confirm top/bottom safe areas in portrait/landscape and with large text. No background scroll or accidental dismissal.
+- [ ] **CP-UI104 Navigation/focus:** All five nav positions and icon centers align. iPad portrait/landscape retains Home/Vault/Profile/Settings. With external keyboard, Tab/Shift+Tab remain in dialogs, Escape preserves dirty input when cancelled, and focus returns on close. Check VoiceOver names and reading order.
+- [ ] **CP-UI105 CRUD/files/errors:** Save/edit/archive/unarchive/reload a synthetic achievement, edit Profile, export to Files, reject an invalid file and cancel a valid/legacy preview. Error text must remain visible without covering actions; export keeps Settings usable. In an isolated dataset, confirm both valid formats restore correctly.
+- [ ] **CP-UI106 Offline/cold start:** After the new worker activates, close/reopen offline. App, icons, saved records, Settings and editors work. Reconnect/reload if an older open installation has mixed cached assets; do not clear data.
+
+Safari keyboard resizing, safe-area insets, native discard/delete alerts, file-picker behavior, dynamic text and install-icon refresh are not proven by Chromium. Expanded CP-011A quota/interruption/blocked-upgrade recovery checks below remain separately tracked; the reported five smoke checks are not a blanket pass for every extended scenario.
+
 ## CP-011A automated evidence (0.1.1-alpha.1)
 
 All fixtures are synthetic. `npm test` runs the production build, 36 Node tests and 8 Chromium tests; `npm run typecheck` is a separate compile check. Local results on 2026-10-09: **36/36 Node and 8/8 Chromium tests passed**, production build and separate typecheck passed. CI must also pass on the PR commit; automation is not real-device acceptance.
@@ -17,7 +34,7 @@ All fixtures are synthetic. `npm test` runs the production build, 36 Node tests 
 | CP-A09 / UAT-10/12 | Mobile fields/selects, dirty dismissal, 320/375px nav centers, desktop Profile, actual download/import, cached offline reload and previous-worker cache cleanup |
 | CP-A10 | 12 MiB UTF-8 boundary, oversize rejection without changes, oversized export refusal, every compiled module in offline shell |
 
-## CP-011A real-device checks — pending after user merge
+## CP-011A extended device matrix — five smoke checks accepted; detailed evidence still tracked
 
 Generate the synthetic full/legacy/invalid files with `npm run fixtures:backup`; they appear in `test-results/manual-fixtures/` (excluded from git). Import the full synthetic backup into a disposable origin to set up newer-domain records for replacement checks.
 
@@ -33,7 +50,7 @@ These require iPhone Safari and preferably an installed PWA. Use a disposable **
 - [ ] **CP-A108 Offline/cache:** After online worker activation, close/reopen installed PWA offline. Confirm stored records, editor and Settings work. Validate the real prior-worker update on-device; Chromium uses a previous-cache fixture.
 - [ ] **CP-A109 Layout/accessibility:** Check 320/375px, iPad and desktop; nav alignment, focus/Tab/Escape, readable theme contrast, long full-backup preview and no keyboard/bottom-bar overlap.
 
-The user's prior iPhone acceptance covers the original achievement-input and navigation hotfix only. These new checks and broader v0.1.0 recovery/offline checks remain open. New CP-011B–E employer/portfolio/linking screens are not part of CP-011A.
+The user confirmed the original hotfix and all five CP-011A smoke checks on alpha.1. These detailed extended cases are retained for traceable qualification; do not infer that every unreported fault scenario passed. New CP-011B–E employer/portfolio/linking screens are not part of CP-011A.
 
 ## Original v0.1.0 manual plan
 

@@ -2,7 +2,7 @@
 
 **Increment:** 0.1.1-alpha.1 · **Physical schema:** 2 · **Backup format:** 2 · **Taxonomy:** 1.0
 
-Implemented on the feature branch for review. This is the CP-011A foundation, not acceptance of the complete v0.1.1 milestone. CP-011B–E screens and workflows have not begun. No merge or deployment is authorized by this PR.
+Merged by the user in PR #4; all five alpha.1 iPhone smoke checks were subsequently user-confirmed. This is the CP-011A foundation, not acceptance of the complete v0.1.1 milestone. CP-011A.1 preserves these contracts while stabilizing UI/branding. CP-011B–E screens and workflows have not begun; merge/deployment of the new checkpoint requires user approval.
 
 ## Persistence contracts
 

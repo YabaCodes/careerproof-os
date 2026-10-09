@@ -77,16 +77,16 @@ Automated tests must use synthetic data, and manual browser/device tests are tra
 
 | Module | Current repository evidence | Next planned development |
 |---|---|---|
-| M01 Profile | Partial: basic identity UI retained; CP-011A adds history/qualification contracts and migration | CP-011B history/qualification screens |
-| M02 Vault | Partial: existing capture lifecycle retained; CP-011A precision/privacy/evidence contracts, strict recovery and legacy compatibility | CP-011D rich achievement/linking UI |
-| M03 Experience Portfolio | Foundation on CP-011A branch: P0 store, validator and relationship integrity; no screen | CP-011C portfolio UI |
-| M04 Competency Intelligence | Foundation on CP-011A branch: four categories/32 seeded competencies, custom contracts and links; no Growth UI or scoring | CP-011D taxonomy/tagging UI; assessments v0.1.3 |
+| M01 Profile | Partial: merged CP-011A contracts; CP-011A.1 stabilizes identity presentation/profile editor | CP-011B history/qualification screens (paused for CP-011A.1) |
+| M02 Vault | Partial: merged capture and recovery contracts; CP-011A.1 stabilizes forms/details/filters/Settings | CP-011D rich achievement/linking UI |
+| M03 Experience Portfolio | Foundation on merged CP-011A: P0 store, validator and relationship integrity; no screen | CP-011C portfolio UI |
+| M04 Competency Intelligence | Foundation on merged CP-011A: four categories/32 seeded competencies, custom contracts and links; no Growth UI or scoring | CP-011D taxonomy/tagging UI; assessments v0.1.3 |
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |
 | M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
-| M08 Career Analytics & Insights | Foundation: basic dashboard retained; CP-011A source-data revision metadata | Expanded P0 dashboard v0.1.2; advanced later |
+| M08 Career Analytics & Insights | Foundation: basic dashboard/revision metadata; CP-011A.1 responsive visual polish | Expanded P0 dashboard v0.1.2; advanced later |
 
-CP-011A is implemented for PR review as **0.1.1-alpha.1**, not a completed v0.1.1 release. Full backup capability is brought into A so every intermediate schema remains recoverable. CP-011B–E and their acceptance gates remain open. The deployed baseline is unchanged until user merge.
+CP-011A was merged in PR #4 as **0.1.1-alpha.1**; the user confirmed all five iPhone smoke checks. This is not completion of v0.1.1. **CP-011A.1 (0.1.1-alpha.2)** is the authorized UI/branding checkpoint in PR review: no new data/module scope. CP-011B–E remain open, with B paused until A.1 is merged and accepted on iPhone. Existing production remains unchanged by this branch. See [audit and evidence](UI_AUDIT_CP_011A_1.md).
 
 **Module status vocabulary**: Not started / Foundation / Partial / Core Complete / Expanded / Deferred. Actual state follows merged code and acceptance evidence, not roadmap estimates.
 
