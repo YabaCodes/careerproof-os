@@ -17,7 +17,7 @@ export class DialogController {
         const editable=Boolean(document.activeElement?.matches('input:not([type=file]),textarea,select'));
         // iOS standalone PWAs can shrink the layout viewport *as well* as
         // VisualViewport. Keep the last unobstructed height as a second signal.
-        if(!editable&&height>0)this.restingViewportHeight=height;
+        if(!editable&&height>0)this.restingViewportHeight=Math.max(this.restingViewportHeight,height);
         const unobstructedHeight=Math.max(this.restingViewportHeight,document.documentElement.clientHeight);
         const keyboardOpen=editable&&(viewport?.scale??1)===1&&unobstructedHeight-height>150;
         document.documentElement.style.setProperty('--visual-height',height+'px');
