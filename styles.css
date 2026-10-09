@@ -348,3 +348,45 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 @media (prefers-reduced-motion:reduce) {
   *, *:before, *:after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+
+/* CP-011B — Career history: reuse shared spacing, control and panel tokens. */
+.career-sections { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-5); margin-top: var(--space-5); }
+.career-panel { min-width: 0; padding: var(--space-6); }
+.career-panel:first-child { grid-column: 1 / -1; }
+.career-section-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-4); }
+.career-section-heading h2 { font-size: var(--type-section); margin: 0; }
+.career-empty { color: var(--muted); margin: var(--space-3) 0; line-height: 1.55; }
+.career-employer { border-top: 1px solid var(--line); padding: var(--space-4) 0; }
+.career-employer:first-of-type { border-top: none; }
+.career-employer-head, .career-entry { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); min-width: 0; }
+.career-employer-head > div:first-child, .career-entry-main { min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; }
+.career-employer h3, .career-entry h3 { font-size: var(--type-body); line-height: 1.45; margin: 0 0 4px; }
+.career-meta { color: var(--muted); font-size: var(--type-meta); line-height: 1.5; margin: 2px 0; }
+.career-description { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; margin: var(--space-2) 0; }
+.career-note { color: var(--text); overflow-wrap: anywhere; font-size: var(--type-meta); line-height: 1.5; margin: var(--space-2) 0; }
+.career-link { color: var(--teal); text-decoration: underline; overflow-wrap: anywhere; font-size: var(--type-meta); }
+.career-role-list { border-left: 2px solid var(--line); margin: var(--space-3) 0 0 var(--space-2); padding-left: var(--space-4); }
+.career-role { padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+.career-role:last-child { border-bottom: 0; }
+.career-entry:not(.career-role) { border-top: 1px solid var(--line); padding: var(--space-4) 0; }
+.career-entry-actions { display: flex; gap: var(--space-1); flex-wrap: wrap; justify-content: flex-end; flex: none; }
+.career-action { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 44px; border: 1px solid var(--line); color: var(--text); background: transparent; border-radius: var(--radius-control); padding: 4px 9px; font-size: var(--type-meta); cursor: pointer; }
+.career-action:hover, .career-action:focus-visible { border-color: var(--teal); color: var(--teal); }
+.career-inline-add { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; background: transparent; border: 0; padding: 4px 8px; color: var(--teal); font-size: var(--type-meta); cursor: pointer; }
+.career-title-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.career-primary { display: inline-flex; align-items: center; border: 1px solid var(--teal); color: var(--teal); padding: 3px 7px; font-size: 11px; border-radius: 999px; font-weight: 600; }
+.career-date-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-4); min-width: 0; }
+.career-date-control { display: grid; grid-template-columns: minmax(94px,0.42fr) minmax(0,1fr); gap: var(--space-2); min-width: 0; }
+.career-date-control input, .career-date-control select { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.career-checkbox { display: flex; align-items: center; gap: var(--space-3); line-height: 1.5; font-size: var(--type-body); cursor: pointer; min-height: 44px; }
+.career-checkbox input { width: 19px; height: 19px; flex: none; accent-color: var(--teal); }
+@media (max-width:1023px) { .career-sections { grid-template-columns: minmax(0,1fr); } .career-panel:first-child { grid-column: auto; } }
+@media (max-width:479px) {
+  .career-panel { padding: var(--space-4); }
+  .career-employer-head, .career-entry { flex-direction: column; gap: var(--space-2); }
+  .career-entry-actions { justify-content: flex-start; }
+  .career-date-grid { grid-template-columns: minmax(0,1fr); }
+  .career-date-control { grid-template-columns: minmax(96px,0.34fr) minmax(0,1fr); }
+  .career-role-list { padding-left: var(--space-3); }
+}

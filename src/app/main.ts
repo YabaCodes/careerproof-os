@@ -1,6 +1,7 @@
-import { type AchievementView as Achievement, type Profile, type AchievementStatus, type P0Store, IMPACT_CATEGORIES, APP_VERSION, SCHEMA_VERSION, P0_STORES, localDate, PROFILE_ID } from '../domain/models.js';
+import { type AchievementView as Achievement, type Profile, type AchievementStatus, type P0Store, type CareerCollections, IMPACT_CATEGORIES, APP_VERSION, SCHEMA_VERSION, P0_STORES, localDate, PROFILE_ID } from '../domain/models.js';
 import { validateAchievementInput, validateProfileInput, summarizeAchievements, ValidationError } from '../domain/validation.js';
-import { initialize, getProfile, saveProfile, listAchievements, getAchievement, saveAchievement, removeAchievement, getMeta, setMeta } from '../data/db.js';
+import { initialize, getProfile, saveProfile, listAchievements, getAchievement, saveAchievement, removeAchievement, getMeta, setMeta, database } from '../data/db.js';
+import { careerSections, careerForm, readCareerForm, dependentCareerRecords, type CareerKind, type CareerRecord } from '../ui/careerHistory.js';
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup, type PreparedBackup } from '../data/backup.js';
 import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
@@ -8,10 +9,13 @@ import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
 
 type Screen='home'|'vault'|'profile';
-type Modal='capture'|'detail'|'profile'|'settings'|'restore'|null;
+type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|null;
 const root=document.getElementById('app')!;
 let profile:Profile;
 let achievements:Achievement[]=[];
+let careerCollections:CareerCollections|null=null;
+let careerKind:CareerKind='employers';
+let careerEmployerId:string|undefined;
 let screen:Screen='home';
 let modal:Modal=null;
 let selectedId:string|null=null;
@@ -93,7 +97,7 @@ function profileView():string {
   const has=Boolean(profile.displayName||profile.headline||profile.summary||profile.location||profile.email);
   return `<div class="page-heading page-heading-flex"><div><p class="eyebrow">YOUR PROFESSIONAL IDENTITY</p><h1>Career Profile</h1><p class="page-subtitle">Build a foundation that grows with your experience.</p></div><button class="button button-outline desktop-add" data-action="edit-profile">${icon('edit',17)} Edit profile</button></div>
   <div class="profile-grid"><section class="panel profile-card"><div class="profile-top"><div class="avatar">${escape(initials())}</div><div><h2>${escape(profile.displayName||'Your name')}</h2><p>${escape(profile.headline||'Add your current professional headline')}</p>${profile.location?`<span class="profile-location">${escape(profile.location)}</span>`:''}</div></div><div class="profile-section"><p class="section-kicker">ABOUT</p>${profile.summary?`<p class="profile-summary">${escape(profile.summary)}</p>`:`<p class="muted">Describe the expertise, responsibilities, and career direction that define you.</p>`}</div>${profile.email?`<div class="profile-section"><p class="section-kicker">CONTACT</p><p>${escape(profile.email)}</p></div>`:''}<button class="button button-outline" data-action="edit-profile">${icon('edit',16)} ${has?'Edit your profile':'Complete profile'}</button></section>
-  <aside class="profile-aside"><div class="panel"><div class="mini-heading">${icon('briefcase',20)}<h2>Employment timeline</h2></div><p class="muted">Employers, role progression, and professional qualifications will arrive in v0.1.1.</p><div class="planned-tag">PLANNED FOR NEXT RELEASE</div></div><div class="panel"><div class="mini-heading">${icon('trophy',20)}<h2>Your professional story</h2></div><p class="muted">The Achievement Vault is where you can start building evidence of your experience today.</p><button class="text-action" data-action="nav" data-screen="vault">Open Vault ${icon('arrow',16)}</button></div></aside></div>`;
+  <aside class="profile-aside"><div class="panel"><div class="mini-heading">${icon('trophy',20)}<h2>Your professional story</h2></div><p class="muted">The Achievement Vault is where you can start building evidence of your experience today.</p><button class="text-action" data-action="nav" data-screen="vault">Open Vault ${icon('arrow',16)}</button></div></aside></div>${careerCollections?careerSections(profile,careerCollections):''}`;
 }
 function modalView():string {
   if(!modal)return '';
@@ -101,6 +105,10 @@ function modalView():string {
   if(modal==='capture')content=achievementForm();
   if(modal==='detail')content=achievementDetail();
   if(modal==='profile')content=profileForm();
+  if(modal==='career'&&careerCollections){
+    const record=careerCollections[careerKind].find(r=>r.id===selectedId) as CareerRecord|undefined;
+    content=careerForm(careerKind,record,careerCollections,careerEmployerId);
+  }
   if(modal==='settings')content=settingsView();
   if(modal==='restore')content=restoreView();
   return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1" class="modal ${modal==='capture'?'capture-modal':''}">${content}</section></div>`;
@@ -176,12 +184,46 @@ async function saveAchievementForm(status:'draft'|'recorded'){
 async function saveProfileForm(){if(saving)return;setSaving(true);try{
   const form=document.getElementById('profile-form') as HTMLFormElement;const fd=new FormData(form);const input={displayName:String(fd.get('displayName')??'').trim(),headline:String(fd.get('headline')??'').trim(),summary:String(fd.get('summary')??'').trim(),email:String(fd.get('email')??'').trim(),location:String(fd.get('location')??'').trim()};
   const errors=validateProfileInput(input);if(errors.length){showError(errors.join(' '));return;}
-  profile=await saveProfile({...input,id:PROFILE_ID,revision:profile.revision});closeModal(true);notify('Profile updated.');
+  profile=await saveProfile({...input,id:PROFILE_ID,revision:profile.revision});if(careerCollections)careerCollections.profiles[0]=profile;closeModal(true);notify('Profile updated.');
 }catch(err){showError(errorMessage(err));}finally{setSaving(false);}}
+async function loadCareerCollections(){careerCollections=(await database.readSnapshot()).collections;profile=careerCollections.profiles[0]!;}
+function openCareer(kind:CareerKind,id:string|null=null,employerId?:string){
+  if(!careerCollections)return notify('Career records are still loading.','error');
+  if(kind==='roles'&&!careerCollections.employers.length){notify('Add an employer before creating a role.','error');return;}
+  careerKind=kind;careerEmployerId=employerId;openModal('career',id,Boolean(id));
+}
+async function saveCareerForm(){
+  if(saving||!careerCollections)return;
+  setSaving(true);
+  try{
+    const form=document.getElementById('career-form') as HTMLFormElement|null;
+    if(!form)throw new ValidationError('The career form is not available.');
+    const previous=careerCollections[careerKind].find(r=>r.id===selectedId) as CareerRecord|undefined;
+    const result=readCareerForm(careerKind,form,previous);
+    switch(result.kind){
+      case 'roles':await database.saveCareerRole(result.record,result.primary);break;
+      case 'employers':await database.saveRecord('employers',result.record);break;
+      case 'education':await database.saveRecord('education',result.record);break;
+      case 'credentials':await database.saveRecord('credentials',result.record);break;
+    }
+    await loadCareerCollections();closeModal(true);notify('Career record saved.');
+  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+}
+async function deleteCareer(kind:CareerKind,id:string){
+  if(saving||!careerCollections)return;
+  const record=careerCollections[kind].find(r=>r.id===id);
+  if(!record)return notify('Record no longer available. Reload this page.','error');
+  const dependencies=dependentCareerRecords(kind,id,careerCollections);
+  if(dependencies.length){notify('Cannot delete: this record is referenced by '+dependencies.join(', ')+'. Reassign or unlink these records first.','error');return;}
+  if(!window.confirm('Permanently delete this '+(kind==='education'?'education entry':kind==='credentials'?'credential':kind==='roles'?'role':'employer')+'? This cannot be undone.'))return;
+  try{await database.removeRecord(kind,id,record.revision);await loadCareerCollections();render();notify('Career record deleted.');}
+  catch(err){notify(errorMessage(err),'error');}
+}
+
 function errorMessage(err:unknown):string{return err instanceof Error?err.message:'An unexpected error occurred.';}
 async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;if(modal==='settings')render(true);notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
 async function doFileRestore(file:File){try{pendingBackup=await parseBackupFile(file);openModal('restore');}catch(err){notify(`Cannot restore: ${errorMessage(err)}`,'error');}}
-async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;setSaving(true);try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();dialogs.restoreFocus();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{setSaving(false);}}
+async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;setSaving(true);try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();await loadCareerCollections();theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();dialogs.restoreFocus();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{setSaving(false);}}
 async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;try{
   const isArchived=a.status==='archived';await saveAchievement({...a,revision:a.revision,status:isArchived?a.preArchiveStatus??'draft':'archived',preArchiveStatus:isArchived?null:a.status as 'draft'|'recorded'});
   achievements=await listAchievements();closeModal(true);notify(isArchived?'Achievement restored.':'Achievement archived.');
@@ -196,6 +238,10 @@ function runAction(node:HTMLElement){
     case 'nav':navigate(node.dataset.screen as Screen);break;
     case 'capture':openModal('capture');break;
     case 'edit-profile':openModal('profile');break;
+    case 'add-career':openCareer(node.dataset.kind as CareerKind,null,node.dataset.employer);break;
+    case 'edit-career':openCareer(node.dataset.kind as CareerKind,node.dataset.id??null);break;
+    case 'delete-career':void deleteCareer(node.dataset.kind as CareerKind,node.dataset.id??'');break;
+    case 'save-career':void saveCareerForm();break;
     case 'settings':openModal('settings');break;
     case 'close':closeModal();break;
     case 'backdrop':if(node.classList.contains('modal-backdrop'))closeModal();break;
@@ -216,15 +262,23 @@ document.addEventListener('click',e=>{
   const actionTarget=resolveActionTarget(e.target);
   if(actionTarget)runAction(actionTarget);
 });
-document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form'))isDirty=true;if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
-document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){void setTheme(t.value);}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.closest('#achievement-form,#profile-form'))isDirty=true;});
-document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}});
+document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form'))isDirty=true;if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
+document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){void setTheme(t.value);}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.dataset.action==='career-date-precision'){
+    const target=t.dataset.target??'';
+    const input=document.getElementById('career-'+target) as HTMLInputElement|null;
+    if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}
+  }
+  if(t.id==='career-isCurrent'&&t instanceof HTMLInputElement&&t.checked){
+    const end=document.getElementById('career-endDate') as HTMLInputElement|null;if(end)end.value='';
+  }
+  if(t.closest('#achievement-form,#profile-form,#career-form'))isDirty=true;});
+document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}});
 document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('hashchange',()=>{const next=currentNav();if(next===screen)return;screen=next;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof couldn't open your local database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{
   dialogs.trackViewport();
-  applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);screen=currentNav();render();
+  applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);await loadCareerCollections();screen=currentNav();render();
   if('serviceWorker' in navigator&&location.protocol!=='file:'){navigator.serviceWorker.register('./sw.js').catch(()=>{/* app remains usable online */});}
 }catch(err){renderStartupError(err);}}
 void start();
