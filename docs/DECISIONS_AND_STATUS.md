@@ -112,3 +112,8 @@ Plan/review here in ChatGPT; sync approved design decisions into GitHub docs; us
 ## 8. Privacy reminder
 
 Repository is public. Specifications may describe engineering skills and generic supplier workflows, but **must not** contain real confidential employer blueprints, machine defects, vendor negotiation records, contracts, internal names/IDs, or personal career/finance data. Keep sample records fictional.
+
+
+## 2026-10-09 — CP-011A.3 remaining iPhone keyboard defect
+
+After merging CP-011A.2 / PR #6, the user reported the Outcome textarea is covered by the iOS keyboard and requires manual scrolling. **The keyboard visibility criterion did not pass**; compact navigation/date improvements are separate. CP-011A.3 (proposed alpha.4) corrects focused-field scroll scheduling and short-viewport handling with no schema change. See [CP-011A.3 report](IOS_KEYBOARD_OUTCOME_CP_011A_3.md). Physical iPhone validation remains required before authorizing CP-011B.
