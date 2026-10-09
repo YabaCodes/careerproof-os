@@ -99,7 +99,7 @@ export function parseRichFields(form:HTMLFormElement){
   const confidentiality=str(fd,'confidentiality');
   if(confidentiality!=='confidential'&&confidentiality!=='standard-private')throw new ValidationError('Invalid confidentiality selection.');
   const metrics=[...form.querySelectorAll<HTMLElement>('.metric-row')].map(row=>{
-    const data=new FormDataFromRow(row);
+    const data=FormDataFromRow(row);
     const metricName=str(data,'metricName'),baselineValue=numeric(data,'baselineValue'),resultValue=numeric(data,'resultValue'),reportedValue=numeric(data,'reportedValue');
     if(!metricName)throw new ValidationError('Metric name is required.');
     if([baselineValue,resultValue,reportedValue].every(v=>v===null))throw new ValidationError('Enter at least one numeric value for each metric.');
@@ -110,7 +110,7 @@ export function parseRichFields(form:HTMLFormElement){
       direction:direction===''?null:direction as 'increase'|'decrease'|'neutral',sourceNote:str(data,'sourceNote')};
   });
   const references=[...form.querySelectorAll<HTMLElement>('.evidence-row')].map(row=>{
-    const data=new FormDataFromRow(row);
+    const data=FormDataFromRow(row);
     const referenceType=str(data,'referenceType');
     if(!['description','url','document-reference'].includes(referenceType))throw new ValidationError('Choose a valid evidence type.');
     if(!str(data,'label')||!str(data,'referenceValue'))throw new ValidationError('Evidence name and reference value are required.');
