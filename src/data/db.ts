@@ -225,7 +225,11 @@ export class CareerDatabase {
       unique(projectIds,'project');unique(competencyIds,'competency');
       if(primaryProjectId&&!projectIds.includes(primaryProjectId))throw new ValidationError('Primary project must be selected.');
       if(projectIds.some(id=>!data.collections.projects.some(p=>p.id===id)))throw new ValidationError('A selected project does not exist.');
-      if(competencyIds.some(id=>!data.collections.competencies.some(c=>c.id===id&&c.status==='active')))throw new ValidationError('A selected competency is unavailable.');
+      if(competencyIds.some(id=>{
+        const skill=data.collections.competencies.find(c=>c.id===id);
+        return !skill||(skill.status!=='active'&&!data.collections.recordLinks.some(l=>
+          l.linkType==='achievement-competency'&&l.sourceId===input.id&&l.targetId===id));
+      }))throw new ValidationError('A selected competency is unavailable.');
       if(new Set(metricDrafts.map(r=>r.id)).size!==metricDrafts.length||new Set(evidenceDrafts.map(r=>r.id)).size!==evidenceDrafts.length)
         throw new ValidationError('Duplicate metric or reference identifiers.');
       const {occurredOn,...canonical}=input;
