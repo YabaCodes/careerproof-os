@@ -3,7 +3,7 @@ import {normalizeName} from '../domain/taxonomy.js';
 import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
 const esc=(v:unknown):string=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]!));
-export function competencyPage(c:CareerCollections,query:string,category:string):string{
+export function competencyGroups(c:CareerCollections,query:string,category:string):string{
   const active=c.competencies.filter(r=>r.status==='active');
   const filtered=active.filter(r=>(!category||r.categoryId===category)&&
     (!query||[r.name,r.description,...r.aliases].join(' ').toLowerCase().includes(query.toLowerCase())));
@@ -28,6 +28,10 @@ export function competencyPage(c:CareerCollections,query:string,category:string)
           '</div></details>';
       }).join('')+'</section>';
   }).join('');
+  return groups||'<div class="panel"><p class="career-empty">No competencies match your search.</p></div>';
+}
+export function competencyPage(c:CareerCollections,query:string,category:string):string{
+  const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
   return '<div class="competency-page"><div class="page-heading page-heading-flex"><div><p class="eyebrow">YOUR DOCUMENTED CAPABILITIES</p><h1>Competency Library</h1>'+
     '<p class="page-subtitle">Map recorded achievements to skills. Linked examples are not self-assessed proficiency or independent verification.</p></div>'+
     '<button class="button button-primary" data-action="add-competency">'+icon('plus',17)+' Custom skill</button></div>'+
@@ -35,7 +39,7 @@ export function competencyPage(c:CareerCollections,query:string,category:string)
     '<section class="panel skill-toolbar"><div class="field"><label for="competency-search">Search competencies</label><input id="competency-search" value="'+esc(query)+'" placeholder="Search skills"/></div>'+
     '<div class="field"><label for="competency-category">Category</label><select id="competency-category"><option value="">All categories</option>'+
     categories.map(cat=>'<option value="'+esc(cat.id)+'" '+(category===cat.id?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></div></section>'+
-    '<div class="skill-groups">'+(groups||'<div class="panel"><p class="career-empty">No competencies match your search.</p></div>')+'</div></div>';
+    '<div class="skill-groups">'+competencyGroups(c,query,category)+'</div></div>';
 }
 export function customCompetencyForm(c:CareerCollections,record?:Competency):string{
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
