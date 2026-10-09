@@ -117,3 +117,8 @@ Repository is public. Specifications may describe engineering skills and generic
 ## 2026-10-09 — CP-011A.3 remaining iPhone keyboard defect
 
 After merging CP-011A.2 / PR #6, the user reported the Outcome textarea is covered by the iOS keyboard and requires manual scrolling. **The keyboard visibility criterion did not pass**; compact navigation/date improvements are separate. CP-011A.3 (proposed alpha.4) corrects focused-field scroll scheduling and short-viewport handling with no schema change. See [CP-011A.3 report](IOS_KEYBOARD_OUTCOME_CP_011A_3.md). Physical iPhone validation remains required before authorizing CP-011B.
+
+
+## CP-011B — Career history and qualifications under review
+
+The user confirmed CP-011A.3 iPhone keyboard/Outcome visibility on alpha.4. CP-011B uses preexisting schema-v2 employer/role/education/credential stores, with mobile-first Career Profile entry forms and transactional primary-role updates; currently a draft feature PR, not deployed. Do not mark it accepted until CI and the user's iPhone UAT in [CP-011B report](CP_011B_HISTORY_QUALIFICATIONS.md) pass. CP-011C remains on hold.
