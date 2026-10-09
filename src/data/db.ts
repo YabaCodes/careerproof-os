@@ -264,7 +264,7 @@ export const getProfile=async()=> (await database.readSnapshot()).collections.pr
 export const listAchievements=async()=> (await database.readSnapshot()).collections.achievements.map(achievementView).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
 export const getAchievement=async(id:string)=> (await listAchievements()).find(a=>a.id===id);
 export const saveProfile=(input:ProfileWrite)=>database.saveProfile(input);
-export const saveAchievement=(input:AchievementWrite)=>database.saveAchievement(input);
+export const saveAchievement=(input:AchievementWrite,projectId?:string)=>database.saveAchievement(input,projectId);
 export const removeAchievement=(id:string,revision:number)=>database.removeRecord('achievements',id,revision);
 export const getMeta=(key:string)=>database.getMeta(key);
 export const setMeta=(key:string,value:unknown)=>database.setMeta(key,value);
