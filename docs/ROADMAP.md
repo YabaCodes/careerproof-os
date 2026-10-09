@@ -86,9 +86,9 @@ Automated tests must use synthetic data, and manual browser/device tests are tra
 | Module | Current repository evidence | Next planned development |
 |---|---|---|
 | M01 Profile | Core Complete: CP-011B employer/role history, education and credentials; compact timeline and iPhone update improvements accepted | CP-011E end-to-end validation |
-| M02 Vault | Partial: quick capture, draft/recorded/archive and offline backup work; CP-011C adds achievement creation from project context | CP-011D rich achievement/linking UI |
-| M03 Experience Portfolio | Partial in unmerged CP-011C alpha.8 PR: compact CRUD, three experience types, employer/role links, contextual achievement capture and protected deletion; physical iPhone acceptance pending | CP-011C merge/UAT, then CP-011E integration |
-| M04 Competency Intelligence | Foundation on merged CP-011A: four categories/32 seeded competencies, custom contracts and links; no Growth UI or scoring | CP-011D taxonomy/tagging UI; assessments v0.1.3 |
+| M02 Vault | Partial: basic Vault and capture already merged; CP-011D alpha.9 PR adds optional enrichment, atomic typed links, metric/evidence editing and contextual/date filters, awaiting device UAT | CP-011D merge/UAT, then CP-011E qualification |
+| M03 Experience Portfolio | Core Complete: CP-011C alpha.8 merged; user accepted on iPhone including linked achievement capture | CP-011E cross-module qualification |
+| M04 Competency Intelligence | Partial in CP-011D alpha.9 PR: four seeded categories and 32 built-in skills visible with linked achievement examples and custom skill CRUD; self-assessment and evidence breadth intentionally deferred | CP-011D merge/UAT; rubric-based assessments v0.1.3 |
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |
 | M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
