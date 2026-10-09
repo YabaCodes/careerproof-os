@@ -4,6 +4,7 @@ import { initialize, getProfile, saveProfile, listAchievements, getAchievement, 
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup } from '../data/backup.js';
 import type { CareerBackup } from '../domain/models.js';
 import {icon} from '../ui/icons.js';
+import { resolveActionTarget } from '../ui/actionRouting.js';
 
 type Screen='home'|'vault'|'profile';
 type Modal='capture'|'detail'|'profile'|'settings'|'restore'|null;
@@ -200,7 +201,11 @@ function runAction(node:HTMLElement){
     case 'clear-filters':searchText='';filterStatus='active';sortOrder='recent';render();break;
   }
 }
-document.addEventListener('click',e=>{const node=(e.target as HTMLElement).closest<HTMLElement>('[data-action]');if(node)runAction(node);});
+document.addEventListener('click',e=>{
+  if(!(e.target instanceof Element))return;
+  const actionTarget=resolveActionTarget(e.target);
+  if(actionTarget)runAction(actionTarget);
+});
 document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form'))isDirty=true;if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
 document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='theme-select'){theme=t.value;localStorage.setItem('careerproof-theme',theme);applyTheme();}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.closest('#achievement-form,#profile-form'))isDirty=true;});
 document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}});

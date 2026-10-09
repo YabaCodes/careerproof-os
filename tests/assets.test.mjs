@@ -31,3 +31,10 @@ test('service worker offline asset shell refers to existing assets',async()=>{
   const list=sw.match(/APP_SHELL=\[(.*?)\]/s)?.[1];assert.ok(list);
   for(const [,asset] of list.matchAll(/['"](\.\/[^'"]+)['"]/g)) assert.ok((await stat(join(root,asset))).isFile(),asset);
 });
+test('service worker offline shell lists every compiled module',async()=>{
+  const {readdir}=await import('node:fs/promises');
+  const sw=await readFile(join(root,'sw.js'),'utf8');
+  const listed=new Set([...sw.match(/APP_SHELL=\[(.*?)\]/s)[1].matchAll(/['"]\.\/([^'"]+)['"]/g)].map(m=>m[1]));
+  const walk=async dir=>(await Promise.all((await readdir(join(root,dir),{withFileTypes:true})).map(e=>e.isDirectory()?walk(`${dir}/${e.name}`):[`${dir}/${e.name}`]))).flat();
+  for(const file of (await walk('app')).filter(f=>f.endsWith('.js'))) assert.ok(listed.has(file),`sw.js APP_SHELL is missing ./${file}; the app would not open offline`);
+});

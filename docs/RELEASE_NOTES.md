@@ -1,3 +1,15 @@
+## v0.1.0 — UI Hotfix 1 (pending user acceptance)
+
+- Fixed a delegated-click bug where interacting with inputs, labels and selectors inside dialogs closed them unexpectedly.
+- Only a direct click on the modal backdrop dismisses the dialog; close buttons still work normally.
+- Evenly aligned the five mobile bottom-navigation buttons and removed the raised center-button offset.
+- Updated the offline service-worker cache identifier to refresh published UI assets.
+- Added the new dialog-routing module to the offline cache, so the app still opens without a connection.
+- Pull-request checks run in their own queue and can no longer cancel a live deploy.
+- Added four automated UI-routing and layout regression checks, plus a check that every app module is cached for offline use.
+- Enabled non-deploying build/test checks for new pull requests.
+- Data model and database schema remain unchanged; no data migration required.
+
 # CareerProof release notes
 
 ## 0.1.0 — Career Foundation (first usable implementation)
