@@ -40,3 +40,8 @@ App/runtime dependencies remain unchanged. Rendering tools are development-only.
 ## CP-011A.3 keyboard-visible content rule
 
 With the iPhone keyboard visible, the modal-body is the **only** scrollport moved to reveal the active form field. Keep a label and enough of the editable control visible, preserve the fixed footer, and do not pan the locked background. Use VisualViewport dimensions and a post-layout adjustment rather than hardcoding keyboard heights or model-specific offsets. Native textarea caret scrolling remains independent. See [keyboard-specific acceptance](IOS_KEYBOARD_OUTCOME_CP_011A_3.md).
+
+
+## Career Timeline overview density (CP-011B.1)
+
+The Profile page is a **scannable index**, not a full CV. Employer cards show name/industry/location, and role rows show title, date range, employment type and primary-role badge. Restrict optional description/responsibility text to two visible lines with a user-controlled **… More / Less** disclosure for the full content and other secondary details. Scope expansion to a single entry. Do not truncate persisted content. Hide More for short text without hidden details. Preserve readable typography, ≥44px touch targets and keyboard semantics across phones and tablets.
