@@ -1,3 +1,13 @@
+## v0.1.0 — UI Hotfix 1 (pending user acceptance)
+
+- Fixed a delegated-click bug where interacting with inputs, labels and selectors inside dialogs closed them unexpectedly.
+- Only a direct click on the modal backdrop dismisses the dialog; close buttons still work normally.
+- Evenly aligned the five mobile bottom-navigation buttons and removed the raised center-button offset.
+- Updated the offline service-worker cache identifier to refresh published UI assets.
+- Added four automated UI-routing and layout regression checks.
+- Enabled non-deploying build/test checks for new pull requests.
+- Data model and database schema remain unchanged; no data migration required.
+
 # CareerProof release notes
 
 ## 0.1.0 — Career Foundation (first usable implementation)
