@@ -8,6 +8,7 @@ This file is the entry point for Codex and other coding agents working on Career
 - [Data architecture](docs/DATA_ARCHITECTURE.md) — schemas, integrity, backup/migration rules and compatibility.
 - [Career intelligence framework](docs/CAREER_INTELLIGENCE.md) — taxonomy, proficiency, evidence, job matching.
 - [Roadmap and release gates](docs/ROADMAP.md) — P0/P1 scope and v0.1.x milestones.
+- [v0.1.1 implementation brief](docs/V0.1.1_IMPLEMENTATION_BRIEF.md) — next incremental scope, legacy migration contract and test gates.
 - [Decisions, project status and open questions](docs/DECISIONS_AND_STATUS.md) — agreed choices and what needs verification.
 - [Existing manual acceptance tests](docs/ACCEPTANCE_TESTS.md) and [release notes](docs/RELEASE_NOTES.md).
 - [README](README.md) — current build, local development and deployment procedure.
@@ -46,7 +47,7 @@ Eight long-term modules: (1) Career Profile, (2) Achievement Vault, (3) Experien
 
 ## Important historical correction
 
-v0.1.0 was initially deployed from the uncompiled repository root, causing an 'Opening CareerProof…' screen. The deployment method was changed to GitHub Actions. A dialog/backdrop interaction defect and crooked mobile navigation were addressed in merged PR #1 (UI Hotfix 1). **Real iPhone acceptance after that PR has not been confirmed in this conversation.** Validate it before starting v0.1.1.
+v0.1.0 was initially deployed from the uncompiled repository root, causing an 'Opening CareerProof…' screen. The deployment method was changed to GitHub Actions. A dialog/backdrop interaction defect and crooked mobile navigation were addressed in merged PR #1 (UI Hotfix 1). **The user confirmed on iPhone that achievement input fields now work and mobile bottom navigation is aligned.** These two defects are accepted, but the rest of the v0.1.0 acceptance plan (notably backup/restore, offline, and deletion/recovery) is not thereby verified. See the v0.1.1 brief.
 
 ## When specifications and code disagree
 
