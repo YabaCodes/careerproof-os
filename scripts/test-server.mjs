@@ -6,7 +6,7 @@ createServer(async(req,res)=>{
   // A previous-worker fixture exercises activation cleanup on the same origin.
   if(req.url==='/__legacy_sw__'){
     res.setHeader('Content-Type','text/javascript');res.setHeader('Service-Worker-Allowed','/');
-    res.end("self.addEventListener('install',e=>e.waitUntil(caches.open('careerproof-v0.1.1-alpha.1').then(c=>c.put('/__legacy_marker__',new Response('synthetic'))).then(()=>self.skipWaiting())));self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));");return;
+    res.end("self.addEventListener('install',e=>e.waitUntil(caches.open('careerproof-v0.1.1-alpha.2').then(c=>c.put('/__legacy_marker__',new Response('synthetic'))).then(()=>self.skipWaiting())));self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));");return;
   }
   if(req.url==='/__fixture__'){res.setHeader('Content-Type','text/html');res.end('<!doctype html><title>Synthetic fixture</title>');return;}
   const path=resolve(root,'.'+new URL(req.url,'http://localhost').pathname.replace(/\/$/,'/index.html'));
