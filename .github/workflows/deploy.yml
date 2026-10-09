@@ -10,7 +10,8 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: pages
+  # Pull-request checks get their own queue so they never cancel a live deploy.
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'pages' }}
   cancel-in-progress: true
 jobs:
   build:
