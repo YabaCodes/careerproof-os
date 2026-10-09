@@ -31,6 +31,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **CP-011B development (2026-10-09):** Career Profile employer/role/education/credential interfaces are in a feature-branch PR; not yet merged or device-accepted. Existing schema-v2 stores, backup format-2 compatibility, and iPhone design rules are retained. See [CP-011B release gate](CP_011B_HISTORY_QUALIFICATIONS.md). CP-011C remains paused.
 
+**CP-011C (2026-10-09):** Experience Portfolio (Project / Initiative / Ongoing responsibility) implemented in alpha.8 feature branch; user iPhone acceptance and merge pending. Reuses schema 2 projects and recordLinks; includes role association and project-context achievement capture. See [CP-011C acceptance](CP_011C_EXPERIENCE_PORTFOLIO.md).
+
 ## 3. Requirements traceability
 
 | Functional ID | Capability | Main UI | Stores / services | Acceptance |
