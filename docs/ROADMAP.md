@@ -33,6 +33,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **CP-011C (2026-10-09):** Experience Portfolio (Project / Initiative / Ongoing responsibility) implemented in alpha.8 feature branch; user iPhone acceptance and merge pending. Reuses schema 2 projects and recordLinks; includes role association and project-context achievement capture. See [CP-011C acceptance](CP_011C_EXPERIENCE_PORTFOLIO.md).
 
+**CP-011D (2026-10-10):** Enriched achievements, metric/reference editing, transactional many-to-many project and competency linking, the seeded Competency Library and Vault contextual filters are implemented in the alpha.9 feature PR. CI, merge and physical iPhone UAT remain pending. See [CP-011D acceptance](CP_011D_ACHIEVEMENT_INTELLIGENCE.md). CP-011E has not started.
+
 ## 3. Requirements traceability
 
 | Functional ID | Capability | Main UI | Stores / services | Acceptance |
