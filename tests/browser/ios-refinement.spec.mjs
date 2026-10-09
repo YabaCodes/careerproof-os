@@ -146,3 +146,36 @@ test('a deliberately cleared new draft remains unspecified after reopening',asyn
   const a=(await snapshot(page)).collections.achievements[0];expect(a.occurredStart).toBeNull();
   await page.reload();await expect(page.locator('.hero-card')).toBeVisible();await edit(page,a.id);await expect(page.locator('#occurredOn')).toHaveValue('');
 });
+
+
+for(const width of [320,375,390,430]){
+  test('expanded enrichment stays inside iPhone modal and collapses without overlapping fields: '+width,async({page})=>{
+    await page.setViewportSize({width,height:812});
+    await start(page);
+    await page.locator('.mobile-create').click();
+    const toggle=page.locator('#rich-detail-panel [data-action=toggle-rich-panel]');
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-expanded','false');
+    await expect(page.locator('#rich-panel-content')).toBeHidden();
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded','true');
+    await expect(page.locator('#rich-panel-content')).toBeVisible();
+    const bounds=await page.locator('.modal-body').evaluate(el=>{
+      const r=el.getBoundingClientRect();
+      return {overflow:el.scrollWidth-el.clientWidth,
+        fields:[...el.querySelectorAll('#rich-panel-content .field input,#rich-panel-content .field textarea,#rich-panel-content .field select')]
+          .filter(x=>x.getClientRects().length>0)
+          .map(x=>{const b=x.getBoundingClientRect();return {left:b.left,right:b.right,parent:x.closest('.field')?.getBoundingClientRect().right??r.right};}),
+        left:r.left,right:r.right};
+    });
+    expect(bounds.overflow).toBeLessThanOrEqual(1);
+    expect(bounds.fields.length).toBeGreaterThan(0);
+    for(const field of bounds.fields){
+      expect(field.left).toBeGreaterThanOrEqual(bounds.left-.5);
+      expect(field.right).toBeLessThanOrEqual(bounds.right+.5);
+    }
+    await toggle.click();
+    await expect(page.locator('#rich-panel-content')).toBeHidden();
+    await expect(page.locator('#outcome')).toBeVisible();
+  });
+}
