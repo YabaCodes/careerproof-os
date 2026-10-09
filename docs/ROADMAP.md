@@ -83,14 +83,14 @@ Automated tests must use synthetic data, and manual browser/device tests are tra
 
 | Module | Current repository evidence | Next planned development |
 |---|---|---|
-| M01 Profile | Partial: merged CP-011A contracts; merged CP-011A.1 stabilizes identity; CP-011A.2 refines shared form/focus/footer controls | CP-011B history/qualification screens (paused for CP-011A.2) |
-| M02 Vault | Partial: merged capture and recovery contracts; merged CP-011A.1 stabilizes UI; CP-011A.2 refines date controls, capture and nav density | CP-011D rich achievement/linking UI |
-| M03 Experience Portfolio | Foundation on merged CP-011A: P0 store, validator and relationship integrity; no screen | CP-011C portfolio UI |
+| M01 Profile | Core Complete: CP-011B employer/role history, education and credentials; compact timeline and iPhone update improvements accepted | CP-011E end-to-end validation |
+| M02 Vault | Partial: quick capture, draft/recorded/archive and offline backup work; CP-011C adds achievement creation from project context | CP-011D rich achievement/linking UI |
+| M03 Experience Portfolio | Partial in unmerged CP-011C alpha.8 PR: compact CRUD, three experience types, employer/role links, contextual achievement capture and protected deletion; physical iPhone acceptance pending | CP-011C merge/UAT, then CP-011E integration |
 | M04 Competency Intelligence | Foundation on merged CP-011A: four categories/32 seeded competencies, custom contracts and links; no Growth UI or scoring | CP-011D taxonomy/tagging UI; assessments v0.1.3 |
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |
 | M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
-| M08 Career Analytics & Insights | Foundation: basic dashboard/revision metadata; merged CP-011A.1 visual polish; CP-011A.2 compact navigation | Expanded P0 dashboard v0.1.2; advanced later |
+| M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls | Expanded P0 dashboard v0.1.2; advanced later |
 
 CP-011A was merged in PR #4 as **0.1.1-alpha.1**; the user confirmed all five iPhone smoke checks. This is not completion of v0.1.1. **CP-011A.1 (0.1.1-alpha.2)** was merged by the user in PR #5. iPhone review found native-date overflow, premature focus scrolling and excessive navigation/footer density. **CP-011A.2 (0.1.1-alpha.3)** is the authorized corrective branch: shared presentation and dialog interaction only, no new module/data scope. CP-011B–E remain open; B is paused until A.2 is reviewed, merged and explicitly verified on iPhone. Production is unchanged by this branch. See [correction evidence and device gate](IOS_FORM_NAV_REFINEMENT.md).
 
