@@ -59,7 +59,7 @@ test('employers group multiple overlapping roles; primary role stays consistent'
   // CP-012B: a referenced employer is never silently deleted. Its roles need an employer
   // and there is no other employer to move them to, so nothing can be confirmed.
   await page.locator('[data-action=delete-career][data-kind=employers]').click();
-  await expect(page.getByRole('dialog')).toContainText('Linked to this employer');
+  await expect(page.getByRole('dialog')).toContainText('Linked to This Employer');
   await expect(page.getByRole('dialog')).toContainText('2 roles');
   await expect(page.locator('#removal-mode-move')).toBeDisabled();
   await expect(page.locator('#removal-mode-unlink')).toBeDisabled();

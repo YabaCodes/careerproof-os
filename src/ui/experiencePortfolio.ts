@@ -49,9 +49,9 @@ export function portfolioForm(p:Project|undefined,c:CareerCollections):string{
       {id:'confidential',name:'Confidential (recommended)'},
       {id:'standard-private',name:'Standard private'}
     ],p?.confidentiality??'confidential')+
-    '<fieldset class="portfolio-role-fieldset"><legend>Associated employment roles</legend><p class="career-meta">Optional. Choose existing roles; the employer must match if one is selected. These are links, not duplicate job records.</p>'+
+    '<fieldset class="portfolio-role-fieldset"><legend>Associated Employment Roles</legend><p class="career-meta">Optional. Choose existing roles; the employer must match if one is selected. These are links, not duplicate job records.</p>'+
     '<div class="portfolio-role-options">'+(roles.length?roles.map(r=>roleCheck(r,c,selected)).join(''):'<p class="career-empty">No roles recorded yet. You can link them later.</p>')+'</div></fieldset>';
-  return '<div class="modal-header"><div><p class="eyebrow">EXPERIENCE PORTFOLIO</p><h2 id="dialog-title">'+(p?'Edit experience':'Add experience')+'</h2><p id="dialog-description">Document the work you owned and its outcomes. Avoid proprietary information.</p></div>'+
+  return '<div class="modal-header"><div><p class="eyebrow">EXPERIENCE PORTFOLIO</p><h2 id="dialog-title">'+(p?'Edit Experience':'Add Experience')+'</h2><p id="dialog-description">Document the work you owned and its outcomes. Avoid proprietary information.</p></div>'+
     '<button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">'+icon('close',24)+'</button></div>'+
     '<form id="portfolio-form" class="modal-body form-grid" novalidate><div id="form-error" class="form-error" role="alert" hidden></div>'+fields+'</form>'+
     '<div class="modal-footer"><button type="button" class="button button-outline" data-action="close">Cancel</button><button type="button" class="button button-primary" data-action="save-project">'+icon('check',17)+' Save experience</button></div>';
@@ -115,10 +115,10 @@ function card(p:Project,c:CareerCollections):string{
     '<span class="portfolio-summary-hint">'+icon('chevron',15)+' <span class="portfolio-show-label">View details</span></span></summary>'+
     '<div class="portfolio-expanded">'+
     (p.confidentiality==='confidential'?'<p class="portfolio-confidential">'+icon('lock',14)+' Confidential · private backup only</p>':'')+
-    detail('Objective',p.objective)+detail('Scope',p.scope)+detail('My responsibilities',p.personalResponsibility)+
+    detail('Objective',p.objective)+detail('Scope',p.scope)+detail('My Responsibilities',p.personalResponsibility)+
     detail('Outcome',p.outcome)+detail('Technologies',p.technologies.join(', '))+
-    '<div class="portfolio-detail"><strong>Associated roles</strong><p>'+(roles.length?roles.map(r=>esc(r.title)).join(' · '):'None linked yet')+'</p></div>'+
-    '<div class="portfolio-detail"><strong>Linked achievements ('+achievements.length+')</strong>'+
+    '<div class="portfolio-detail"><strong>Associated Roles</strong><p>'+(roles.length?roles.map(r=>esc(r.title)).join(' · '):'None linked yet')+'</p></div>'+
+    '<div class="portfolio-detail"><strong>Linked Achievements ('+achievements.length+')</strong>'+
     (achievements.length?'<div class="portfolio-achievement-links">'+achievements.map(a=>
       '<button class="career-inline-add" data-action="portfolio-achievement" data-id="'+esc(a.id)+'">'+esc(a.title)+'</button>').join('')+'</div>':
       '<p>No linked achievements yet. Capture an achievement from this experience to connect it.</p>')+'</div>'+

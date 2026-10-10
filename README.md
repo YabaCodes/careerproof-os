@@ -16,7 +16,7 @@ CareerProof OS is a privacy-first, local-first professional career and achieveme
 - **Recovery:** full version-2 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. From `0.1.2-alpha.4` Settings → Check data adds a read-only **Data Health** report; from `0.1.2-alpha.5` deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
-From `0.1.2-alpha.3` the iPhone bottom navigation is **Home / Vault / Experience / Skills / Profile**, with **＋ (new achievement)** and **Settings** in each screen's header (DEC-029). The look follows the Wealth OS design language with CareerProof's navy/teal (DEC-030).
+From `0.1.2-alpha.3` the iPhone bottom navigation is **Home / Vault / Experience / Skills / Profile**, with **＋ (new achievement)** and **Settings** in each screen's header (DEC-029). The look follows the Wealth OS design language with CareerProof's navy/teal (DEC-030). From `0.1.2-alpha.6` titles and subtitles use Title Case (DEC-032) and Employment History lists the most recent employer first (DEC-033).
 
 ## Data ownership and safety
 

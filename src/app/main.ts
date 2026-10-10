@@ -64,8 +64,8 @@ const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employ
 const escape=escapeHtml;
 const formatDate=formatPrecisionDate;
 function relativeDate(v:string):string {if(!v)return 'Never';return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(new Date(v));}
-function titleCase(v:string):string {return v.charAt(0).toUpperCase()+v.slice(1);}
-function statusBadge(status:AchievementStatus):string {return `<span class="status-tag status-${status}">${status==='recorded'?'Recorded':titleCase(status)}</span>`;}
+function capitalize(v:string):string {return v.charAt(0).toUpperCase()+v.slice(1);}
+function statusBadge(status:AchievementStatus):string {return `<span class="status-tag status-${status}">${status==='recorded'?'Recorded':capitalize(status)}</span>`;}
 function initials():string {return profile.displayName.trim().split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()??'').join('') || 'CP';}
 function currentNav():Screen {const name=location.hash.replace('#/','');return name==='vault'||name==='profile'||name==='portfolio'||name==='competencies'?name:'home';}
 function applyTheme(){document.documentElement.dataset.theme=theme;}
@@ -74,14 +74,15 @@ function navButton(id:Screen,label:string,glyph:string,mobile=false):string{retu
 // CP-012.2 (DEC-029): five content destinations; capture and Settings live in the header.
 const NAV:[Screen,string,string][]=[['home','Home','home'],['vault','Vault','vault'],['portfolio','Experience','layers'],['competencies','Skills','target'],['profile','Profile','user']];
 function plural(n:number,word:string):string{return `${n} ${word}${n===1?'':'s'}`;}
+// CP-012.3: page titles and subtitles use Title Case; minor words (a, and, of, the, with…) stay lower case.
 function screenMeta():{title:string;subtitle:string}{
   const stats=summarizeAchievements(achievements);
   switch(screen){
-    case 'vault':return {title:'Achievement Vault',subtitle:achievements.length?[plural(stats.total,'achievement'),plural(stats.drafts,'draft'),...(stats.archived?[`${stats.archived} archived`]:[])].join(' · '):'Your record of contributions and results'};
-    case 'portfolio':{const n=careerCollections?.projects.length??0;return {title:'Experience Portfolio',subtitle:n?plural(n,'experience'):'Projects, initiatives and ongoing responsibilities'};}
-    case 'competencies':{const s=careerCollections?skillExampleSummary(careerCollections):{withExamples:0,total:0};return {title:'Skills',subtitle:`${s.withExamples} of ${s.total} skills have linked examples`};}
-    case 'profile':return {title:'Career Profile',subtitle:'Identity, work history and qualifications'};
-    default:{const first=profile.displayName.trim().split(/\s+/)[0];return {title:'CareerProof',subtitle:first?`Welcome back, ${first}.`:'Record the work. Prove the impact.'};}
+    case 'vault':return {title:'Achievement Vault',subtitle:achievements.length?[plural(stats.total,'Achievement'),plural(stats.drafts,'Draft'),...(stats.archived?[`${stats.archived} Archived`]:[])].join(' · '):'Your Record of Contributions and Results'};
+    case 'portfolio':{const n=careerCollections?.projects.length??0;return {title:'Experience Portfolio',subtitle:n?plural(n,'Experience'):'Projects, Initiatives and Ongoing Responsibilities'};}
+    case 'competencies':{const s=careerCollections?skillExampleSummary(careerCollections):{withExamples:0,total:0};return {title:'Skills',subtitle:`${s.withExamples} of ${s.total} Skills with Examples`};}
+    case 'profile':return {title:'Career Profile',subtitle:'Identity, Work History and Qualifications'};
+    default:{const first=profile.displayName.trim().split(/\s+/)[0];return {title:'CareerProof',subtitle:first?`Welcome Back, ${first}`:'Record the Work. Prove the Impact.'};}
   }
 }
 function pageHeader():string{
@@ -94,7 +95,7 @@ function pwaUpdateMessage():string {
 }
 function pwaUpdateNotice():string {
   // CP-012.1 (DEC-028): restart stays user-controlled so a backup can be taken first.
-  return pwaUpdateReady?`<div id="pwa-update-notice" class="pwa-update-notice" role="status" aria-live="polite"><div><strong>New version ready</strong><p id="pwa-update-version">${escape(pwaUpdateMessage())}</p></div><div class="pwa-update-actions"><button class="button button-outline" data-action="export">${icon('download',16)} Back up first</button><button class="button button-primary" data-action="reload-update">Restart app</button></div></div>`:'';
+  return pwaUpdateReady?`<div id="pwa-update-notice" class="pwa-update-notice" role="status" aria-live="polite"><div><strong>New Version Ready</strong><p id="pwa-update-version">${escape(pwaUpdateMessage())}</p></div><div class="pwa-update-actions"><button class="button button-outline" data-action="export">${icon('download',16)} Back up first</button><button class="button button-primary" data-action="reload-update">Restart app</button></div></div>`:'';
 }
 function displayPwaUpdateNotice(){
   pwaUpdateReady=true;
@@ -203,12 +204,12 @@ function exportAge():{days:number|null;stale:boolean}{
 /** One deterministic, truthful next step. No scores and no invented targets. */
 function nextAction():{label:string;title:string;text:string;button:string;attrs:string}{
   const stats=summarizeAchievements(achievements),age=exportAge();
-  if(!achievements.length)return {label:'Start here',title:'Capture your first achievement',text:'One contribution you are proud of is enough to start. You can add details, metrics and evidence later.',button:'Capture achievement',attrs:'data-action="capture"'};
+  if(!achievements.length)return {label:'Start here',title:'Capture Your First Achievement',text:'One contribution you are proud of is enough to start. You can add details, metrics and evidence later.',button:'Capture achievement',attrs:'data-action="capture"'};
   const draft=achievements.filter(a=>a.status==='draft').sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt))[0];
-  if(draft)return {label:'Next action',title:`Finish ${plural(stats.drafts,'draft')}`,text:`“${draft.title}” is saved as a draft. Add what you did and when, then record it.`,button:'Open draft',attrs:`data-action="detail" data-id="${escape(draft.id)}"`};
-  if(age.stale)return {label:'Protect your records',title:'Export a backup',text:age.days===null?'No backup has been exported from this device yet. Your records live only here.':`The last export was generated ${plural(age.days,'day')} ago. Your records live only on this device.`,button:'Export backup',attrs:'data-action="export"'};
-  if(!profile.headline)return {label:'Next action',title:'Add your professional headline',text:'A one-line headline helps every record make sense later.',button:'Edit profile',attrs:'data-action="edit-profile"'};
-  return {label:'Next action',title:'Capture a recent win',text:'Record it while the details are fresh, then link it to an experience or skill.',button:'New achievement',attrs:'data-action="capture"'};
+  if(draft)return {label:'Next action',title:`Finish ${plural(stats.drafts,'Draft')}`,text:`“${draft.title}” is saved as a draft. Add what you did and when, then record it.`,button:'Open draft',attrs:`data-action="detail" data-id="${escape(draft.id)}"`};
+  if(age.stale)return {label:'Protect your records',title:'Export a Backup',text:age.days===null?'No backup has been exported from this device yet. Your records live only here.':`The last export was generated ${plural(age.days,'day')} ago. Your records live only on this device.`,button:'Export backup',attrs:'data-action="export"'};
+  if(!profile.headline)return {label:'Next action',title:'Add Your Professional Headline',text:'A one-line headline helps every record make sense later.',button:'Edit profile',attrs:'data-action="edit-profile"'};
+  return {label:'Next action',title:'Capture a Recent Win',text:'Record it while the details are fresh, then link it to an experience or skill.',button:'New achievement',attrs:'data-action="capture"'};
 }
 function homeView():string {
   const stats=summarizeAchievements(achievements),next=nextAction(),age=exportAge();
@@ -225,7 +226,7 @@ function homeView():string {
     ${metricCard('Last export',age.days===null?'Never':age.days===0?'Today':`${plural(age.days,'day')} ago`,age.days===null?'no export from this device yet':'generated on this device',age.stale?'metric-warn':'')}
   </section>
   ${recent.length?`<div class="section-title"><h2>Recent</h2><button class="text-action" data-action="nav" data-screen="vault">View all ${icon('arrow',16)}</button></div><section class="panel list-card"><div class="achievement-list">${recent.map(smallAchievement).join('')}</div></section>`:''}
-  <div class="section-title"><h2>Quick capture</h2></div>
+  <div class="section-title"><h2>Quick Capture</h2></div>
   <div class="quick-grid">${quick('Achievement','trophy','data-action="capture"')}${quick('Experience','layers','data-action="add-project"')}${quick('Employer','briefcase','data-action="add-career" data-kind="employers"')}${quick('Credential','badge','data-action="add-career" data-kind="credentials"')}</div>
   <p class="footer-note">${icon('lock',14)} Local-first: your records stay on this device. There is no account or sync, so export backups regularly.</p>`;
 }
@@ -250,7 +251,7 @@ function filterToggleLabel():string{const n=advancedFilterCount();return `${icon
 function refreshVaultResults(){const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();const toggle=document.getElementById('vault-filter-toggle');if(toggle)toggle.innerHTML=filterToggleLabel();}
 function filterField(id:string,label:string,control:string):string{return `<div class="field"><label for="${id}">${label}</label>${control}</div>`;}
 function vaultView():string {
-  if(achievements.length===0)return `<section class="panel">${emptyState('Start documenting your impact','Your vault is empty. Even one meaningful achievement is worth recording.','Add your first achievement','capture')}</section>`;
+  if(achievements.length===0)return `<section class="panel">${emptyState('Start Documenting Your Impact','Your vault is empty. Even one meaningful achievement is worth recording.','Add your first achievement','capture')}</section>`;
   const open=vaultFiltersOpen;
   return `<section class="panel vault-panel"><div class="vault-toolbar"><label class="search-field">${icon('search',19)}<input id="vault-search" type="search" placeholder="Search achievements" value="${escape(searchText)}" autocomplete="off" aria-label="Search achievements"/></label><div class="filter-controls"><label class="sr-only" for="status-filter">Filter by status</label><select id="status-filter"><option value="active" ${filterStatus==='active'?'selected':''}>Active</option><option value="all" ${filterStatus==='all'?'selected':''}>All statuses</option><option value="recorded" ${filterStatus==='recorded'?'selected':''}>Recorded</option><option value="draft" ${filterStatus==='draft'?'selected':''}>Drafts</option><option value="archived" ${filterStatus==='archived'?'selected':''}>Archived</option></select><label class="sr-only" for="sort-order">Sort achievements</label><select id="sort-order"><option value="recent" ${sortOrder==='recent'?'selected':''}>Newest</option><option value="oldest" ${sortOrder==='oldest'?'selected':''}>Oldest</option><option value="updated" ${sortOrder==='updated'?'selected':''}>Last edited</option></select><button id="vault-filter-toggle" class="button button-outline filter-toggle" data-action="toggle-vault-filters" aria-expanded="${open}" aria-controls="vault-filters">${filterToggleLabel()}</button></div></div>
     <div id="vault-filters" class="vault-advanced-filters" ${open?'':'hidden'}>
@@ -292,7 +293,7 @@ function achievementForm():string {
   const existing=editing&&selectedId?achievements.find(a=>a.id===selectedId):undefined;
   const status=existing?.status==='archived'?existing.preArchiveStatus:existing?.status;
   const dateType=existing?.occurredStart?.precision==='year'?'text':existing?.occurredStart?.precision==='month'?'month':'date';
-  return `${dialogHeader(existing?'Edit achievement':'Capture an achievement',existing?'Update the details of your contribution.':'Start with what you accomplished. Refine the details later.')}
+  return `${dialogHeader(existing?'Edit Achievement':'Capture an Achievement',existing?'Update the details of your contribution.':'Start with what you accomplished. Refine the details later.')}
   <form id="achievement-form" class="modal-body form-grid" novalidate>
     <div id="form-error" class="form-error" role="alert" hidden></div>
     ${captureProjectId&&careerCollections?.projects.some(p=>p.id===captureProjectId)?`<p class="portfolio-capture-context">${icon('layers',16)} Linked experience: <strong>${escape(careerCollections.projects.find(p=>p.id===captureProjectId)?.name)}</strong></p>`:''}
@@ -305,8 +306,8 @@ function achievementForm():string {
   </form><div class="modal-footer"><button class="button button-outline" data-action="save-achievement" data-status="draft">Save draft</button><button class="button button-primary" data-action="save-achievement" data-status="recorded">${icon('check',17)} ${existing?'Save changes':'Save achievement'}</button></div>`;
 }
 function achievementDetail():string {
-  const a=achievements.find(x=>x.id===selectedId);if(!a)return `${dialogHeader('Achievement unavailable','This entry might have been deleted.')}<div class="modal-body">Please reload your vault.</div>`;
-  return `${dialogHeader('Achievement details','Your contribution, preserved.')}
+  const a=achievements.find(x=>x.id===selectedId);if(!a)return `${dialogHeader('Achievement Unavailable','This entry might have been deleted.')}<div class="modal-body">Please reload your vault.</div>`;
+  return `${dialogHeader('Achievement Details','Your contribution, preserved.')}
   <div class="modal-body"><div class="detail-title-row">${statusBadge(a.status)}<span class="detail-date">${icon('calendar',15)} ${formatDate(a.occurredOn)}</span></div><h3 class="detail-title">${escape(a.title)}</h3>
   <div class="detail-section"><p class="section-kicker">YOUR CONTRIBUTION</p><p class="readable-text">${escape(a.contribution||'Not added yet. Edit this draft to describe what you contributed.')}</p></div>
   <div class="detail-section"><p class="section-kicker">OUTCOME</p><p class="readable-text ${!a.outcome?'muted':''}">${escape(a.outcome||'Not recorded yet')}</p></div>
@@ -316,7 +317,7 @@ function achievementDetail():string {
   <div class="detail-actions"><button class="button button-outline" data-action="edit-achievement">${icon('edit',16)} Edit</button><button class="button button-outline" data-action="toggle-archive">${icon(a.status==='archived'?'refresh':'archive',16)} ${a.status==='archived'?'Restore':'Archive'}</button><button class="button button-danger-soft" data-action="delete-achievement">${icon('trash',16)} Delete</button></div></div>`;
 }
 function profileForm():string {
-  return `${dialogHeader('Edit career profile','Your professional introduction and contact details.')}
+  return `${dialogHeader('Edit Career Profile','Your professional introduction and contact details.')}
   <form id="profile-form" class="modal-body form-grid" novalidate><div id="form-error" class="form-error" role="alert" hidden></div>
     <div class="field"><label for="displayName">Display name <span class="optional">optional</span></label><input id="displayName" name="displayName" maxlength="120" value="${escape(profile.displayName)}" placeholder="Your professional name"/></div>
     <div class="field"><label for="headline">Professional headline</label><input id="headline" name="headline" maxlength="200" value="${escape(profile.headline)}" placeholder="e.g., Manufacturing Engineer & Technical Project Lead"/></div>
@@ -326,10 +327,10 @@ function profileForm():string {
   </form><div class="modal-footer"><button class="button button-outline" data-action="close">Cancel</button><button class="button button-primary" data-action="save-profile">${icon('check',17)} Save profile</button></div>`;
 }
 function settingsView():string {
-  return `${dialogHeader('Settings & data','Your workspace preferences and data controls.')}
-  <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line settings-line-stack"><div><strong>Theme</strong><p>System follows your phone's light or dark setting.</p></div><div class="segmented" role="radiogroup" aria-label="Color theme">${(['system','light','dark'] as const).map(value=>`<button type="button" class="segment" role="radio" aria-checked="${theme===value}" data-action="set-theme" data-value="${value}">${titleCase(value)}</button>`).join('')}</div></div></div>
-  <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Data health</strong><p>Read-only check that your records and backup format are intact, plus suggestions for what is worth completing or protecting. Nothing is changed, uploaded or scored.</p></div><button id="check-integrity" class="button button-outline" data-action="check-integrity">Check data</button></div><p id="integrity-check-result" class="integrity-check-result" role="status" aria-live="polite"></p><div id="data-health-report" class="data-health-report"></div><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
-  <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="settings-line"><div><strong>Check for updates</strong><p id="pwa-update-status">${pwaUpdateReady?'Update ready. Close Settings to back up or restart.':`Checks automatically each time you open CareerProof, without removing the app or your records. ${lastCheckedText()}`}</p></div><button class="button button-outline" data-action="check-updates">Check now</button></div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
+  return `${dialogHeader('Settings & Data','Your workspace preferences and data controls.')}
+  <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line settings-line-stack"><div><strong>Theme</strong><p>System follows your phone's light or dark setting.</p></div><div class="segmented" role="radiogroup" aria-label="Color theme">${(['system','light','dark'] as const).map(value=>`<button type="button" class="segment" role="radio" aria-checked="${theme===value}" data-action="set-theme" data-value="${value}">${capitalize(value)}</button>`).join('')}</div></div></div>
+  <div class="settings-group"><h3>Data Management</h3><div class="settings-line"><div><strong>Export Career Backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Data Health</strong><p>Read-only check that your records and backup format are intact, plus suggestions for what is worth completing or protecting. Nothing is changed, uploaded or scored.</p></div><button id="check-integrity" class="button button-outline" data-action="check-integrity">Check data</button></div><p id="integrity-check-result" class="integrity-check-result" role="status" aria-live="polite"></p><div id="data-health-report" class="data-health-report"></div><div class="settings-line"><div><strong>Restore from Backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
+  <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="settings-line"><div><strong>Check for Updates</strong><p id="pwa-update-status">${pwaUpdateReady?'Update ready. Close Settings to back up or restart.':`Checks automatically each time you open CareerProof, without removing the app or your records. ${lastCheckedText()}`}</p></div><button class="button button-outline" data-action="check-updates">Check now</button></div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
 }
 function removalView():string{
   if(!removal||!careerCollections)return '';
@@ -337,7 +338,7 @@ function removalView():string{
     const impact=removalImpact(careerCollections,removal.kind,removal.id);
     const view=removalContent(impact,removal);
     return dialogHeader(escape(view.title),escape(view.subtitle))+view.body+view.footer;
-  }catch(err){return `${dialogHeader('Record unavailable','It may have been changed or deleted elsewhere.')}<div class="modal-body"><p>${escape(errorMessage(err))}</p></div>`;}
+  }catch(err){return `${dialogHeader('Record Unavailable','It may have been changed or deleted elsewhere.')}<div class="modal-body"><p>${escape(errorMessage(err))}</p></div>`;}
 }
 /** CP-012B: every delete of a career record goes through the dependency preview. */
 function openRemoval(kind:RemovableKind,id:string){
@@ -361,7 +362,7 @@ async function confirmRemoval(){
 function restoreView():string {
   if(!pendingBackup)return '';
   const m=pendingBackup.backup.manifest;
-  return `${dialogHeader('Restore career data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This replaces your current data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
+  return `${dialogHeader('Restore Career Data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This Replaces Your Current Data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
 }
 let lastRenderedScreen:Screen|null=null;
 /** Keep expanded Experience cards and skill entries open when the same screen redraws (e.g. after a dialog closes). */
@@ -641,7 +642,7 @@ document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achiev
 document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('resize',()=>syncCareerDisclosures(root),{passive:true});
 window.addEventListener('hashchange',()=>{const next=currentNav();if(next===screen)return;screen=next;if(!modal)render();});
-function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof couldn't open your local database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
+function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof Couldn't Open Your Local Database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{
   dialogs.trackViewport();
   applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);await loadCareerCollections();screen=currentNav();render();

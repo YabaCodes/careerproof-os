@@ -66,7 +66,7 @@ export function competencyPage(c:CareerCollections,query:string,category:string,
 }
 export function customCompetencyForm(c:CareerCollections,record?:Competency):string{
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
-  return '<div class="modal-header"><div><p class="eyebrow">COMPETENCY LIBRARY</p><h2 id="dialog-title">'+(record?'Edit custom competency':'Add custom competency')+'</h2>'+
+  return '<div class="modal-header"><div><p class="eyebrow">COMPETENCY LIBRARY</p><h2 id="dialog-title">'+(record?'Edit Custom Competency':'Add Custom Competency')+'</h2>'+
     '<p id="dialog-description">Describe a professional capability. Linking achievements does not independently verify proficiency.</p></div>'+
     '<button class="icon-button close-dialog" data-action="close" aria-label="Close">'+icon('close',24)+'</button></div>'+
     '<form id="competency-form" class="modal-body form-grid" novalidate><div id="form-error" class="form-error" role="alert" hidden></div>'+

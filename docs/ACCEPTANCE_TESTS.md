@@ -9,6 +9,13 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-012.3 — Title Case and employment order (0.1.2-alpha.6, device gate)
+
+- [ ] **T101:** The update banner names alpha.6 and offers Back up first / Restart app; after restart all records are intact.
+- [ ] **T102:** Profile → **Employment History**: your current employer is listed first and earlier employers follow in date order, even the one you entered after the current one. Inside an employer, the current role is first.
+- [ ] **T103:** Optional, synthetic only: add a test employer with an old ended role. It appears below your real employers (an employer with no role yet appears at the bottom until a role is added). Delete it afterwards with **Remove the links**.
+- [ ] **T104:** Titles read in Title Case on Home, Vault, Experience, Skills and Profile, in Settings and in the capture form. Your own entries (employer names, titles, notes) are unchanged.
+
 ## CP-012B — controlled removal (0.1.2-alpha.5, device gate)
 
 Export a backup first. **Use synthetic test records only**: never delete real records just to test.
