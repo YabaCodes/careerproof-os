@@ -4,15 +4,31 @@ import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
 import {escapeHtml} from './html.js';
 const esc=escapeHtml;
-export function competencyGroups(c:CareerCollections,query:string,category:string,showArchived=false):string{
+export type SkillScope='linked'|'all';
+/** Number of achievement links per competency; counts links, not proficiency. */
+function exampleCounts(c:CareerCollections):Map<string,number>{
+  const counts=new Map<string,number>();
+  for(const l of c.recordLinks)if(l.linkType==='achievement-competency')counts.set(l.targetId,(counts.get(l.targetId)??0)+1);
+  return counts;
+}
+export function skillExampleSummary(c:CareerCollections):{withExamples:number;total:number}{
+  const counts=exampleCounts(c),active=c.competencies.filter(r=>r.status==='active');
+  return {withExamples:active.filter(r=>(counts.get(r.id)??0)>0).length,total:active.length};
+}
+/** CP-012.2: show skills with linked examples by default once any exist. */
+export function defaultSkillScope(c:CareerCollections):SkillScope{return skillExampleSummary(c).withExamples>0?'linked':'all';}
+export function competencyGroups(c:CareerCollections,query:string,category:string,showArchived=false,scope:SkillScope='all'):string{
+  const counts=exampleCounts(c);
   const active=c.competencies.filter(r=>r.status==='active'||showArchived);
+  // A search always looks across every skill, so nothing is hidden by the scope.
   const filtered=active.filter(r=>(!category||r.categoryId===category)&&
+    (query||scope==='all'||(counts.get(r.id)??0)>0)&&
     (!query||[r.name,r.description,...r.aliases].join(' ').toLowerCase().includes(query.toLowerCase())));
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
   const groups=categories.map(cat=>{
     const items=filtered.filter(r=>r.categoryId===cat.id).sort((a,b)=>a.name.localeCompare(b.name));
     if(!items.length)return '';
-    return '<section class="panel skill-panel"><div class="career-section-heading"><h2>'+esc(cat.name)+'</h2><span class="career-meta">'+items.length+' skills</span></div>'+
+    return '<section class="panel skill-panel"><div class="career-section-heading"><h2>'+esc(cat.name)+'</h2><span class="career-meta">'+items.length+' skill'+(items.length===1?'':'s')+'</span></div>'+
       items.map(skill=>{
         const links=c.recordLinks.filter(l=>l.linkType==='achievement-competency'&&l.targetId===skill.id);
         const examples=links.map(l=>c.achievements.find(a=>a.id===l.sourceId)).filter((a):a is NonNullable<typeof a>=>Boolean(a));
@@ -31,19 +47,21 @@ export function competencyGroups(c:CareerCollections,query:string,category:strin
           '</div></details>';
       }).join('')+'</section>';
   }).join('');
-  return groups||'<div class="panel"><p class="career-empty">No competencies match your search.</p></div>';
+  return groups||'<div class="panel"><p class="career-empty">'+(scope==='linked'&&!query?'No skills have linked examples yet. Link a skill from an achievement\'s More details, or choose All.':'No competencies match your search.')+'</p></div>';
 }
-export function competencyPage(c:CareerCollections,query:string,category:string,showArchived=false):string{
+export function competencyPage(c:CareerCollections,query:string,category:string,showArchived=false,scope:SkillScope='all'):string{
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
-  return '<div class="competency-page"><div class="page-heading page-heading-flex"><div><p class="eyebrow">YOUR DOCUMENTED CAPABILITIES</p><h1>Competency Library</h1>'+
-    '<p class="page-subtitle">Map recorded achievements to skills. Linked examples are not self-assessed proficiency or independent verification.</p></div>'+
-    '<button class="button button-primary" data-action="add-competency">'+icon('plus',17)+' Custom skill</button></div>'+
-    '<button class="career-inline-add" data-action="nav" data-screen="profile">'+icon('back',16)+' Back to Career Profile</button>'+
+  const summary=skillExampleSummary(c);
+  const segment=(value:SkillScope,label:string)=>'<button type="button" class="segment" data-action="skill-scope" data-scope="'+value+'" aria-pressed="'+(scope===value)+'">'+label+'</button>';
+  return '<div class="competency-page">'+
+    '<div class="segmented" role="group" aria-label="Which skills to show">'+segment('linked','With examples · '+summary.withExamples)+segment('all','All · '+summary.total)+'</div>'+
     '<section class="panel skill-toolbar"><div class="field"><label for="competency-search">Search competencies</label><input id="competency-search" value="'+esc(query)+'" placeholder="Search skills"/></div>'+
     '<div class="field"><label for="competency-category">Category</label><select id="competency-category"><option value="">All categories</option>'+
     categories.map(cat=>'<option value="'+esc(cat.id)+'" '+(category===cat.id?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></div>'+
-    '<label class="skill-archive-toggle"><input type="checkbox" id="competency-archived" '+(showArchived?'checked':'')+'/> Include archived custom skills</label></section>'+
-    '<div class="skill-groups">'+competencyGroups(c,query,category,showArchived)+'</div></div>';
+    '<button type="button" id="competency-archived" class="button button-outline skill-archived-toggle" data-action="toggle-archived-skills" aria-pressed="'+showArchived+'">Show archived</button>'+
+    '<button class="button button-outline" data-action="add-competency">'+icon('plus',17)+' Custom skill</button></section>'+
+    '<div class="skill-groups">'+competencyGroups(c,query,category,showArchived,scope)+'</div>'+
+    '<p class="footer-note">Linked examples show where you recorded using a skill. They are not a proficiency rating or independent verification.</p></div>';
 }
 export function customCompetencyForm(c:CareerCollections,record?:Competency):string{
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);

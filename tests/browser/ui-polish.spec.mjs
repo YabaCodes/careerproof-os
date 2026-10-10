@@ -52,7 +52,7 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430,768,1024
     await start(page);
     const c=await seed(page,theme);
     await layout(page,'Home');
-    for(const screen of ['vault','profile','home']){
+    for(const screen of ['vault','portfolio','competencies','profile','home']){
       await action(page,'[data-screen="'+screen+'"]');
       await layout(page,screen);
     }
@@ -68,9 +68,18 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430,768,1024
         expect(geometry[i].y).toBe(geometry[0].y);
         expect(geometry[i].iconY).toBe(geometry[0].iconY);
       }
-      await expect(page.locator('.mobile-nav')).toContainText('Add');
+      // DEC-029: five content tabs; capture and Settings live in the header only.
+      await expect(page.locator('.mobile-nav > button')).toHaveText(['Home','Vault','Experience','Skills','Profile']);
+      await expect(page.locator('.mobile-nav [data-action=settings], .mobile-nav [data-action=capture]')).toHaveCount(0);
+      await expect(page.locator('[data-action=settings]:visible')).toHaveCount(1);
+      const [create,gear]=await Promise.all([page.locator('.mobile-create').boundingBox(),page.locator('.header-settings').boundingBox()]);
+      for(const box of [create,gear]){expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);expect(box.x+box.width).toBeLessThanOrEqual(width);}
+      expect(create.x+create.width).toBeLessThanOrEqual(gear.x+1);
     }else{
       await expect(page.locator('.side-links [data-screen="profile"]')).toBeVisible();
+      // Settings is in the sidebar only at tablet/desktop widths, never duplicated in the header.
+      await expect(page.locator('.header-settings')).toBeHidden();
+      await expect(page.locator('[data-action=settings]:visible')).toHaveCount(1);
     }
     await action(page,'[data-screen="vault"]');
     await page.locator('#vault-search').fill('no-synthetic-match');
@@ -109,7 +118,7 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430,768,1024
 }
 test('dialog focus, scroll lock, dirty confirmation and hash events preserve input',async({page})=>{
   await start(page);
-  await page.locator('.mobile-nav [data-action="capture"]').click();
+  await page.locator('.mobile-create').click();
   await expect(page.getByRole('dialog')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.locator('.close-dialog')).toBeFocused();
@@ -129,17 +138,18 @@ test('dialog focus, scroll lock, dirty confirmation and hash events preserve inp
   await expect(page.locator('#title')).toHaveValue('Synthetic unsaved form');
   page.once('dialog',d=>d.accept());await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.locator('.mobile-nav [data-action="capture"]')).toBeFocused();
+  await expect(page.locator('.mobile-create')).toBeFocused();
   await expect(page.locator('.content-wrap')).not.toHaveAttribute('inert','');
   // An invocation far down the page restores both its scroll and keyboard focus.
   await action(page,'[data-screen="home"]');
-  await page.locator('.privacy-note [data-action="settings"]').scrollIntoViewIfNeeded();
+  const invoker=page.locator('.quick-action[data-kind="credentials"]');
+  await invoker.scrollIntoViewIfNeeded();
   const scroll=await page.evaluate(()=>scrollY);
-  await page.locator('.privacy-note [data-action="settings"]').click();
+  await invoker.click();
   await page.locator('.modal-body').evaluate(el=>el.scrollTop=el.scrollHeight);
   await action(page,'[data-action="close"]');
   expect(await page.evaluate(()=>scrollY)).toBe(scroll);
-  await expect(page.locator('.privacy-note [data-action="settings"]')).toBeFocused();
+  await expect(invoker).toBeFocused();
 });
 test('short visual viewport keeps dialog footer and final input reachable',async({page})=>{
   await page.addInitScript(()=>{

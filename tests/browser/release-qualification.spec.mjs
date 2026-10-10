@@ -21,7 +21,7 @@ async function snapshot(page){
   });
 }
 async function settings(page){
-  await page.locator('.mobile-nav [data-action=settings]').click();
+  await page.locator('.header-settings').click();
   await expect(page.getByRole('dialog',{name:'Settings & data'})).toBeVisible();
 }
 async function selectBackup(page,backup){
@@ -87,7 +87,7 @@ test('CP-E203 cross-module navigation, complete backup and restoration preserve 
   const original=await snapshot(page);
   await page.locator('.mobile-nav [data-screen=profile]').click();
   await expect(page.getByText('Synthetic Company').first()).toBeVisible();
-  await page.locator('[data-screen=portfolio][data-action=nav]').filter({hasText:'Open Experience Portfolio'}).click();
+  await page.locator('.mobile-nav [data-screen=portfolio]').click();
   await expect(page.locator('details.portfolio-card')).toHaveCount(1);
   await page.locator('details.portfolio-card summary').click();
   await expect(page.locator('[data-action=portfolio-achievement]')).toContainText('Resolved synthetic issue');
@@ -96,7 +96,7 @@ test('CP-E203 cross-module navigation, complete backup and restoration preserve 
   await expect(page.getByRole('dialog')).toContainText('SYNTHETIC-001');
   await page.locator('.close-dialog').click();
   await page.locator('.mobile-nav [data-screen=profile]').click();
-  await page.locator('[data-screen=competencies][data-action=nav]').filter({hasText:'Open Competency Library'}).click();
+  await page.locator('.mobile-nav [data-screen=competencies]').click();
   await page.locator('#competency-search').fill('Synthetic Skill');
   await expect(page.locator('details.skill-entry')).toHaveCount(1);
   await page.locator('details.skill-entry summary').click();
@@ -105,7 +105,7 @@ test('CP-E203 cross-module navigation, complete backup and restoration preserve 
   await page.locator('[data-action=check-integrity]').click();
   await expect(page.locator('#integrity-check-result')).toContainText('Check passed.');
   const downloadReady=page.waitForEvent('download');
-  await page.locator('[data-action=export]').click();
+  await page.locator('#export-backup').click();
   const download=await downloadReady,parts=[];
   for await(const chunk of await download.createReadStream())parts.push(chunk);
   const backup=JSON.parse(Buffer.concat(parts).toString('utf8'));
@@ -137,16 +137,17 @@ test('CP-E204 installed offline shell supports Profile, Portfolio, Vault and Com
     if(!navigator.serviceWorker.controller)
       await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
-  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.2-alpha.2');
+  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.2-alpha.3');
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('.hero-card')).toBeVisible();
   await page.locator('.mobile-nav [data-screen=profile]').click();
   await expect(page.getByText('Synthetic Company').first()).toBeVisible();
-  await page.locator('[data-screen=portfolio][data-action=nav]').filter({hasText:'Open Experience Portfolio'}).click();
+  await page.locator('.mobile-nav [data-screen=portfolio]').click();
   await expect(page.locator('details.portfolio-card')).toHaveCount(1);
   await page.locator('.mobile-nav [data-screen=profile]').click();
-  await page.locator('[data-screen=competencies][data-action=nav]').filter({hasText:'Open Competency Library'}).click();
+  await page.locator('.mobile-nav [data-screen=competencies]').click();
+  await page.locator('[data-action=skill-scope][data-scope=all]').click();
   await expect(page.locator('details.skill-entry')).toHaveCount(33);
   await page.locator('.mobile-nav [data-screen=vault]').click();
   await expect(page.locator('.achievement-row')).toHaveCount(1);

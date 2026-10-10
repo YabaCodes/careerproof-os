@@ -41,16 +41,17 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
     });
     expect(nav.height).toBe(61); // 60px content plus one divider; zero device inset here.
     expect(nav.paddingTop).toBe('0px');expect(nav.paddingBottom).toBe('0px');
-    expect(nav.items.map(x=>x.label)).toEqual(['Home','Vault','Add','Profile','Settings']);
+    // DEC-029/030: five content tabs, Wealth OS line icons; capture and Settings moved to the header.
+    expect(nav.items.map(x=>x.label)).toEqual(['Home','Vault','Experience','Skills','Profile']);
     for(const [index,item] of nav.items.entries()){
       expect(item.height).toBe(60);expect(item.width).toBeGreaterThanOrEqual(44);
       expect(item.frame).toBe(24);expect(item.frameHeight).toBe(24);
-      expect(item.size).toBe(width<=390?19:20);expect(item.stroke).toBe('1.8px');expect(item.font).toBe('10.5px');
+      expect(item.size).toBe(21);expect(item.stroke).toBe(index===0?'2.05px':'1.8px');expect(item.font).toBe('10.5px');
       expect(Math.abs(item.iconX-item.center)).toBeLessThan(.1);
       expect(item.iconY).toBe(nav.items[0].iconY);expect(item.labelY).toBe(nav.items[0].labelY);
       if(index){expect(Math.abs(item.width-nav.items[0].width)).toBeLessThan(.1);expect(Math.abs((item.center-nav.items[index-1].center)-(nav.items[1].center-nav.items[0].center))).toBeLessThan(.1);}
     }
-    expect(nav.items[0].background).toBe('rgba(0, 0, 0, 0)');expect(nav.items[2].circle).toBe('34px');
+    for(const item of nav.items)expect(item.background).toBe('rgba(0, 0, 0, 0)');
     await info.attach('navigation',{body:await page.locator('.mobile-nav').screenshot(),contentType:'image/png'});
     await page.locator('.mobile-create').click();
     await expect(page.getByRole('dialog')).toBeFocused();
@@ -109,7 +110,7 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
 test('safe-area inset is separate from navigation content and shared profile footer',async({page})=>{
   await start(page);await page.evaluate(()=>document.documentElement.style.setProperty('--safe-bottom','34px'));
   expect(await page.locator('.mobile-nav').evaluate(el=>el.getBoundingClientRect().height)).toBe(95);
-  expect(await page.locator('.mobile-create').evaluate(el=>el.getBoundingClientRect().height)).toBe(60);
+  expect(await page.locator('.mobile-nav .nav-item').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height))).toEqual([60,60,60,60,60]);
   await page.locator('.mobile-nav [data-screen=profile]').click();await page.locator('[data-action=edit-profile]').last().click();
   await expect(page.getByRole('dialog')).toBeFocused();expect(await page.locator('.modal-body').evaluate(el=>el.scrollTop)).toBe(0);
   expect(await page.locator('.modal-footer').evaluate(el=>getComputedStyle(el).paddingBottom)).toBe('46px');
