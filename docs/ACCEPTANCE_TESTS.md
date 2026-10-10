@@ -9,6 +9,23 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-011E — integrated release candidate v0.1.1-rc.1
+
+- [ ] E211: Existing Home Screen PWA updates without reinstall; version rc.1 and all existing data remain intact.
+- [ ] E212: Full JSON backup export is physically present in a secure location; it is not encrypted.
+- [ ] E213: Settings Check data passes online/offline without upload, replacement or mutation.
+- [ ] E214: Employer/role, education, credentials, Experience Portfolio, partial dates and relationships persist.
+- [ ] E215: Rich achievements, metric/evidence records, role/project/skill links, custom skill history and Vault filters work (also closes remaining CP-011D checks).
+- [ ] E216: Physical iPhone Quick Capture More details, Outcome keyboard and label spacing function in both themes.
+- [ ] E217: Compact five-slot navigation and no horizontal overflow.
+- [ ] E218: Installed PWA reopens offline with all four career modules and records.
+- [ ] E219: Any destructive restore test is limited to an isolated, disposable synthetic dataset; NEVER replace real user records merely to test.
+- [ ] E220: Public repository fixtures and commits contain no personal career or employer-sensitive information.
+
+Passing automated Chromium tests does not replace iOS WebKit acceptance. Final release v0.1.1 is NOT accepted at this candidate gate. See [CP-011E plan](CP_011E_RELEASE_QUALIFICATION.md).
+
+
+
 ## CP-011D.1 — iPhone Quick Capture overlap correction, alpha.10
 
 - [ ] D211: Settings reports alpha.10 after the existing installed Home Screen PWA updates. Previously saved records remain present; export backup first.
