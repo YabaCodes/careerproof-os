@@ -18,10 +18,10 @@ test('nested icons still activate their own button',()=>{
   assert.equal(resolveActionTarget(svg),button);
 });
 test('navigation icons share a coordinate system and decorative accessibility contract',()=>{
-  for(const name of ['home','vault','plus','user','settings']){
+  for(const name of ['home','vault','plus','user','settings','layers','target']){
     const svg=icon(name,24);
     assert.match(svg,/viewBox="0 0 24 24"/);
-    assert.match(svg,/stroke-width="2"/);
+    assert.match(svg,/stroke-width="1.8"/); // DEC-030 Wealth OS line weight
     assert.match(svg,/aria-hidden="true" focusable="false"/);
   }
   assert.notEqual(icon('settings'),icon('sun'),'Settings must be a distinct gear');

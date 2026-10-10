@@ -1,17 +1,17 @@
 /* Shared visual foundations. All component spacing and type use these tokens. */
 :root {
   color-scheme: light;
-  --canvas: #f6f8fa; --surface: #fff; --surface-alt: #edf2f5;
+  --canvas: #f6f7fb; --surface: #fff; --surface-alt: #eef2f7;
   --ink: #142c40; --text: #1d3042; --muted: #5b6c7c;
-  --line: #dce4ea; --control-line: #7b8e9e;
+  --line: #e5e7eb; --control-line: #7b8e9e;
   --teal: #176b73; --teal-soft: #e7f4f2; --navy: #142c40;
   --focus: #176b73; --danger: #a32f3b; --danger-soft: #fff0f1;
-  --shadow: 0 4px 20px rgb(20 44 64 / 4%);
+  --shadow: 0 6px 22px rgb(15 23 42 / 5.5%);
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
   --space-5: 20px; --space-6: 24px; --space-8: 32px;
   --type-small: 12px; --type-meta: 14px; --type-body: 16px;
   --type-section: 20px; --type-title: 28px;
-  --radius-control: 10px; --radius-card: 12px; --radius-modal: 16px;
+  --radius-control: 12px; --radius-card: 20px; --radius-modal: 20px;
   --sidebar-width: 248px;
   --nav-content-height: 60px;
   --safe-bottom: env(safe-area-inset-bottom,0px);
@@ -291,15 +291,10 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
   .vault-toolbar { padding: var(--space-4); }
   .vault-panel .achievement-list { padding: 0 var(--space-4); }
   .mobile-nav { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); align-items: center; gap: 0; position: fixed; bottom: 0; left: 0; right: 0; padding: 0 max(8px,env(safe-area-inset-right)) var(--safe-bottom) max(8px,env(safe-area-inset-left)); background: var(--surface); z-index: 22; border-top: 1px solid var(--line); }
-  .mobile-nav .nav-item, .mobile-create { display: grid; grid-template-rows: 34px auto; align-items: center; align-content: center; justify-items: center; gap: 3px; padding: 0; font-size: 10.5px; line-height: 1.05; text-align: center; border-radius: var(--radius-control); min-width: 44px; width: 100%; min-height: 44px; height: var(--nav-content-height); }
+  .mobile-nav .nav-item { display: grid; grid-template-rows: 34px auto; align-items: center; align-content: center; justify-items: center; gap: 3px; padding: 0; font-size: 10.5px; line-height: 1.05; text-align: center; border-radius: var(--radius-control); min-width: 44px; width: 100%; min-height: 44px; height: var(--nav-content-height); }
   .mobile-nav .nav-item.active { background: transparent; }
   .nav-icon { position: relative; width: 24px; height: 24px; display: grid; place-items: center; }
   .mobile-nav svg { width: 20px; height: 20px; stroke-width: 1.8; position: relative; }
-  .mobile-create { background: transparent; border: 0; color: var(--teal); font-weight: 600; margin: 0; }
-  .mobile-create .nav-icon { color: #fff; }
-  .mobile-create .nav-icon::before { content: ''; position: absolute; width: 34px; height: 34px; border-radius: 50%; background: #176b73; }
-  .mobile-create:hover .nav-icon::before { background: #0c5961; }
-  /* The shared row accommodates Add without raising its icon or label. */
   .modal-backdrop { padding: 0; align-items: flex-end; }
   .modal { border-radius: var(--radius-modal) var(--radius-modal) 0 0; max-height: 96%; width: 100%; border-bottom: 0; }
   .capture-modal { max-height: 100%; border-radius: 0; height: 100%; }
@@ -603,3 +598,121 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .integrity-check-result.integrity-failed {
   color: var(--danger, #c43d45);
 }
+
+
+/* CP-012.2 (DEC-029/030) — Wealth OS design language with CareerProof navy/teal.
+   One header per screen (title, subtitle, capture, settings); five content tabs;
+   20px cards; uppercase metric labels; flat line-icon tab bar; segmented controls. */
+.page-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin: 0 0 18px; min-width: 0; }
+.page-title { min-width: 0; }
+.page-title h1 { font-size: 22px; letter-spacing: -.2px; margin: 0; line-height: 1.2; }
+.page-title p { margin: 3px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.page-actions { display: flex; gap: var(--space-2); flex: none; }
+.header-button { min-width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface); color: var(--ink); }
+.header-button:hover { background: var(--surface-alt); }
+.header-button.mobile-create { background: var(--navy); border-color: var(--navy); color: #fff; }
+.header-button.mobile-create:hover { background: #24465c; }
+.header-button-label { display: none; font-weight: 600; font-size: var(--type-meta); }
+@media (min-width:768px) { .header-settings { display: none; } }
+@media (min-width:1024px) {
+  .header-button.mobile-create { padding: 0 var(--space-4); }
+  .header-button-label { display: inline; }
+}
+.sidebar .nav-item.active { color: var(--ink); background: var(--surface-alt); font-weight: 700; }
+.sidebar .nav-item.active svg { stroke-width: 2.05; }
+
+/* Cards */
+.panel, .stat-card, .portfolio-card, .metric-card { border-radius: var(--radius-card); }
+.metric-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.metric-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: var(--space-3); margin: var(--space-3) 0 0; }
+.metric-card { background: var(--surface); border: 1px solid var(--line); padding: var(--space-4); box-shadow: var(--shadow); min-width: 0; }
+.metric-value { font-size: 28px; font-weight: 780; color: var(--ink); line-height: 1.15; margin-top: 5px; overflow-wrap: anywhere; }
+.metric-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.metric-warn .metric-value { color: var(--danger); }
+.hero-card.next-card { background: var(--navy); border-radius: var(--radius-card); padding: var(--space-5); color: #fff; box-shadow: var(--shadow); }
+.next-card .metric-label { color: #cbd5e1; }
+.next-card h2 { color: #fff; font-size: 19px; margin: var(--space-1) 0; letter-spacing: -.2px; }
+.next-card p { color: #dbe4ee; font-size: var(--type-meta); margin: 0 0 var(--space-4); max-width: 620px; }
+.next-card .button { min-height: 44px; }
+.section-title { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin: 22px 2px 10px; }
+.section-title h2 { font-size: 16px; margin: 0; }
+.section-title .text-action { min-height: 44px; padding-right: 0; }
+.list-card { padding: var(--space-1) var(--space-4); }
+.list-card .achievement-list { margin: 0; }
+.quick-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; }
+.quick-action { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); font-weight: 650; font-size: var(--type-meta); padding: var(--space-2); min-width: 0; }
+.quick-action:hover { background: var(--surface-alt); }
+.quick-action span { min-width: 0; overflow-wrap: anywhere; }
+.footer-note { display: flex; gap: 6px; align-items: flex-start; color: var(--muted); font-size: 12.5px; line-height: 1.5; margin: 18px 4px 0; }
+.footer-note svg { margin-top: 2px; }
+
+/* Segmented controls replace dropdowns where there are few options. */
+.segmented { display: flex; gap: 4px; padding: 3px; background: var(--surface-alt); border-radius: var(--radius-control); min-width: 0; }
+.segment { flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 var(--space-2); border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-weight: 650; font-size: var(--type-meta); overflow-wrap: anywhere; }
+.segment[aria-pressed=true], .segment[aria-checked=true] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgb(15 23 42 / 12%); }
+.competency-page > .segmented { margin-bottom: var(--space-3); }
+
+/* Vault toolbar: search, status, sort; detailed filters on demand. */
+.vault-toolbar { display: grid; grid-template-columns: minmax(0,1fr) auto; }
+.vault-toolbar .search-field { grid-column: 1 / -1; }
+.filter-toggle { min-height: 48px; }
+.vault-advanced-filters { padding: var(--space-4) var(--space-5) 0; margin: 0; border-bottom: 1px solid var(--line); padding-bottom: var(--space-4); }
+.vault-advanced-filters[hidden] { display: none !important; }
+.vault-advanced-filters .field label { font-size: var(--type-meta); }
+
+/* Experience and Skills pages: actions sit in their toolbars. */
+.portfolio-overview .button, .skill-toolbar > .button { min-height: 44px; }
+.skill-toolbar { align-items: end; }
+.profile-grid { grid-template-columns: minmax(0,1fr); }
+.modal-header .eyebrow { display: none; }
+
+@media (max-width:1199px) { .metric-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media (max-width:767px) {
+  .page { padding-top: calc(14px + env(safe-area-inset-top)); }
+  .metric-grid { gap: var(--space-3); }
+  .metric-card { padding: 14px; }
+  .metric-value { font-size: 26px; }
+  .quick-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .vault-toolbar { grid-template-columns: minmax(0,1fr); }
+  .vault-toolbar .filter-toggle { justify-self: start; }
+  .vault-advanced-filters { padding: var(--space-4); }
+  /* Flat line-icon tab bar (Wealth OS) */
+  .mobile-nav { background: rgb(255 255 255 / 97%); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  :root[data-theme=dark] .mobile-nav { background: rgb(27 42 58 / 97%); }
+  .mobile-nav .nav-item { color: #64748b; font-weight: 500; }
+  .mobile-nav .nav-item.active { color: var(--ink); font-weight: 800; }
+  .mobile-nav .nav-item.active svg { stroke-width: 2.05; }
+  .mobile-nav svg { width: 21px; height: 21px; }
+}
+@media (max-width:767px) and (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]):not([data-theme=dark]) .mobile-nav { background: rgb(27 42 58 / 97%); }
+}
+:root[data-theme=dark] .mobile-nav .nav-item { color: var(--muted); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]):not([data-theme=dark]) .mobile-nav .nav-item { color: var(--muted); } }
+:root[data-theme=dark] .mobile-nav .nav-item.active { color: var(--ink); }
+@media (max-width:359px) {
+  .quick-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .page-title h1 { font-size: 20px; }
+}
+.settings-line-stack { grid-template-columns: minmax(0,1fr); }
+
+/* CP-012.2 refinements: compact toolbars. */
+.filter-controls .filter-toggle { flex: none; width: auto; padding-inline: var(--space-3); }
+.filter-controls .filter-toggle span { white-space: nowrap; }
+.skill-panel .career-section-heading h2 { font-size: 17px; }
+.skill-toolbar { grid-template-columns: minmax(0,2fr) minmax(0,1fr) auto; }
+@media (max-width:767px) {
+  .skill-toolbar { grid-template-columns: minmax(0,1fr) auto; }
+  .skill-toolbar > .field { grid-column: 1 / -1; }
+  .filter-controls select { width: auto; flex: 1 1 0; }
+}
+@media (max-width:359px) {
+  .filter-controls { flex-wrap: wrap; }
+  .filter-controls select { flex: 1 1 calc(50% - 4px); }
+  .filter-controls .filter-toggle { flex: 1 1 100%; }
+}
+/* Dark mode: navy capture button would vanish on the navy canvas; use the teal accent. */
+:root[data-theme=dark] .header-button.mobile-create { background: var(--teal); border-color: var(--teal); color: #0d1b26; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme=light]):not([data-theme=dark]) .header-button.mobile-create { background: var(--teal); border-color: var(--teal); color: #0d1b26; } }
+
+.skill-archived-toggle[aria-pressed=true] { background: var(--surface-alt); border-color: var(--ink); color: var(--ink); }

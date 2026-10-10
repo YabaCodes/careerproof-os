@@ -9,6 +9,18 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-012.2 — navigation and design (0.1.2-alpha.3, device gate)
+
+Existing Home Screen app only; no reinstall or storage clearing. This release is also the first chance to observe the alpha.2 update behaviour (U103–U104).
+
+- [ ] **A101:** After merge, opening or switching back to CareerProof shows **New version ready — version 0.1.2-alpha.3** with **Back up first** and **Restart app** (U103/U104). After restart, Settings shows `0.1.2-alpha.3` and all records (work history, education, any achievements) are intact.
+- [ ] **A102:** Bottom bar shows Home · Vault · Experience · Skills · Profile with equal spacing, no overlap with the home indicator, and one bold active tab. Settings and ＋ appear only in the header.
+- [ ] **A103:** Home: the dark card shows one sensible next action; metrics read correctly (Last export says *Never* or the right age); Quick capture buttons open the right forms.
+- [ ] **A104:** Vault: Filters opens and closes the detailed filters and shows the active count; status/sort labels are not cut off.
+- [ ] **A105:** Experience and Skills open from their tabs; Skills shows *With examples* and *All*; Show archived toggles.
+- [ ] **A106:** Quick Capture still opens full screen from the header ＋ with the accepted field order; the keyboard does not cover Outcome; light and dark themes both readable (dark ＋ is teal).
+
+
 ## CP-012.1 — update detection (0.1.2-alpha.2, device gate)
 
 Existing Home Screen app only; no reinstall or storage clearing.

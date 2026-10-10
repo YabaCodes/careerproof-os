@@ -1,7 +1,8 @@
 const paths: Record<string,string>={
-  home:'<path class="icon-fill" d="m4 10 8-7 8 7v11h-6v-6h-4v6H4Z"/><path d="m2 10 10-8 10 8"/>',
+  // CP-012.2 (DEC-030): Wealth OS line style — outline only, 1.8 stroke.
+  home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/><path d="M9.5 20v-6h5v6"/>',
   vault:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 8h8M8 12h5"/>',
-  user:'<circle cx="12" cy="7" r="4"/><path d="M4 21a8 8 0 0 1 16 0Z"/>',
+  user:'<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.6 4-5.5 7.5-5.5s6.3 1.9 7.5 5.5"/>',
   plus:'<path d="M12 5v14M5 12h14"/>',
   arrow:'<path d="M5 12h14m-6-6 6 6-6 6"/>',
   chevron:'<path d="m9 18 6-6-6-6"/>',
@@ -22,6 +23,9 @@ const paths: Record<string,string>={
   info:'<circle cx="12" cy="12" r="10"/><path d="M12 11v6m0-10v.1"/>',
   archive:'<rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v12h14V9m-10 5h6"/>',
   refresh:'<path d="M20 7V3l-3 3a8 8 0 1 0 2.4 9M20 3v5h-5"/>',
+  badge:'<circle cx="12" cy="9" r="5"/><path d="m9 13.5-1.5 7 4.5-2.5 4.5 2.5-1.5-7"/>',
+  filter:'<path d="M4 6h16M7 12h10M10 18h4"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
   layers:'<path d="m12 2 9 5-9 5-9-5 9-5zm-9 10 9 5 9-5M3 17l9 5 9-5"/>',
   lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v6l4 2"/>',
@@ -29,4 +33,4 @@ const paths: Record<string,string>={
   moon:'<path d="M20 14a8 8 0 0 1-10-10 8 8 0 1 0 10 10z"/>',
   alert:'<path d="M12 3 2 21h20L12 3zm0 7v5m0 3v.1"/>',
 };
-export function icon(name:string,size=20):string {return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths[name]??paths.info}</svg>`;}
+export function icon(name:string,size=20):string {return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${paths[name]??paths.info}</svg>`;}

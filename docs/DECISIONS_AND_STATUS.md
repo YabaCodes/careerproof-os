@@ -199,3 +199,8 @@ A post-merge review found a data-corrupting defect in the Experience Portfolio: 
 PR #18 (CP-012.0 Experience text integrity hotfix, `0.1.2-alpha.1`) was merged by the user; main CI run 38027577090 built, tested and deployed; the live `sw.js` serves `careerproof-v0.1.2-alpha.1` (a non-cache-busted fetch about 10 minutes after deploy still returned the previous file, confirming GitHub Pages edge caching adds delay). The user reports entering only work history and education; H103 applies only if Experience Portfolio entries exist. Device checks H101/H102 remain open.
 
 Decisions DEC-028 to DEC-031 recorded above. CP-012.1 (`0.1.2-alpha.2`) implements DEC-028; CP-012.2 (`0.1.2-alpha.3`) will implement DEC-029/030.
+
+
+## 2026-10-10 — CP-012.2 navigation and design implementation (0.1.2-alpha.3)
+
+Implements DEC-029/030 as decided by the user: tabs Home · Vault · Experience · Skills · Profile; ＋ and Settings in the header (gear on phones only; sidebar on wider screens); Wealth OS layout language with CareerProof navy/teal and the CP icon. Deviation from the 2026-10-10 mockup, by design: rows keep their existing tap-to-open behaviour instead of ⋯ menus, and career-record Edit/Delete buttons are unchanged in this release (moving Delete into the editor is a candidate follow-up). Input borders keep CareerProof's darker control line for WCAG 1.4.11 contrast rather than Wealth OS's light grey. Supersedes the accepted Home/Vault/Add/Profile/Settings bar once the user accepts A101–A106 on the iPhone.

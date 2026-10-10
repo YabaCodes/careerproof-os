@@ -1,5 +1,33 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.3 — CP-012.2 Navigation and Wealth OS design language (review)
+
+**Navigation (DEC-029)**
+- The phone tab bar is now **Home · Vault · Experience · Skills · Profile**. Experience Portfolio and the Competency Library (now **Skills**) are their own tabs instead of links two taps deep under Profile; the "Back to Career Profile" links are gone.
+- **＋ (new achievement) and Settings sit in the header** of every screen. Settings is no longer duplicated: the header gear appears on phones only; tablets and desktops use the sidebar.
+- The desktop sidebar lists the same five destinations and drops the "Coming in future releases" teaser.
+
+**Design language (DEC-030), keeping CareerProof navy/teal and the CP app icon**
+- One compact header per screen (title + live subtitle) replaces the breadcrumb bar and the stacked caption/title/subtitle blocks.
+- 20px cards, soft shadow, uppercase metric labels, flat line-icon tab bar (1.8 stroke, bold active tab), 12px controls, segmented controls for the theme and the Skills scope.
+- **Home**: one deterministic *next action* (first achievement → finish a draft → export a backup if none in 14 days → add a headline → capture a recent win), four truthful metrics (Recorded, Experiences, Skills with examples, Last export), Recent list, Quick capture (Achievement, Experience, Employer, Credential). The marketing banner, duplicate capture buttons and "Build your record" card are removed.
+- **Vault**: counts move to the header ("1 achievement · 0 drafts"); the five detailed filters collapse behind **Filters** (shows how many are active) and use the standard field style.
+- **Skills**: opens on skills **with linked examples** once any exist, with **All** one tap away; searching always covers every skill; "Show archived" is a 44px toggle. Linked examples are still described as not a proficiency rating.
+- **Profile**: the three shortcut cards are removed.
+- In dark mode the ＋ button uses the teal accent so it stays visible.
+
+**Fixes found during the redesign**
+- Vault said "1 drafts" and called drafts "recorded contributions"; Skills said "1 skills"; sort labels were cut off on phones.
+- The archived-skills checkbox was a 19px tap target (the screen was never covered by the layout sweep).
+- After **Export backup**, Home kept showing "Never" until another screen redrew.
+
+**Tests**
+- Layout sweep now covers Experience and Skills at 320–1440px in both themes (tap targets, overflow, labels, clipping).
+- New `home-navigation` spec: next-action order, export status refresh, truthful counts and plurals, five tabs with one active, header-only Settings and capture.
+- Navigation geometry test rewritten for the new bar (five equal 60px slots, 21px icons, active 2.05 stroke, safe-area inset separate).
+- No schema, backup-format or record change. Version, service-worker cache and version tests updated; no new modules.
+
+
 ## 0.1.2-alpha.2 — CP-012.1 Faster, user-controlled update detection (review)
 
 - **Why updates felt slow:** automatic update checks were throttled to once every 5 minutes, so returning to the app soon after a release did nothing until the throttle expired and the app was foregrounded again. On top of that, CI takes about 2.5 minutes to test and deploy, and GitHub Pages can serve a cached `sw.js` for up to about 10 minutes.

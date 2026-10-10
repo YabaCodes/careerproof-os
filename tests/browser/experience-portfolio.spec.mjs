@@ -5,8 +5,7 @@ async function pageStart(page){
   await expect(page.locator('.hero-card')).toBeVisible();
 }
 async function portfolio(page){
-  await page.locator('.mobile-nav [data-screen=profile]').click();
-  await page.locator('[data-action=nav][data-screen=portfolio]').filter({hasText:'Open Experience Portfolio'}).click();
+  await page.locator('.mobile-nav [data-screen=portfolio]').click();
   await expect(page.getByRole('heading',{name:'Experience Portfolio'})).toBeVisible();
 }
 async function addExperience(page,name='Synthetic Program A'){
@@ -74,7 +73,7 @@ test('roles are linked through canonical IDs in one validated atomic transaction
   await page.locator('#career-startDate').fill('2024');
   await page.locator('[data-action=save-career]').click();
   const employer=(await snapshot(page)).employers[0],role=(await snapshot(page)).roles[0];
-  await page.locator('[data-action=nav][data-screen=portfolio]').filter({hasText:'Open Experience Portfolio'}).click();
+  await page.locator('.mobile-nav [data-screen=portfolio]').click();
   await addExperience(page,'Synthetic Equipment Initiative');
   await page.locator('#portfolio-employerId').selectOption(employer.id);
   await page.locator('.portfolio-role-option input').check();

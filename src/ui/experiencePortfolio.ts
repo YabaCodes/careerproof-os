@@ -138,11 +138,9 @@ export function portfolioCards(c:CareerCollections,f:PortfolioFilters):string {
 }
 export function portfolioPage(c:CareerCollections,f:PortfolioFilters):string{
   const count=c.projects.length;
-  return '<div class="portfolio-page"><div class="page-heading page-heading-flex"><div><p class="eyebrow">CAREER PROFILE / EXPERIENCE</p><h1>Experience Portfolio</h1>'+
-    '<p class="page-subtitle">Projects, initiatives and ongoing responsibilities, separate from individual achievements.</p></div>'+
-    '<button class="button button-primary" data-action="add-project">'+icon('plus',17)+' Add experience</button></div>'+
-    '<button class="career-inline-add portfolio-back" data-action="nav" data-screen="profile">'+icon('back',16)+' Back to Career Profile</button>'+
-    '<section class="panel portfolio-panel"><div class="portfolio-overview"><strong>'+count+' experience'+(count===1?'':'s')+'</strong><p class="career-meta">Tap an entry to explore its full details and linked achievements.</p></div>'+
+  return '<div class="portfolio-page">'+
+    '<section class="panel portfolio-panel"><div class="portfolio-overview"><p class="career-meta">'+(count?'Tap an entry for its details and linked achievements.':'Record projects, initiatives and ongoing responsibilities, then link achievements to them.')+'</p>'+
+    '<button class="button button-outline" data-action="add-project">'+icon('plus',17)+' Add experience</button></div>'+
     '<div class="portfolio-filters"><div class="field"><label for="portfolio-search">Search experiences</label><input id="portfolio-search" placeholder="Search title, objective, or responsibilities" value="'+esc(f.query)+'"/></div>'+
     select('filter-type','Type',[{id:'',name:'All types'},...Object.entries(typeNames).map(([id,name])=>({id,name}))],f.type)+
     select('filter-status','Status',[{id:'',name:'All statuses'},...Object.entries(statuses).map(([id,name])=>({id,name}))],f.status)+'</div>'+

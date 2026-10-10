@@ -118,8 +118,10 @@ test('invalid evidence URL and metric are rejected without any data write',async
 test('competency library displays 32 built-in skills plus custom skills and linked examples',async({page})=>{
   await start(page);
   await page.locator('.mobile-nav [data-screen=profile]').click();
-  await page.locator('[data-screen=competencies][data-action=nav]').filter({hasText:'Open Competency Library'}).click();
-  await expect(page.getByRole('heading',{name:'Competency Library'})).toBeVisible();
+  await page.locator('.mobile-nav [data-screen=competencies]').click();
+  await expect(page.getByRole('heading',{name:'Skills',exact:true})).toBeVisible();
+  // CP-012.2: the library opens on skills with examples; All shows the full taxonomy.
+  await page.locator('[data-action=skill-scope][data-scope=all]').click();
   await expect(page.locator('details.skill-entry')).toHaveCount(33);
   await page.locator('#competency-search').fill('Synthetic Skill');
   await expect(page.locator('details.skill-entry')).toHaveCount(1);
@@ -143,7 +145,8 @@ test('competency library displays 32 built-in skills plus custom skills and link
   await page.locator('[data-action=archive-competency]').click();
   await expect(page.locator('details.skill-entry')).toHaveCount(0);
   expect((await snapshot(page)).competencies.find(x=>x.name==='Industrialization Strategy').status).toBe('archived');
-  await page.locator('#competency-archived').check();
+  await page.locator('#competency-archived').click();
+  await expect(page.locator('#competency-archived')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('details.skill-entry')).toHaveCount(1);
   await page.locator('details.skill-entry summary').click();
   await page.locator('[data-action=restore-competency]').click();
@@ -156,7 +159,12 @@ test('Vault filters support role, project, competency and date without changing 
   const before=await snapshot(page);
   await page.locator('.mobile-nav [data-screen=vault]').click();
   await expect(page.locator('.achievement-row')).toHaveCount(1);
+  // CP-012.2: detailed filters are collapsed behind Filters, which shows the active count.
+  await expect(page.locator('#vault-filters')).toBeHidden();
+  await page.locator('[data-action=toggle-vault-filters]').click();
+  await expect(page.locator('[data-action=toggle-vault-filters]')).toHaveAttribute('aria-expanded','true');
   await page.locator('#role-filter').selectOption('role-1');
+  await expect(page.locator('[data-action=toggle-vault-filters]')).toContainText('Filters · 1');
   await page.locator('#project-filter').selectOption('project-1');
   await page.locator('#competency-filter').selectOption('custom-competency');
   await expect(page.locator('.achievement-row')).toHaveCount(1);
@@ -188,7 +196,7 @@ test('save transaction rejects invalid skill reference without modifying any col
 test('archived competency remains linked to historical achievement through edit/save',async({page})=>{
   await start(page);
   await page.locator('.mobile-nav [data-screen=profile]').click();
-  await page.locator('[data-screen=competencies][data-action=nav]').filter({hasText:'Open Competency Library'}).click();
+  await page.locator('.mobile-nav [data-screen=competencies]').click();
   await page.locator('#competency-search').fill('Synthetic Skill');
   await page.locator('details.skill-entry summary').click();
   page.once('dialog',d=>d.accept());
