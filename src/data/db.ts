@@ -304,11 +304,13 @@ export class CareerDatabase {
       validateCollections(data.collections);tx.objectStore(store).delete(id);
     });
   }
-  async replaceAllData(collections:CareerCollections,preferences:Preferences,expected:number):Promise<void> {
+  async replaceAllData(collections:CareerCollections,preferences:Preferences,expected:number,expectedRevision?:number):Promise<void> {
     const checked=structuredClone(validateCollections(collections));
     if(!isPreferences(preferences))throw new ValidationError('Invalid backup preferences.');
     const checkedPreferences=structuredClone(preferences);
     const newGeneration=await this.write(async(tx,data)=>{
+      if(expectedRevision!==undefined&&data.revision!==expectedRevision)
+        throw new ConflictError('Career data changed since you selected the backup. Export a new backup and review the restore again; no records were replaced.');
       if(data.generation===Number.MAX_SAFE_INTEGER)throw new ValidationError('Dataset generation limit reached.');
       for(const store of P0_STORES){const s=tx.objectStore(store);s.clear();for(const record of checked[store])s.put(record);}
       metaValue(tx,GENERATION,data.generation+1);metaValue(tx,'preferences',checkedPreferences);metaValue(tx,'lastExportAt',null);
