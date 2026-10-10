@@ -580,3 +580,21 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 #achievement-form > .field,#achievement-form > .field-row { position:relative; }
 .rich-expander > span:first-child { min-width:0;overflow-wrap:anywhere; }
 .rich-expander > .rich-summary-hint { flex:none; }
+
+/* CP-011E read-only recovery qualification result. Never hide failures in a toast timeout. */
+.integrity-check-result {
+  margin: var(--space-2) 0 var(--space-3);
+  min-width: 0;
+  line-height: 1.5;
+  font-size: var(--type-meta);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.integrity-check-result:not(:empty) {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  padding: var(--space-3);
+}
+.integrity-check-result.integrity-failed {
+  color: var(--danger, #c43d45);
+}
