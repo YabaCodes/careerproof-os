@@ -1,5 +1,19 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.5 — CP-012B Controlled unlink, move and delete (review)
+
+- Deleting an **employer, role, experience, education entry, credential or custom skill** now opens one review sheet instead of either blocking ("Cannot delete…") or a browser confirm.
+- The sheet lists what links to the record: achievements (marking a primary experience), roles, experiences, and your primary role. You then choose:
+  - **Move them to another …**: links and references point to the record you pick. Only compatible targets are offered (a role's experiences must fit the new role's employer, and so on). Duplicate links are merged, and an achievement keeps exactly one primary experience.
+  - **Remove the links**: dependents stay and only lose this link. The sheet says exactly what changes ("Your primary role will be cleared", "experiences become independent"). An employer with roles cannot be unlinked, because roles need an employer.
+- Records with dependents also require ticking "I understand…". Records without dependents delete with one tap in the sheet. A link in the sheet offers **Export backup** first.
+- **No achievement, metric or evidence reference is ever deleted** by these flows. The plan is computed from the data read inside the same IndexedDB transaction, the record revision is re-checked, the whole dataset is validated, and every change commits or aborts together.
+- Custom skills gain **Delete…** next to Archive; the sheet notes that Archive keeps the history.
+- Expanded Experience cards and skill entries stay open after a dialog closes.
+- Tests: 8 Node (each record type and mode, compatibility filtering, primary merge, refusal cases, purity, revision bumps, stale-revision refusal, rollback when storage fails mid-transaction, backup still valid) and 3 browser (experience move, custom skill delete, 320px layout and export from the sheet). Existing deletion tests updated to the new flow.
+- No schema or backup-format change. New modules `domain/removal.js` and `ui/removal.js` are in the offline app shell.
+
+
 ## 0.1.2-alpha.4 — CP-012A Data Health (review)
 
 - **Settings → Data health → Check data** now adds a read-only report under the existing backup round-trip result. It separates **critical** problems (records or backup format fail validation; reported, never thrown or auto-repaired) from **suggestions**:

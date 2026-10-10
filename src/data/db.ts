@@ -1,4 +1,5 @@
-import { type Achievement, type AchievementView, type ImpactMetric, type EvidenceReference, type RecordLink, type Profile, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
+import { type Achievement, type BaseRecord, type AchievementView, type ImpactMetric, type EvidenceReference, type RecordLink, type Profile, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
+import { planRemoval, type RemovableKind, type RemovalMode, type RemovalPlan } from '../domain/removal.js';
 import { achievementView, migrateLegacyAchievement, migrateLegacyProfile, validateCollections, isPreferences, validTime, ConflictError, ValidationError } from '../domain/validation.js';
 import { precisionDateFromInput } from '../domain/dates.js';
 import { builtInTaxonomy } from '../domain/taxonomy.js';
@@ -285,6 +286,22 @@ export class CareerDatabase {
       for(const r of references.records)tx.objectStore('evidenceReferences').put(r);
       for(const r of references.removed)tx.objectStore('evidenceReferences').delete(r.id);
       return achievementView(achievement);
+    });
+  }
+  /**
+   * CP-012B: delete one record after moving or unlinking everything that
+   * depends on it. The plan is recomputed from the snapshot read inside this
+   * transaction, the record revision is re-checked, the whole dataset is
+   * validated, and every put/delete commits or aborts together.
+   */
+  async removeWithPlan(kind:RemovableKind,id:string,revision:number,mode:RemovalMode,targetId:string|null):Promise<RemovalPlan> {
+    return this.write((tx,data)=>{
+      const current=(data.collections[kind] as BaseRecord[]).find(r=>r.id===id);
+      if(!current||current.revision!==revision)throw new ConflictError('This record changed. Reload before deleting.');
+      const plan=planRemoval(data.collections,kind,id,mode,targetId,nowIso());
+      for(const p of plan.puts)tx.objectStore(p.store).put(p.record);
+      for(const d of plan.deletes)tx.objectStore(d.store).delete(d.id);
+      return plan;
     });
   }
   async removeRecord(store:P0Store,id:string,revision:number):Promise<void> {
