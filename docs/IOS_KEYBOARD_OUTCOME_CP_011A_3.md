@@ -2,7 +2,7 @@
 
 **Proposed release:** v0.1.1-alpha.4  
 **Baseline:** merged PR #6, v0.1.1-alpha.3  
-**Status:** Implementation PR pending physical iPhone Safari / installed-PWA acceptance  
+**Status:** Merged in PR #7 (alpha.4); user confirmed Outcome keyboard visibility on a physical iPhone; released in `v0.1.1` and re-confirmed in rc.1 check E216. *(Status updated 2026-10-10.)*  
 **Reported by user:** With the iPhone keyboard open, the bottom Outcome textarea is obscured and requires manual scrolling.
 
 ## Root-cause analysis

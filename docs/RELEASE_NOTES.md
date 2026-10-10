@@ -1,8 +1,17 @@
 # CareerProof release notes
 
-## 0.1.1 — Professional Experience & Evidence (final release promotion PR)
+## Documentation — v0.1.1 status reconciliation and milestone tracker (docs-only, no app version change)
 
-**Release state:** Release promotion ready for CI and user PR review; **not merged or deployed** from this branch. The user explicitly accepted all eight `v0.1.1-rc.1` physical iPhone checks on the existing Home Screen PWA.
+- Reconciles documentation that still described the `v0.1.1` final promotion (PR #16) as pending; it is merged and deployed.
+- Adds [`docs/MILESTONE_TRACKER.md`](MILESTONE_TRACKER.md), the persistent per-feature tracker using the lifecycle **Not Started → Planned → In Development → In Review → Merged → Device Testing → Accepted**.
+- No source, schema, backup-format, service-worker cache or version changes. The installed PWA will not see an update from this change.
+
+
+## 0.1.1 — Professional Experience & Evidence (released 2026-10-10)
+
+**Release state (verified 2026-10-10):** Final promotion [PR #16](https://github.com/YabaCodes/careerproof-os/pull/16) was **merged by the user** on 2026-10-10 (merge commit `398f892974f3fab037656d8bc1d923df461c6397`). PR CI [run 38020852674](https://github.com/YabaCodes/careerproof-os/actions/runs/38020852674) and post-merge main CI [run 38021279551](https://github.com/YabaCodes/careerproof-os/actions/runs/38021279551) both succeeded; the main run built, passed **42/42 Node and 102/102 browser tests**, and **deployed to GitHub Pages**. The live service worker serves cache `careerproof-v0.1.1`. The user explicitly accepted all eight `v0.1.1-rc.1` physical iPhone checks on the existing Home Screen PWA; a separate post-promotion smoke check of the final `v0.1.1` (Settings shows `v0.1.1`, existing records intact) has **not yet been reported**. **No Git tag or GitHub Release exists** for `v0.1.1`; creating one requires explicit user authorization.
+
+*The bullets below are the original promotion-PR description, retained for history.*
 
 - Promotes the already accepted `v0.1.1-rc.1` implementation to **`v0.1.1`**. There are no feature, database, record, manifest identity, or portable backup contract changes in the final promotion.
 - Updates app/package version, service-worker cache name and exact release-specific automated test expectations.

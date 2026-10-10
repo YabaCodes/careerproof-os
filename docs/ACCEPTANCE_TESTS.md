@@ -13,9 +13,16 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 **Accepted on physical iPhone:** User reported all eight `v0.1.1-rc.1` checks passed after PR #15 was merged and deployed. These include version/data retention, verified backup download, read-only Check data, career and Experience linking, rich achievements/competencies/Vault filters, corrected Quick Capture keyboard/layout, and offline reopen.
 
-**Final promotion PR:** Change **only** version/package and service-worker cache identifiers from `0.1.1-rc.1` to `0.1.1`, adjust exact-version regression expectations, and reconcile user docs. Full Node/build/browser CI and user review/merge required; no automatic merge, release tag, schema or backup migration.
+**Final promotion PR #16:** Changed **only** version/package and service-worker cache identifiers from `0.1.1-rc.1` to `0.1.1`, exact-version regression expectations and docs. **Merged by the user 2026-10-10 and deployed** (main CI run 38021279551: 42/42 Node, 102/102 browser, Pages deploy successful). No release tag, schema or backup migration.
 
-After final PR merge and successful GitHub Pages deployment: verify Settings shows `v0.1.1`, locally stored career records remain intact, and the existing installed Home Screen PWA updates safely without reinstalling or clearing storage. Do not restore a synthetic test backup over real records.
+**Post-promotion smoke — open (user to report):**
+
+- [ ] **F101:** Existing Home Screen PWA shows `v0.1.1` in Settings (use **Check now** / **Restart app** if still on rc.1; never reinstall or clear storage).
+- [ ] **F102:** Previously stored employers, roles, Experiences, achievements, metrics, evidence and custom skills are all still present.
+
+Do not restore a synthetic test backup over real records.
+
+**Status reconciliation (2026-10-10):** Sections below are kept as originally written. Several historical device gates were later closed by broader evidence rather than by ticking each box: CP-011A.3 (CP-UI301/302) was accepted by the user on alpha.4; CP-011B was verified by the user before CP-011C was authorized, and the B.1 compact timeline is covered by rc.1 check E214; CP-011C was accepted before CP-011D; the alpha.10 overlap fix was confirmed ("fix works"); and the remaining CP-011D (D201–D209) and D.1 (D211–D215) feature checks were consolidated into rc.1 checks E215–E217, which passed. **CP-011B.2 Check now / Restart notice (CP-B222/B223) has no separately recorded device confirmation.** Authoritative per-feature status: [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md).
 
 
 
@@ -34,7 +41,7 @@ After final PR merge and successful GitHub Pages deployment: verify Settings sho
 - [ ] E219: Any destructive restore test is limited to an isolated, disposable synthetic dataset; NEVER replace real user records merely to test.
 - [ ] E220: Public repository fixtures and commits contain no personal career or employer-sensitive information.
 
-The candidate passed automated CI and the user confirmed the eight installed-iPhone UAT checks. Final release v0.1.1 still requires a separately reviewed, fully tested version-promotion PR and post-merge deployment smoke check. See [CP-011E plan](CP_011E_RELEASE_QUALIFICATION.md).
+The candidate passed automated CI and the user confirmed the eight installed-iPhone UAT checks. The version-promotion PR (#16) has since been merged and deployed; only the post-promotion smoke (F101–F102 above) remains. See [CP-011E plan](CP_011E_RELEASE_QUALIFICATION.md).
 
 
 

@@ -8,7 +8,8 @@ This file is the entry point for Codex and other coding agents working on Career
 - [Data architecture](docs/DATA_ARCHITECTURE.md) — schemas, integrity, backup/migration rules and compatibility.
 - [Career intelligence framework](docs/CAREER_INTELLIGENCE.md) — taxonomy, proficiency, evidence, job matching.
 - [Roadmap and release gates](docs/ROADMAP.md) — P0/P1 scope and v0.1.x milestones.
-- [v0.1.1 implementation brief](docs/V0.1.1_IMPLEMENTATION_BRIEF.md) — next incremental scope, legacy migration contract and test gates.
+- [Milestone tracker](docs/MILESTONE_TRACKER.md) — authoritative per-feature status (Not Started → Planned → In Development → In Review → Merged → Device Testing → Accepted), PRs, test baselines and device evidence. **Update it in every PR.**
+- [v0.1.1 implementation brief](docs/V0.1.1_IMPLEMENTATION_BRIEF.md) — historical: the delivered v0.1.1 scope, legacy migration contract and test gates (not authorization to repeat work).
 - [Decisions, project status and open questions](docs/DECISIONS_AND_STATUS.md) — agreed choices and what needs verification.
 - [Existing manual acceptance tests](docs/ACCEPTANCE_TESTS.md) and [release notes](docs/RELEASE_NOTES.md).
 - [README](README.md) — current build, local development and deployment procedure.

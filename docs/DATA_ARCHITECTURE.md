@@ -6,6 +6,8 @@
 
 **Legacy shipped v0.1.0:** `careerproof-local` IndexedDB at schema version **1**, with `profiles`, `achievements` and `meta` stores. Existing Achievement records use `occurredOn` (exact local date) and Profile has displayName/headline/summary/email/location. JSON backup format **1** includes one profile + achievements. All of this must remain compatible on migration.
 
+**Shipped v0.1.1 (updated 2026-10-10):** schema version **2** with the 12 P0 stores (`profiles`, `employers`, `roles`, `education`, `credentials`, `projects`, `achievements`, `impactMetrics`, `competencyCategories`, `competencies`, `evidenceReferences`, `recordLinks`) plus internal `meta`; backup format **2** with legacy format-1 import. The five P1 collections below do **not** exist yet and require an authorized schema/backup version design.
+
 **Target P0/P1 model:** 17 principal logical collections described below plus internal metadata. New stores and date-precision records require carefully tested migrations; do not treat this document as a reason to reset version-1 data.
 
 **CP-011A branch:** schema 2 implements the 12 P0 collections plus meta, precision-date migration, strict format-1 adaptation, complete format-2 backups and persistent restore generations. No P1 stores are introduced. See [the implemented contract](CP_011A_MIGRATION_RECOVERY.md) for exact fields, versions, limits and tests. PR/device acceptance is separate from this implementation.

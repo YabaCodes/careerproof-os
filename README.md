@@ -2,7 +2,7 @@
 
 **Own your experience. Prove your impact.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. The `v0.1.1 — Professional Experience & Evidence` milestone has passed automated release qualification and the user's physical iPhone acceptance on `v0.1.1-rc.1`. Final version promotion is performed through a separate user-reviewed PR; merge and GitHub Pages deployment remain explicit user-controlled steps.
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.1 — Professional Experience & Evidence` is released**: the user-accepted `v0.1.1-rc.1` (eight physical iPhone checks passed) was promoted to final `v0.1.1` in [PR #16](https://github.com/YabaCodes/careerproof-os/pull/16), merged 2026-10-10 and deployed to GitHub Pages by the main CI run (build, 42 Node and 102 browser tests, deploy: all successful). A short post-promotion iPhone smoke check of the final version is still to be reported, and no Git release tag has been created. Current milestone status lives in the [milestone tracker](docs/MILESTONE_TRACKER.md).
 
 ## Capabilities in v0.1.1
 
@@ -58,4 +58,4 @@ See the [release notes](docs/RELEASE_NOTES.md), [roadmap](docs/ROADMAP.md), [CP-
 
 ## Planned next increments
 
-The next planned `v0.1.2` expands data health, controlled deletion, dashboard insights and reliability hardening. Future increments may add user-assessed proficiency (distinct from documented evidence), performance reviews, editable CV output and job-fit comparison. These features are **not included** in `v0.1.1`.
+The next planned `v0.1.2` expands data health, controlled deletion, dashboard insights and reliability hardening. Future increments may add user-assessed proficiency (distinct from documented evidence), performance reviews, editable CV output and job-fit comparison. These features are **not included** in `v0.1.1`. Each increment starts only after explicit user authorization; see the [roadmap](docs/ROADMAP.md) and [milestone tracker](docs/MILESTONE_TRACKER.md).
