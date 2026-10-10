@@ -57,7 +57,7 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
     expect(await page.locator('.modal-body').evaluate(el=>el.scrollTop)).toBe(0);
     const titleLabel=await page.locator('label[for=title]').boundingBox(),body=await page.locator('.modal-body').boundingBox();
     expect(titleLabel.y).toBeGreaterThanOrEqual(body.y);
-    const fields=await page.locator('.field input,.field select,.field textarea').evaluateAll(nodes=>nodes.map(el=>{
+    const fields=await page.locator('#title,#contribution,#occurredOn,#impactCategory,#outcome').evaluateAll(nodes=>nodes.map(el=>{
       const r=el.getBoundingClientRect(),field=el.closest('.field').getBoundingClientRect(),body=el.closest('.modal-body'),b=body.getBoundingClientRect(),s=getComputedStyle(el),bs=getComputedStyle(body);
       return {id:el.id,left:r.left,right:r.right,width:r.width,height:r.height,fieldLeft:field.left,fieldRight:field.right,bodyLeft:b.left+parseFloat(bs.paddingLeft),bodyRight:b.right-parseFloat(bs.paddingRight),appearance:s.appearance,align:s.textAlign,border:s.borderTopWidth,borderColor:s.borderTopColor,radius:s.borderTopLeftRadius,bg:s.backgroundColor,font:s.fontSize,padding:s.padding,line:s.lineHeight};
     }));
@@ -146,3 +146,36 @@ test('a deliberately cleared new draft remains unspecified after reopening',asyn
   const a=(await snapshot(page)).collections.achievements[0];expect(a.occurredStart).toBeNull();
   await page.reload();await expect(page.locator('.hero-card')).toBeVisible();await edit(page,a.id);await expect(page.locator('#occurredOn')).toHaveValue('');
 });
+
+
+for(const width of [320,375,390,430]){
+  test('expanded enrichment stays inside iPhone modal and collapses without overlapping fields: '+width,async({page})=>{
+    await page.setViewportSize({width,height:812});
+    await start(page);
+    await page.locator('.mobile-create').click();
+    const toggle=page.locator('#rich-detail-panel [data-action=toggle-rich-panel]');
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-expanded','false');
+    await expect(page.locator('#rich-panel-content')).toBeHidden();
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded','true');
+    await expect(page.locator('#rich-panel-content')).toBeVisible();
+    const bounds=await page.locator('.modal-body').evaluate(el=>{
+      const r=el.getBoundingClientRect();
+      return {overflow:el.scrollWidth-el.clientWidth,
+        fields:[...el.querySelectorAll('#rich-panel-content .field input,#rich-panel-content .field textarea,#rich-panel-content .field select')]
+          .filter(x=>x.getClientRects().length>0)
+          .map(x=>{const b=x.getBoundingClientRect();return {left:b.left,right:b.right,parent:x.closest('.field')?.getBoundingClientRect().right??r.right};}),
+        left:r.left,right:r.right};
+    });
+    expect(bounds.overflow).toBeLessThanOrEqual(1);
+    expect(bounds.fields.length).toBeGreaterThan(0);
+    for(const field of bounds.fields){
+      expect(field.left).toBeGreaterThanOrEqual(bounds.left-.5);
+      expect(field.right).toBeLessThanOrEqual(bounds.right+.5);
+    }
+    await toggle.click();
+    await expect(page.locator('#rich-panel-content')).toBeHidden();
+    await expect(page.locator('#outcome')).toBeVisible();
+  });
+}

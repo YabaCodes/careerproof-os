@@ -137,3 +137,8 @@ PR #10 (alpha.6) deployed successfully, but the user's installed iPhone Home Scr
 ## CP-011C — Experience Portfolio awaiting merge and device acceptance
 
 The user verified CP-011B education, certification, backup export and installed PWA operation on their iPhone and authorized CP-011C. Proposed alpha.8 adds a compact Portfolio screen under Profile plus desktop navigation, precise Project/Initiative/Ongoing Responsibility forms, transactional role-project links and project-context achievement capture. It must not create duplicate employer names or expose confidential company data. Schema 2 and backup 2 remain unchanged. User merge and CP-C201–209 acceptance must precede CP-011D.
+
+
+## CP-011D — Expanded Achievement and Competency Linking in review
+
+The user accepted CP-011C on the physical iPhone and explicitly authorized CP-011D. Proposed alpha.9 exposes optional advanced achievement fields, metrics and self-reported evidence, canonical role/project/competency links, a read-only built-in competency taxonomy and custom skill management, plus Vault relational/date filters. A transaction-safe bundle operation preserves existing source, metric and link identities and rejects invalid partial writes. No database schema or backup-format change, cloud sync, rating, job score, PDF export or tasks. Pending CI, user merge and CP-D201–209 iPhone checks; CP-011E remains paused.

@@ -517,3 +517,59 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 
 .portfolio-capture-context { display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:var(--space-3);border:1px solid var(--line);border-radius:var(--radius-control);font-size:var(--type-meta);color:var(--muted); }
 .portfolio-capture-context strong { color:var(--text);overflow-wrap:anywhere; }
+
+
+/* CP-011D — advanced achievement metadata is opt-in and does not inflate Quick Capture. */
+.rich-panel { position:relative;z-index:1;isolation:isolate;align-self:start;border:1px solid var(--line);border-radius:var(--radius-control);overflow:hidden;min-width:0; }
+.rich-panel>.rich-expander { position:relative;z-index:2;cursor:pointer;border:0;width:100%;text-align:left;color:var(--text);background:transparent;padding:var(--space-4);font-size:var(--type-body);font-weight:650;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2); }
+.rich-panel>.rich-expander:focus-visible { outline:2px solid var(--teal);outline-offset:-2px; }
+.rich-summary-hint { color:var(--muted);font-size:var(--type-meta);font-weight:400; }
+.rich-panel-body { padding:var(--space-4);padding-top:0;display:grid;gap:var(--space-4);min-width:0; }
+/* Author display:grid otherwise overrides the closed <details> UA rule, creating untappable overlapping content. */
+.rich-panel-body[hidden] { display:none!important; }
+.rich-link-fieldset { min-width:0;border:1px solid var(--line);border-radius:var(--radius-control);padding:var(--space-3); }
+.rich-link-fieldset legend { padding:0 var(--space-2);font-weight:600; }
+.rich-choice-list { max-height:176px;overflow-y:auto;display:grid;gap:2px;min-width:0;margin-bottom:var(--space-3); }
+.rich-choice-list.rich-competencies { max-height:228px; }
+.rich-check { display:flex;align-items:center;gap:var(--space-3);min-height:44px;cursor:pointer;padding:var(--space-1);font-size:var(--type-meta);overflow-wrap:anywhere; }
+.rich-check input { width:19px;height:19px;accent-color:var(--teal);flex:none; }
+.rich-section-heading { display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--space-2);margin-bottom:var(--space-3); }
+.rich-section-heading h3 { font-size:var(--type-body);margin:0; }
+.rich-row { border:1px solid var(--line);border-radius:var(--radius-control);padding:var(--space-3);min-width:0;margin-bottom:var(--space-3); }
+.rich-row legend { font-size:var(--type-meta);font-weight:600;color:var(--muted);padding:0 var(--space-2); }
+.rich-row-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3); }
+.rich-row .field { min-width:0; }
+.rich-row input,.rich-row textarea,.rich-row select { display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;margin-top:5px; }
+.rich-remove { color:var(--danger, #b33); }
+.vault-advanced-filters { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-3);margin-bottom:var(--space-4); }
+.vault-advanced-filters label { display:grid;gap:5px;min-width:0;font-size:var(--type-meta);color:var(--muted); }
+.vault-advanced-filters select,.vault-advanced-filters input { min-width:0;width:100%;max-width:100%;box-sizing:border-box; }
+.vault-advanced-filters select,.vault-advanced-filters input { min-height:44px; }
+.skill-toolbar { display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--space-3);margin:var(--space-3) 0 var(--space-4);padding:var(--space-4); }
+.skill-toolbar .field,.skill-toolbar input,.skill-toolbar select { min-width:0;width:100%;box-sizing:border-box; }
+.skill-groups { display:grid;gap:var(--space-4); }
+.skill-panel { padding:var(--space-5); }
+.skill-entry { border-top:1px solid var(--line);min-width:0; }
+.skill-entry summary { list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:var(--space-2);min-height:54px;padding:var(--space-3) 0; }
+.skill-entry summary::-webkit-details-marker { display:none; }
+.skill-entry summary:focus-visible { outline:2px solid var(--teal);outline-offset:-2px; }
+.skill-entry summary span:first-child { min-width:0;overflow-wrap:anywhere; }
+.skill-entry summary small { display:block;color:var(--muted);margin-top:4px;font-size:var(--type-meta); }
+.skill-entry[open] summary svg { transform:rotate(90deg); }
+.skill-entry-details { padding:0 0 var(--space-4);overflow-wrap:anywhere; }
+.skill-entry-details>p { line-height:1.5; }
+.skill-entry .portfolio-achievement-links { margin-top:var(--space-3); }
+@media(max-width:767px) {
+  .vault-advanced-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .skill-toolbar { grid-template-columns:minmax(0,1fr); }
+  .skill-panel { padding:var(--space-4); }
+  .rich-panel>.rich-expander,.rich-panel-body { padding:var(--space-3); }
+  .rich-panel-body { padding-top:0; }
+}
+@media(max-width:359px) {
+  .vault-advanced-filters { grid-template-columns:minmax(0,1fr); }
+  .rich-row-grid { grid-template-columns:minmax(0,1fr); }
+}
+
+.skill-archive-toggle { display:flex;align-items:center;gap:var(--space-2);min-height:44px;font-size:var(--type-meta);color:var(--muted);cursor:pointer; }
+.skill-archive-toggle input { width:19px;height:19px;accent-color:var(--teal);flex:none; }

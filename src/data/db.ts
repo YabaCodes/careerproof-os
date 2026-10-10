@@ -1,4 +1,4 @@
-import { type Achievement, type AchievementView, type Profile, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
+import { type Achievement, type AchievementView, type ImpactMetric, type EvidenceReference, type RecordLink, type Profile, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
 import { achievementView, migrateLegacyAchievement, migrateLegacyProfile, validateCollections, isPreferences, validTime, ConflictError, ValidationError } from '../domain/validation.js';
 import { precisionDateFromInput } from '../domain/dates.js';
 import { builtInTaxonomy } from '../domain/taxonomy.js';
@@ -209,6 +209,81 @@ export class CareerDatabase {
           linkType:'achievement-project' as const,sourceId:achievement.id,targetId:projectId,isPrimary:false,note:''};
         this.upsert(tx,data,'recordLinks',link,0);
       }
+      return achievementView(achievement);
+    });
+  }
+  /** All achievement source fields, relationships, metrics and references change atomically. */
+  async saveAchievementBundle(input:AchievementWrite,projectIds:string[],primaryProjectId:string|null,competencyIds:string[],
+    metricDrafts:Omit<ImpactMetric,'achievementId'|'createdAt'|'updatedAt'>[],
+    evidenceDrafts:Omit<EvidenceReference,'achievementId'|'createdAt'|'updatedAt'>[]):Promise<AchievementView>{
+    return this.write((tx,data)=>{
+      const current=data.collections.achievements.find(r=>r.id===input.id);
+      if(current?current.revision!==input.revision:input.revision!==0)throw new ConflictError('This achievement changed. Reload before saving.');
+      const unique=(ids:string[],label:string)=>{
+        if(new Set(ids).size!==ids.length)throw new ValidationError('Duplicate '+label+' selection.');
+      };
+      unique(projectIds,'project');unique(competencyIds,'competency');
+      if(primaryProjectId&&!projectIds.includes(primaryProjectId))throw new ValidationError('Primary project must be selected.');
+      if(projectIds.some(id=>!data.collections.projects.some(p=>p.id===id)))throw new ValidationError('A selected project does not exist.');
+      if(competencyIds.some(id=>{
+        const skill=data.collections.competencies.find(c=>c.id===id);
+        return !skill||(skill.status!=='active'&&!data.collections.recordLinks.some(l=>
+          l.linkType==='achievement-competency'&&l.sourceId===input.id&&l.targetId===id));
+      }))throw new ValidationError('A selected competency is unavailable.');
+      if(new Set(metricDrafts.map(r=>r.id)).size!==metricDrafts.length||new Set(evidenceDrafts.map(r=>r.id)).size!==evidenceDrafts.length)
+        throw new ValidationError('Duplicate metric or reference identifiers.');
+      const {occurredOn,...canonical}=input;
+      if(occurredOn!==undefined&&canonical.occurredStart!==undefined&&occurredOn!==(canonical.occurredStart?.value??''))throw new ValidationError('Conflicting achievement dates.');
+      if(current?.revision===Number.MAX_SAFE_INTEGER)throw new ValidationError('Record revision limit reached.');
+      const now=nowIso();
+      const achievement={occurredStart:null,occurredEnd:null,roleId:null,situation:'',actions:'',confidentiality:'confidential' as const,notes:'',
+        ...current,...canonical,createdAt:current?.createdAt??now,updatedAt:now,revision:(current?.revision??0)+1} as Achievement;
+      if(occurredOn!==undefined)achievement.occurredStart=precisionDateFromInput(occurredOn);
+      const existingLinks=data.collections.recordLinks.filter(r=>r.sourceId===achievement.id&&
+        (r.linkType==='achievement-project'||r.linkType==='achievement-competency'));
+      const keptLinks:RecordLink[]=[],addedLinks:RecordLink[]=[];
+      for(const [type,ids] of [['achievement-project',projectIds],['achievement-competency',competencyIds]] as const){
+        for(const id of ids){
+          const old=existingLinks.find(r=>r.linkType===type&&r.targetId===id);
+          const primary=type==='achievement-project'&&id===primaryProjectId;
+          if(old){
+            keptLinks.push(old.isPrimary===primary?old:{...old,isPrimary:primary,updatedAt:now,revision:old.revision+1});
+          }else{
+            addedLinks.push({id:crypto.randomUUID(),createdAt:now,updatedAt:now,revision:1,
+              linkType:type,sourceId:achievement.id,targetId:id,isPrimary:primary,note:''});
+          }
+        }
+      }
+      const changedLinks=keptLinks.filter(r=>{
+        const old=existingLinks.find(x=>x.id===r.id);return old?.revision!==r.revision;
+      });
+      const removedLinks=existingLinks.filter(r=>!keptLinks.some(k=>k.id===r.id));
+      const assemble=<T extends ImpactMetric|EvidenceReference>(kind:'impactMetrics'|'evidenceReferences',
+        drafts:Omit<T,'achievementId'|'createdAt'|'updatedAt'>[]):{records:T[];removed:T[]}=>{
+        const prior=data.collections[kind].filter(r=>r.achievementId===achievement.id) as T[];
+        const result=drafts.map(draft=>{
+          const old=prior.find(x=>x.id===draft.id);
+          if(old?old.revision!==draft.revision:draft.revision!==0)throw new ConflictError('A metric or evidence reference changed. Reload before saving.');
+          if(old?.revision===Number.MAX_SAFE_INTEGER)throw new ValidationError('Record revision limit reached.');
+          return {...draft,achievementId:achievement.id,createdAt:old?.createdAt??now,
+            updatedAt:now,revision:(old?.revision??0)+1} as T;
+        });
+        return {records:result,removed:prior.filter(r=>!result.some(x=>x.id===r.id))};
+      };
+      const metrics=assemble<ImpactMetric>('impactMetrics',metricDrafts);
+      const references=assemble<EvidenceReference>('evidenceReferences',evidenceDrafts);
+      data.collections.achievements=data.collections.achievements.filter(r=>r.id!==achievement.id).concat(achievement);
+      data.collections.recordLinks=data.collections.recordLinks.filter(r=>!existingLinks.includes(r)).concat(keptLinks,addedLinks);
+      data.collections.impactMetrics=data.collections.impactMetrics.filter(r=>r.achievementId!==achievement.id).concat(metrics.records);
+      data.collections.evidenceReferences=data.collections.evidenceReferences.filter(r=>r.achievementId!==achievement.id).concat(references.records);
+      validateCollections(data.collections);
+      tx.objectStore('achievements').put(achievement);
+      for(const link of [...addedLinks,...changedLinks])tx.objectStore('recordLinks').put(link);
+      for(const link of removedLinks)tx.objectStore('recordLinks').delete(link.id);
+      for(const r of metrics.records)tx.objectStore('impactMetrics').put(r);
+      for(const r of metrics.removed)tx.objectStore('impactMetrics').delete(r.id);
+      for(const r of references.records)tx.objectStore('evidenceReferences').put(r);
+      for(const r of references.removed)tx.objectStore('evidenceReferences').delete(r.id);
       return achievementView(achievement);
     });
   }

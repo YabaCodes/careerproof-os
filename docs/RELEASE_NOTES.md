@@ -1,5 +1,15 @@
 # CareerProof release notes
 
+## 0.1.1-alpha.9 — CP-011D Expanded Achievements & Competency Linking (review)
+
+- Optional advanced achievement editor adds situation, actions, notes, explicit privacy, career role, multiple Experience and competency links, optional primary project, user-entered impact metrics and evidence references.
+- Preserves fast default capture while validating numeric measurements and safe URL references; never claims independent verification or inferred proficiency.
+- Saves achievement source, typed links, metrics and evidence in a single validated IndexedDB transaction, preserving stable IDs and revision checks; existing achievement and CP-011C project relationships remain supported.
+- Competency Library lists the four seeded categories and 32 built-in skills with linked examples, and allows custom competency creation/edit/archive; no L1–L4 self-assessment or scores.
+- Vault gains role, Experience, competency, date and status filtering. Mobile navigation and iOS Outcome keyboard treatment remain unchanged.
+- Reuses database schema 2 and private backup format 2, extends offline app-shell cache, updates browser regression coverage. iPhone acceptance pending; [full CP-011D scope](CP_011D_ACHIEVEMENT_INTELLIGENCE.md).
+
+
 ## 0.1.1-alpha.8 — CP-011C Experience Portfolio (PR review)
 
 - Adds a compact Profile-linked Experience Portfolio for projects, initiatives and ongoing responsibilities, with independent expandable details, search and type/status filters.
