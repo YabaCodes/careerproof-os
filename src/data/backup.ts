@@ -1,4 +1,4 @@
-import { generateBackup, validateBackup, ValidationError, obj } from '../domain/validation.js';
+import { generateBackup, validateBackup, validateCollections, ValidationError, obj } from '../domain/validation.js';
 import { database, type CareerDatabase } from './db.js';
 import { type CareerBackup, MAX_BACKUP_BYTES } from '../domain/models.js';
 export interface PreparedBackup { backup: CareerBackup; legacy: boolean; expectedGeneration: number }
@@ -10,6 +10,52 @@ export async function createBackup(repo:CareerDatabase=database):Promise<{name:s
   const backup=generateBackup(data.collections,data.preferences),json=JSON.stringify(backup,null,2);
   checkBackupSize(json);
   return {name:`CareerProof_Backup_${backup.manifest.exportedAt.slice(0,10)}.json`,json,count:data.collections.achievements.length,exportedAt:backup.manifest.exportedAt};
+}
+/**
+ * Read-only release/data integrity check. A complete version-2 backup is
+ * serialized and revalidated in memory, without importing, writing metadata,
+ * invoking the file picker or changing the active browsing context.
+ *
+ * This proves structural recovery compatibility, not external truth of a claim
+ * or persistence of a downloaded file; a separate secure backup is still needed.
+ */
+export interface IntegrityReport {
+  checkedAt:string;
+  schemaVersion:number;
+  formatVersion:number;
+  generation:number;
+  revision:number;
+  jsonBytes:number;
+  counts:CareerBackup['manifest']['counts'];
+}
+export async function inspectLocalData(repo:CareerDatabase=database):Promise<IntegrityReport>{
+  const before=await repo.readSnapshot();
+  validateCollections(before.collections);
+  const backup=generateBackup(before.collections,before.preferences);
+  const json=JSON.stringify(backup);
+  checkBackupSize(json);
+  const parsed=validateBackup(JSON.parse(json));
+  // Prove all record fields and local portable settings round-trip exactly;
+  // checking counts alone would miss altered dates, links and privacy flags.
+  for(const store of Object.keys(parsed.collections) as (keyof typeof parsed.collections)[]){
+    if(JSON.stringify(parsed.collections[store])!==JSON.stringify(before.collections[store]))
+      throw new ValidationError('Integrity check failed: backup round-trip changed '+store+'.');
+  }
+  if(JSON.stringify(parsed.preferences)!==JSON.stringify(before.preferences))
+    throw new ValidationError('Integrity check failed: portable preferences changed.');
+  // Protect against a concurrent tab editing during the in-memory round-trip.
+  const after=await repo.readSnapshot();
+  if(before.generation!==after.generation||before.revision!==after.revision)
+    throw new ValidationError('Career records changed during the check. Run it again.');
+  return {
+    checkedAt:new Date().toISOString(),
+    schemaVersion:parsed.manifest.schemaVersion,
+    formatVersion:parsed.manifest.formatVersion,
+    generation:before.generation,
+    revision:before.revision,
+    jsonBytes:new TextEncoder().encode(json).byteLength,
+    counts:parsed.manifest.counts
+  };
 }
 export function downloadBackup(name:string,json:string):void {
   checkBackupSize(json);
