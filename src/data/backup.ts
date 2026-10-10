@@ -1,7 +1,7 @@
 import { generateBackup, validateBackup, validateCollections, ValidationError, obj } from '../domain/validation.js';
 import { database, type CareerDatabase } from './db.js';
 import { type CareerBackup, MAX_BACKUP_BYTES } from '../domain/models.js';
-export interface PreparedBackup { backup: CareerBackup; legacy: boolean; expectedGeneration: number }
+export interface PreparedBackup { backup: CareerBackup; legacy: boolean; expectedGeneration: number; expectedRevision: number }
 export function checkBackupSize(json:string):void {
   if(new TextEncoder().encode(json).byteLength>MAX_BACKUP_BYTES)throw new ValidationError('Backup exceeds the supported 12 MiB limit. No export or restore was performed.');
 }
@@ -68,7 +68,8 @@ export async function parseBackupJson(json:string,repo:CareerDatabase=database):
   try{raw=JSON.parse(json);}catch{throw new ValidationError('The file is not valid JSON.');}
   const backup=validateBackup(raw);
   const legacy=obj(raw)&&obj(raw.manifest)&&raw.manifest.formatVersion===1;
-  return {backup,legacy,expectedGeneration:await repo.getGeneration()};
+  const snapshot=await repo.readSnapshot();
+  return {backup,legacy,expectedGeneration:snapshot.generation,expectedRevision:snapshot.revision};
 }
 export async function parseBackupFile(file:File):Promise<PreparedBackup>{
   if(file.size>MAX_BACKUP_BYTES)throw new ValidationError('Backup exceeds the supported 12 MiB import limit.');
@@ -79,5 +80,5 @@ export async function restoreBackup(prepared:PreparedBackup,repo:CareerDatabase=
   const checked=validateBackup(prepared.backup);
   // File size was checked at selection, before parsing. Re-encoding here could
   // incorrectly reject a valid compact or legacy source file after expansion.
-  await repo.replaceAllData(checked.collections,checked.preferences,prepared.expectedGeneration);
+  await repo.replaceAllData(checked.collections,checked.preferences,prepared.expectedGeneration,prepared.expectedRevision);
 }
