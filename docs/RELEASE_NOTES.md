@@ -1,5 +1,18 @@
 # CareerProof release notes
 
+## 0.1.1 — Professional Experience & Evidence (final release promotion PR)
+
+**Release state:** Release promotion ready for CI and user PR review; **not merged or deployed** from this branch. The user explicitly accepted all eight `v0.1.1-rc.1` physical iPhone checks on the existing Home Screen PWA.
+
+- Promotes the already accepted `v0.1.1-rc.1` implementation to **`v0.1.1`**. There are no feature, database, record, manifest identity, or portable backup contract changes in the final promotion.
+- Updates app/package version, service-worker cache name and exact release-specific automated test expectations.
+- Documents the full delivered scope: career employers/roles and qualifications, compact Experience Portfolio, achievement metrics/evidence with typed links, competency library, Vault filters, data-integrity check, schema-1 upgrade and format-1 import compatibility, validated format-2 backup and restore, installed offline PWA.
+- Final candidate CI baseline: **42/42 Node and 102/102 browser tests**, production build passed. Release PR must pass the full suite again on the final version strings before merge.
+- Native iPhone candidate acceptance: eight checks confirmed, including existing data, downloaded backup, Settings Check data, employment/Experience records, rich achievement and competency workflows, iOS Quick Capture keyboard/layout, and offline reopening.
+- Important limitations remain: **local-only IndexedDB** can be lost when browser/PWA data is removed; exported JSON is **not encrypted**; no cloud sync, external employer-document upload, proficiency scoring, performance-review generator, CV generator or job-fit tool.
+- No automatic merge or release tag. GitHub Pages deploys only after the user merges the PR. After deployment, verify that Settings displays `v0.1.1` and existing records remain intact without reinstalling the PWA.
+
+
 ## 0.1.1-rc.1 — CP-011E Release Qualification (review candidate)
 
 - Integrates Career Profile, Experience Portfolio, Vault, Competency Library and PWA workflows for final candidate qualification. Not GA until physical iPhone acceptance.

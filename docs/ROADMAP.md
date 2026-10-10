@@ -25,19 +25,9 @@ The first builds are useful but **not certified for irreplaceable data** until P
 | v0.1.6 | Job Fit Analyzer: paste description, parse/classify, map, inspect sources and edit overrides | Transparent requirement matrix; explicit unknowns and qualifications |
 | v0.1.7 | Cross-module integration, regression, migration compatibility, privacy, UX and release checks | No critical data loss, confidentiality or relationship defects; P0/P1 acceptance passed |
 
-**Update 2026-10-09:** The user verified on iPhone that achievement input fields work and the mobile bottom navigation is aligned after PR #1. Those two UI defects are accepted. Remaining backup/recovery, offline, and destructive-action UAT stays open; see DECISIONS_AND_STATUS.md and [the v0.1.1 implementation brief](V0.1.1_IMPLEMENTATION_BRIEF.md).
+**v0.1.1 release acceptance (2026-10-10):** The user merged PRs #4–#15, completed CP-011A–E, accepted the targeted native iPhone fixes, and explicitly reported all **eight final physical iPhone checks** for `v0.1.1-rc.1` as passing. The accepted candidate passed **42 Node + 102 browser tests** and deployed through GitHub Pages. The separate `v0.1.1` final version-and-documentation promotion is in a user-reviewed PR, **not yet merged or deployed**. No schema 2 or backup format 2 changes are required for promotion. [CP-011E release qualification](CP_011E_RELEASE_QUALIFICATION.md).
 
-**CP-011A.3 correction:** User found that iPhone keyboard obscures the Outcome textarea after CP-011A.2. A focused alpha.4 bugfix is required, with real-device UAT before CP-011B. See [the keyboard acceptance report](IOS_KEYBOARD_OUTCOME_CP_011A_3.md).
-
-**CP-011B development (2026-10-09):** Career Profile employer/role/education/credential interfaces are in a feature-branch PR; not yet merged or device-accepted. Existing schema-v2 stores, backup format-2 compatibility, and iPhone design rules are retained. See [CP-011B release gate](CP_011B_HISTORY_QUALIFICATIONS.md). CP-011C remains paused.
-
-**CP-011C (2026-10-09):** Experience Portfolio (Project / Initiative / Ongoing responsibility) implemented in alpha.8 feature branch; user iPhone acceptance and merge pending. Reuses schema 2 projects and recordLinks; includes role association and project-context achievement capture. See [CP-011C acceptance](CP_011C_EXPERIENCE_PORTFOLIO.md).
-
-**CP-011D (2026-10-10):** Enriched achievements, metric/reference editing, transactional many-to-many project and competency linking, the seeded Competency Library and Vault contextual filters are implemented in the alpha.9 feature PR. CI, merge and physical iPhone UAT remain pending. See [CP-011D acceptance](CP_011D_ACHIEVEMENT_INTELLIGENCE.md). CP-011E has not started.
-
-**CP-011D / CP-011D.1:** Alpha.9 rich achievements/competency features shipped in PR #13. Alpha.10 Quick Capture overlap correction shipped in PR #14 and was user-accepted on iPhone; other alpha.9 UAT items are included in the CP-011E acceptance gate.
-
-**CP-011E (2026-10-10):** The candidate `v0.1.1-rc.1` adds read-only backup integrity verification, stronger protection against intervening edits on restore confirmation, full-domain recovery/offline regression tests, and the final iPhone qualification. The full `v0.1.1` release remains blocked until candidate CI, user merge, and native-device acceptance. See [CP-011E](CP_011E_RELEASE_QUALIFICATION.md).
+**Release boundary:** v0.1.1 covers the professional record foundation and evidence linking; `v0.1.2` remains planned for extended data-health reporting, controlled deletion improvements, dashboard expansion and additional P0 reliability hardening. The later career studios, evidence/proficiency assessment and job-fit tools are not part of this release.
 
 ## 3. Requirements traceability
 
@@ -89,10 +79,10 @@ Automated tests must use synthetic data, and manual browser/device tests are tra
 
 | Module | Current repository evidence | Next planned development |
 |---|---|---|
-| M01 Profile | Core Complete: CP-011B employer/role history, education and credentials; compact timeline and iPhone update improvements accepted | CP-011E end-to-end validation |
-| M02 Vault | Partial: basic Vault and capture already merged; CP-011D alpha.9 PR adds optional enrichment, atomic typed links, metric/evidence editing and contextual/date filters, awaiting device UAT | CP-011D merge/UAT, then CP-011E qualification |
-| M03 Experience Portfolio | Core Complete: CP-011C alpha.8 merged; user accepted on iPhone including linked achievement capture | CP-011E cross-module qualification |
-| M04 Competency Intelligence | Partial in CP-011D alpha.9 PR: four seeded categories and 32 built-in skills visible with linked achievement examples and custom skill CRUD; self-assessment and evidence breadth intentionally deferred | CP-011D merge/UAT; rubric-based assessments v0.1.3 |
+| M01 Profile | Core Complete: employer/role history, promotions, education and credentials; compact timeline and iPhone acceptance passed | Additional improvements after v0.1.1 |
+| M02 Vault | Core Complete for v0.1.1: quick/advanced capture, impact metrics, user-provided evidence, atomic project/skill links, advanced filters, full local recovery; candidate UAT passed | Extended reporting and deletion controls v0.1.2 |
+| M03 Experience Portfolio | Core Complete for v0.1.1: projects, initiatives and responsibilities with role/achievement associations; user accepted on iPhone | Post-v0.1.1 enhancements as needed |
+| M04 Competency Intelligence | Partial: core v0.1.1 taxonomy and linked examples, custom skill create/edit/archive/restore accepted; no user-assessed proficiency or evidence-breadth ratings | Assessments and evidence breadth v0.1.3 |
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |
 | M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
