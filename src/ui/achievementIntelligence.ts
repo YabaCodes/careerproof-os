@@ -46,8 +46,12 @@ export function richAchievementFields(a:AchievementView|undefined,c:CareerCollec
   const activeCompetencies=c.competencies.filter(x=>x.status==='active'||linkedCompetencies.has(x.id))
     .sort((a,b)=>a.name.localeCompare(b.name));
   const primary=c.recordLinks.find(l=>l.sourceId===a?.id&&l.linkType==='achievement-project'&&l.isPrimary)?.targetId??'';
-  const metrics=c.impactMetrics.filter(m=>m.achievementId===a?.id);
-  const references=c.evidenceReferences.filter(e=>e.achievementId===a?.id);
+  // IndexedDB's primary-key order is unrelated to when a metric was entered.
+  // Keep the editing ledger stable after reload and across backup restoration.
+  const chronological=<T extends {createdAt:string;id:string}>(rows:T[]):T[]=>
+    rows.sort((left,right)=>left.createdAt.localeCompare(right.createdAt)||left.id.localeCompare(right.id));
+  const metrics=chronological(c.impactMetrics.filter(m=>m.achievementId===a?.id));
+  const references=chronological(c.evidenceReferences.filter(e=>e.achievementId===a?.id));
   const roleSelect='<div class="field"><label for="rich-roleId">Employment role</label><select id="rich-roleId" name="roleId">'+
     '<option value="">No role selected</option>'+c.roles.map(r=>{
       const employer=c.employers.find(x=>x.id===r.employerId);
