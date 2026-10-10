@@ -3,7 +3,7 @@ import { validateAchievementInput, validateProfileInput, summarizeAchievements, 
 import { initialize, getProfile, saveProfile, listAchievements, getAchievement, saveAchievement, removeAchievement, getMeta, setMeta, database } from '../data/db.js';
 import { careerSections, careerForm, readCareerForm, dependentCareerRecords, syncCareerDisclosures, toggleCareerDisclosure, type CareerKind, type CareerRecord } from '../ui/careerHistory.js';
 import { portfolioPage,portfolioCards,portfolioForm,readPortfolioForm,updatePortfolioRoleChoices,type PortfolioFilters } from '../ui/experiencePortfolio.js';
-import { createBackup, downloadBackup, parseBackupFile, restoreBackup, type PreparedBackup } from '../data/backup.js';
+import { createBackup, downloadBackup, parseBackupFile, restoreBackup, inspectLocalData, type PreparedBackup } from '../data/backup.js';
 import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
@@ -249,7 +249,7 @@ function profileForm():string {
 function settingsView():string {
   return `${dialogHeader('Settings & data','Your workspace preferences and data controls.')}
   <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line"><div><strong>Color theme</strong><p>Choose your preferred display style.</p></div><select id="theme-select" aria-label="Color theme"><option value="system" ${theme==='system'?'selected':''}>System</option><option value="light" ${theme==='light'?'selected':''}>Light</option><option value="dark" ${theme==='dark'?'selected':''}>Dark</option></select></div></div>
-  <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
+  <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Check local data integrity</strong><p>Read-only check of record links, field values and complete backup-format round trip. No upload, replacement or local data changes.</p></div><button id="check-integrity" class="button button-outline" data-action="check-integrity">Check data</button></div><p id="integrity-check-result" class="integrity-check-result" role="status" aria-live="polite"></p><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
   <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="settings-line"><div><strong>Check for updates</strong><p id="pwa-update-status">Checks for a new release without removing the installed app or local records.</p></div><button class="button button-outline" data-action="check-updates">Check now</button></div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
 }
 function restoreView():string {
@@ -387,6 +387,30 @@ async function changeCustomSkillStatus(id:string,status:'active'|'archived'){
   catch(err){notify(errorMessage(err),'error');}
 }
 function errorMessage(err:unknown):string{return err instanceof Error?err.message:'An unexpected error occurred.';}
+async function doIntegrityCheck(){
+  if(saving)return;
+  const target=document.getElementById('integrity-check-result');
+  const button=document.getElementById('check-integrity') as HTMLButtonElement|null;
+  if(!target)return;
+  if(button)button.disabled=true;
+  target.textContent='Checking local records and recovery-format compatibility…';
+  try{
+    const report=await inspectLocalData();
+    const total=report.counts.achievements+report.counts.projects+report.counts.roles+
+      report.counts.education+report.counts.credentials;
+    target.classList.remove('integrity-failed');
+    target.textContent='Check passed. '+total+' career and achievement records; '+
+      report.counts.recordLinks+' relationships, '+report.counts.impactMetrics+
+      ' metrics, '+report.counts.evidenceReferences+' evidence references. '+
+      'Backup format '+report.formatVersion+' and schema '+report.schemaVersion+
+      ' validated ('+Math.ceil(report.jsonBytes/1024)+' KiB estimated JSON). '+
+      'Read-only: nothing was restored or uploaded. This does not verify the accuracy of your claims or replace a downloaded backup.';
+  }catch(err){
+    target.classList.add('integrity-failed');
+    target.textContent='Check incomplete: '+errorMessage(err)+
+      ' No restore was performed. Keep your current data and export a backup if possible.';
+  }finally{if(button)button.disabled=false;}
+}
 async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;if(modal==='settings')render(true);notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
 async function doFileRestore(file:File){try{pendingBackup=await parseBackupFile(file);openModal('restore');}catch(err){notify(`Cannot restore: ${errorMessage(err)}`,'error');}}
 async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;setSaving(true);try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();await loadCareerCollections();theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();dialogs.restoreFocus();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{setSaving(false);}}
@@ -448,6 +472,7 @@ function runAction(node:HTMLElement){
     case 'toggle-archive':void toggleArchive();break;
     case 'delete-achievement':void deleteCurrent();break;
     case 'export':void doExport();break;
+    case 'check-integrity':void doIntegrityCheck();break;
     case 'choose-restore':(document.getElementById('restore-file') as HTMLInputElement|null)?.click();break;
     case 'confirm-restore':void doConfirmRestore();break;
     case 'clear-filters':searchText='';filterStatus='active';sortOrder='recent';filterRole='';filterProject='';filterCompetency='';filterDateStart='';filterDateEnd='';render();break;
