@@ -35,6 +35,10 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **CP-011D (2026-10-10):** Enriched achievements, metric/reference editing, transactional many-to-many project and competency linking, the seeded Competency Library and Vault contextual filters are implemented in the alpha.9 feature PR. CI, merge and physical iPhone UAT remain pending. See [CP-011D acceptance](CP_011D_ACHIEVEMENT_INTELLIGENCE.md). CP-011E has not started.
 
+**CP-011D / CP-011D.1:** Alpha.9 rich achievements/competency features shipped in PR #13. Alpha.10 Quick Capture overlap correction shipped in PR #14 and was user-accepted on iPhone; other alpha.9 UAT items are included in the CP-011E acceptance gate.
+
+**CP-011E (2026-10-10):** The candidate `v0.1.1-rc.1` adds read-only backup integrity verification, stronger protection against intervening edits on restore confirmation, full-domain recovery/offline regression tests, and the final iPhone qualification. The full `v0.1.1` release remains blocked until candidate CI, user merge, and native-device acceptance. See [CP-011E](CP_011E_RELEASE_QUALIFICATION.md).
+
 ## 3. Requirements traceability
 
 | Functional ID | Capability | Main UI | Stores / services | Acceptance |
