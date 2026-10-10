@@ -1,25 +1,38 @@
-# CareerProof OS — v0.1.1-alpha.3 (CP-011A.2)
+# CareerProof OS — v0.1.1
 
 **Own your experience. Prove your impact.**
 
-A privacy-first, local-only professional achievement PWA. This branch refines native iOS date controls, mobile navigation density and dialog spacing on top of the merged UI and recovery foundation. Approved branding and all data contracts are retained. The complete v0.1.1 feature milestone remains in progress; deployment requires user review and merge.
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. The `v0.1.1 — Professional Experience & Evidence` milestone has passed automated release qualification and the user's physical iPhone acceptance on `v0.1.1-rc.1`. Final version promotion is performed through a separate user-reviewed PR; merge and GitHub Pages deployment remain explicit user-controlled steps.
 
-## Existing workflows retained
-- Personal career profile: display name, headline, summary, professional email, location.
-- Create achievements quickly; save as draft or complete record.
-- Optional outcome and impact category; dates default to today's **local** date.
-- View, search, filter, sort, edit, archive, restore, and permanently delete achievements.
-- Dashboard with live statistics and recent achievements.
-- IndexedDB local persistence with revision checks for conflicting writes.
-- Portable, versioned JSON backup export and full-replacement restore with validation and preview.
-- Responsive iPhone, iPad, and desktop layouts, light/dark/system themes, installable offline PWA.
+## Capabilities in v0.1.1
 
-## Deliberately not built yet
-CP-011A adds P0 persistence contracts and the built-in taxonomy, schema-1 migration, full format-2 backups and legacy import. CP-011B–E will add employment timeline, credentials, projects, detailed evidence and the competency UI. Later increments add self-assessment, distinct evidence breadth, reviews, CVs and job matching. Planned future modules are **not** yet clickable.
+- **Career Profile:** contact information, professional summary, employer history, overlapping job roles and promotions, precision-aware dates, education, credentials and certifications.
+- **Experience Portfolio:** projects, initiatives and ongoing responsibilities with compact expandable cards, employer and employment-role associations, status, scope, contribution, technologies and outcomes.
+- **Achievement Vault:** quick capture, drafts, recorded and archived achievements; advanced situation/actions/outcome notes; multiple Experience and competency links, including a primary Experience.
+- **Evidence and impact:** measurable baseline/result values, units, source/context notes, user-entered evidence references and explicit confidential/private designations. Claims and references are not independently verified.
+- **Competency Library:** four built-in categories and 32 seeded competencies with linked achievement examples, plus custom skill create/edit/archive/restore. No automatic proficiency scoring.
+- **Search and filtering:** achievements by text, dates, role, Experience, competency and status.
+- **Local data integrity:** Settings → **Check data** validates all 12 IndexedDB collections and their full version-2 backup-format round-trip without uploading, restoring or changing records.
+- **Recovery:** full version-2 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews and protected dependent-record deletions.
+- **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
-## Run from source
+The iPhone bottom navigation retains **Home / Vault / Add / Profile / Settings**; Experience Portfolio and Competency Library open from Profile.
 
-Requires Node.js 20+ and npm. Browser tests also need the Chromium headless-shell runtime. The shipped app has no backend or runtime npm dependencies.
+## Data ownership and safety
+
+**Career data stays in the browser's IndexedDB.** GitHub Pages serves the application code, not the user's personal records. There is **no account, cloud sync, multi-device synchronization or automatic external backup**.
+
+- Export regularly using **Settings → Export**, verify the JSON file really saved and keep a separate secure copy. Exported JSON is **not encrypted**.
+- **Check data** is read-only and validates structure and backup compatibility. It **does not create a recoverable external backup**, validate the real-world truth of career claims or guarantee that device storage cannot be evicted.
+- Restoring a backup is a **destructive full replacement** of local collections and portable preferences. Inspect the preview carefully. If records changed since the backup was selected, the operation stops without replacing anything; review/reselect the file before trying again.
+- **Never uninstall the Home Screen PWA, clear Safari website data or reset browser storage to force an update.** Doing so may permanently remove unexported local records.
+- Do not put real employer documents, confidential career details, or private backups in this public GitHub repository.
+
+Database schema **2**, backup format **2** (also reads legacy format **1**), taxonomy version **1.0**. Backup limit: **12 MiB UTF-8 JSON**, at most **100,000 records per collection**. Oversized backups fail rather than silently dropping records.
+
+## Development and testing
+
+Requires Node.js 20+ and npm. Browser tests use Playwright Chromium headless shell. There are no runtime npm dependencies or backend services.
 
 ```bash
 npm ci
@@ -29,47 +42,20 @@ npm run build
 npm run preview
 ```
 
-The compiled static site is in `dist/`. Open the preview URL (typically `http://127.0.0.1:4173`). Do not open `dist/index.html` directly as a `file://` URL: browser modules, service workers and persistence may not work as expected.
+Compiled static assets appear under `dist/`. Open the local HTTP preview (usually `http://127.0.0.1:4173`); do not load `dist/index.html` using `file://` because service workers and persistence require an HTTP context.
 
-Generate alpha.2/alpha.3 comparison screenshots with `node scripts/ios-refinement-evidence.mjs after` (use `before` with `CP_TEST_ROOT` pointing to the matching compiled baseline). Regenerate selected platform icons with `npm run brand:assets`, the review sheet with `npm run brand:review`, and synthetic UI screenshots with `npm run audit:ui`.
+Optional development workflows: `npm run fixtures:backup` for synthetic disposable backups, `npm run brand:assets` for platform icons, `npm run brand:review` for the branding review sheet and `npm run audit:ui` for synthetic UI screenshots.
 
-## Review and deployment
+## Release and contribution process
 
-Work on a feature branch and open a PR targeting main. PR checks build and run all automated tests without publishing. **The user reviews and merges**; do not deploy directly. After an approved merge, the existing GitHub Actions workflow deploys compiled dist/ to GitHub Pages. Pages must use GitHub Actions, not the repository root.
+1. Work on a dedicated branch and open a PR against `main`.
+2. Run the automated build, Node tests, full browser suite, data recovery and offline PWA checks.
+3. **The user reviews and merges the PR.** GitHub Actions deploys compiled `dist/` to GitHub Pages after merge.
+4. Confirm the deployed version, local data retention, UI, keyboard and offline reopening on a physical iPhone.
+5. Never automatically merge, tag a release or publish a new build without explicit authorization.
 
-Generate disposable manual-test files with `npm run fixtures:backup`. See [device acceptance steps](docs/ACCEPTANCE_TESTS.md).
+See the [release notes](docs/RELEASE_NOTES.md), [roadmap](docs/ROADMAP.md), [CP-011E final integration qualification](docs/CP_011E_RELEASE_QUALIFICATION.md), [acceptance history](docs/ACCEPTANCE_TESTS.md), [privacy/recovery contracts](docs/CP_011A_MIGRATION_RECOVERY.md), and [product specification](docs/PRODUCT_SPEC.md).
 
-## Migration and recovery
+## Planned next increments
 
-Schema 2 preserves existing schema-1 IDs, content, exact dates, timestamps, revisions and archive states. Historical achievements migrate as Confidential. One authoritative PrecisionDate is stored; the current editor uses a compatibility projection.
-
-Format 2 backs up all 12 P0 collections and theme. Format-1/schema-1 imports remain supported. Every restore replaces all local collections and preferences; a legacy backup also removes newer history/portfolio/custom competency records absent from that file. Preview explains this before confirmation. Invalid imports and failed transactions preserve existing data. Stale tabs must reload after another tab restores data.
-
-Export/import limit: **12 MiB of UTF-8 JSON**, at most **100,000 records per collection**. Oversized exports fail explicitly; no records are silently omitted. See [CP-011A contracts](docs/CP_011A_MIGRATION_RECOVERY.md).
-
-## Data safety
-
-**Important:** All CareerProof data is stored locally in the browser's IndexedDB. Data entered on one device **does not sync** to another device. GitHub Pages holds only the application files, not your career data.
-
-Browser data may be cleared or evicted; make backups using Settings → Export regularly. Exported JSON is unencrypted and may contain sensitive information. Save backups securely and avoid putting your real workplace information in GitHub.
-
-Restoring a backup **replaces** all local career collections and portable preferences. The app validates the backup before replacing its database; exporting the current data before restore is recommended. The app does not yet support merging backups or cloud sync.
-
-## Development conventions
-
-- `src/domain`: stable record types, validation rules, application-independent logic.
-- `src/data`: IndexedDB repositories and backup logic.
-- `src/app`: UI, navigation and event management.
-- `src/ui`: shared icons, action routing and dialog lifecycle.
-- `styles.css`: centralized responsive design system.
-- `public/`: PWA manifest, offline worker and platform icon assets.
-- `tests/`: automated validation and backup-format tests.
-
-App version `0.1.1-alpha.3` · database schema version `2` · JSON backup format `2` (also imports legacy format `1`).
-
-## Next increment
-
-CP-011B is paused until CP-011A.2 is reviewed, merged and explicitly verified on iPhone. See the [alpha.3 correction report and before/after screenshots](docs/IOS_FORM_NAV_REFINEMENT.md). Review the [UI audit](docs/UI_AUDIT_CP_011A_1.md), [screenshots](docs/UI_VISUAL_REVIEW.md), [branding](docs/BRANDING_REVIEW.md) and [test results](docs/UI_REGRESSION_REPORT.md).
-
-
-**v0.1.1 — Professional Experience & Evidence:** roles/employers, education, credentials, portfolio, competency tags and related achievement links. Schema changes will use migrations and must preserve existing data.
+The next planned `v0.1.2` expands data health, controlled deletion, dashboard insights and reliability hardening. Future increments may add user-assessed proficiency (distinct from documented evidence), performance reviews, editable CV output and job-fit comparison. These features are **not included** in `v0.1.1`.
