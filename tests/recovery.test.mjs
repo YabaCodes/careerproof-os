@@ -66,7 +66,11 @@ test('format-2 export/restore round-trip preserves all P0 collections and portab
   const file=await createBackup(repo),prepared=await parseBackupJson(file.json,repo);
   assert.equal(prepared.legacy,false);assert.ok(new TextEncoder().encode(file.json).length<=MAX_BACKUP_BYTES);
   await repo.saveAchievement({...achievementView(c.achievements[0]),title:'Changed synthetic title'});
-  await restoreBackup(prepared,repo);
+  // The original preview is now stale, so it must NOT overwrite newer work.
+  await assert.rejects(()=>restoreBackup(prepared,repo),/changed since you selected/i);
+  // Deliberately reselect the same backed-up bytes after reviewing the changes.
+  const reviewed=await parseBackupJson(file.json,repo);
+  await restoreBackup(reviewed,repo);
   const out=await repo.readSnapshot();compare(out.collections,c);assert.deepEqual(out.preferences,{theme:'dark'});assert.equal(out.generation,3);assert.equal(await repo.getMeta('lastExportAt'),null);
   await repo.close();
 });

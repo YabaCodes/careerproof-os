@@ -1,5 +1,16 @@
 # CareerProof release notes
 
+## 0.1.1-rc.1 — CP-011E Release Qualification (review candidate)
+
+- Integrates Career Profile, Experience Portfolio, Vault, Competency Library and PWA workflows for final candidate qualification. Not GA until physical iPhone acceptance.
+- Adds read-only **Settings → Check data**: validate complete source, links, privacy and portable preferences via a full in-memory format-2 backup round-trip. No upload, download or mutation; export a separate backup.
+- Prevents stale restore confirmation from overwriting ordinary edits made after backup selection. User must review the current work and reselect the backup before replacing data.
+- Adds Node and browser integration/recovery/offline tests and retains the previous mobile regression suite.
+- Schema 2, backup format 2, taxonomy 1.0 and the existing installed PWA identity remain unchanged. Service-worker cache is updated.
+- See [CP-011E qualification plan](CP_011E_RELEASE_QUALIFICATION.md). Final v0.1.1 requires a separate user-approved promotion.
+
+
+
 ## 0.1.1-alpha.10 — CP-011D.1 iPhone Quick Capture overlap correction (review)
 
 - Corrects a confirmed physical iPhone alpha.9 regression: the optional More details control visually overlaid the What did you do? label in the achievement editor.
