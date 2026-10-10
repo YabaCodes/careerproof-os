@@ -142,3 +142,8 @@ The user verified CP-011B education, certification, backup export and installed 
 ## CP-011D — Expanded Achievement and Competency Linking in review
 
 The user accepted CP-011C on the physical iPhone and explicitly authorized CP-011D. Proposed alpha.9 exposes optional advanced achievement fields, metrics and self-reported evidence, canonical role/project/competency links, a read-only built-in competency taxonomy and custom skill management, plus Vault relational/date filters. A transaction-safe bundle operation preserves existing source, metric and link identities and rejects invalid partial writes. No database schema or backup-format change, cloud sync, rating, job score, PDF export or tasks. Pending CI, user merge and CP-D201–209 iPhone checks; CP-011E remains paused.
+
+
+## 2026-10-10 — CP-011D.1 iPhone Quick Capture layout regression
+
+Following alpha.9 release, a physical iPhone screenshot demonstrated More details, experience & evidence overlapping the What did you do? field label. The original UI placed the optional disclosure before the contribution field and used stacking overrides inside the independently scrolling capture grid. Corrective alpha.10 moves the disclosure after Outcome, shortens its text, uses intrinsic row sizing rather than elevated paint layers, and checks field geometry before and after expansion at 320, 375, 390 and 430px in light/dark. No schema, backup or data changes; corrective PR must pass all CI and iPhone acceptance before CP-011D closes.
