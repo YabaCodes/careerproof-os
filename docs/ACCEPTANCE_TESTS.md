@@ -9,6 +9,16 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-012.1 — update detection (0.1.2-alpha.2, device gate)
+
+Existing Home Screen app only; no reinstall or storage clearing.
+
+- [ ] **U101:** Reach alpha.2 (Settings → Check now → Restart app). Settings shows `0.1.2-alpha.2`; records intact.
+- [ ] **U102:** Settings → Check for updates says it checks automatically and shows *Last checked* time. **Check now** reports the latest version available (v0.1.2-alpha.2).
+- [ ] **U103 (at the next release):** About 3–12 minutes after the next merge, simply open or switch back to CareerProof. Without tapping Check now, a **New version ready** banner names the new version and shows **Back up first** and **Restart app** above the bottom navigation.
+- [ ] **U104 (at the next release):** **Back up first** saves a JSON backup and the banner stays. **Restart app** loads the new version with all records intact. With an unsaved editor open, restart asks before discarding.
+
+
 ## CP-012.0 — Experience text integrity hotfix (0.1.2-alpha.1, device gate)
 
 Use the existing Home Screen app; do not reinstall it or clear storage. Export a backup first.

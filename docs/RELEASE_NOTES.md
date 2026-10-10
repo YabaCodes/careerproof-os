@@ -1,5 +1,17 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.2 — CP-012.1 Faster, user-controlled update detection (review)
+
+- **Why updates felt slow:** automatic update checks were throttled to once every 5 minutes, so returning to the app soon after a release did nothing until the throttle expired and the app was foregrounded again. On top of that, CI takes about 2.5 minutes to test and deploy, and GitHub Pages can serve a cached `sw.js` for up to about 10 minutes.
+- Removes the time throttle. The app checks **every time it is opened, brought to the foreground or reconnects**; an in-flight guard merges simultaneous events into one request.
+- **Restart stays your decision (DEC-028).** The banner now names the release ("Restart to load version 0.1.2-alpha.3") and offers **Back up first** (full JSON export) next to **Restart app**. Nothing reloads by itself; the unsaved-changes guard is unchanged.
+- Settings → Check for updates now reports a real result: *latest version available*, *downloading*, or *update ready*, plus the last check time and the ~10-minute GitHub Pages caveat.
+- `sw.js` answers a version request so the banner can name the incoming release.
+- New tests: every foreground checks (no 5-minute throttle) and duplicate events merge; a simulated new deploy shows the banner with version, Back up first keeps it, Restart app loads the update with records unchanged, and the banner clears the bottom navigation at 320/375/430px. All three fail on the previous code.
+- **Note:** this code takes effect from the *next* release. Moving to alpha.2 itself still uses the old path (Settings → Check now → Restart app).
+- No schema, backup-format, record or navigation change.
+
+
 ## 0.1.2-alpha.1 — CP-012.0 Experience text integrity hotfix (review)
 
 - **Fixes a data-corrupting defect present since 0.1.1-alpha.8 (CP-011C).** The Experience Portfolio used its own HTML-escaping helper that wrote `&#39` without the closing semicolon. Browsers decode an apostrophe followed by digits as a different character (`'24` → `པ`, `'12` → `༈`, `FY'25` → `FYཕ`). The card displayed the wrong text, and **opening Edit and saving, even unchanged, stored the corrupted text** in name, objective, scope, responsibilities, outcome and technologies.

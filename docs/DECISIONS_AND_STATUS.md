@@ -56,6 +56,10 @@
 | DEC-025 | User-selected Concept 1 Modern Monogram and supplied nav family | Latest selection supersedes earlier rejected concepts; editable vector plus platform PNG assets; no automatic merge/deploy |
 | DEC-026 | CP-011A.2 precedes CP-011B; Wealth OS density reference | Native date presentation reset, compact 60px navigation, shared dialog context/spacing; preserve selected branding and every data contract; user verifies iPhone before B |
 | DEC-020 | Use GitHub documentation as durable Codex source of truth | Do not assume Codex has full past chat history |
+| DEC-028 | App updates stay user-controlled: check on every open/foreground, then **Back up first** or **Restart app**; never auto-reload | User decision 2026-10-10 ("restart button is good for safety; I might back up first"). Supersedes the 5-minute check throttle; keeps CP-011B.2's no-forced-reload rule |
+| DEC-029 | Mobile navigation becomes Home · Vault · Experience · Skills · Profile; **＋ (capture) and Settings move to the header** | User decision 2026-10-10. Experience and Competency Library get their own tabs; Settings no longer duplicated. Supersedes the accepted Home/Vault/Add/Profile/Settings bar from alpha.3 onward; requires new geometry tests and iPhone acceptance. DEC-015's Growth/Studio target is revisited when Studio ships (v0.1.4) |
+| DEC-030 | Adopt the Wealth OS design language (header, cards, tabs, buttons, segmented controls, ⋯ row menus, line icons) while keeping CareerProof navy/teal accents and the CP monogram app icon | User decision 2026-10-10; supersedes visual details of DEC-025/026 but not the brand mark |
+| DEC-031 | Sequence: 0.1.2-alpha.2 update detection → alpha.3 redesign/navigation → CP-012A Data Health and the rest of v0.1.2 | User decision 2026-10-10, so Data Health UI is built once in the new style |
 | DEC-027 | Persistent per-feature milestone tracker (`docs/MILESTONE_TRACKER.md`) with lifecycle Not Started → Planned → In Development → In Review → Merged → Device Testing → Accepted | User instruction at the 2026-10-10 development handover. Updated in every PR; a feature is Accepted only after the user's physical-device confirmation. Module-level completion vocabulary in ROADMAP §5 remains |
 
 ## 3. Design artifacts and precedence
@@ -188,3 +192,10 @@ Development continues with a new agent under the same governance: branch + PR, n
 PR #17 (docs reconciliation and milestone tracker) was merged by the user; main CI run 38024672956 built, tested and deployed successfully (docs only, unchanged `dist/`).
 
 A post-merge review found a data-corrupting defect in the Experience Portfolio: its private HTML escape helper emitted `&#39` without a semicolon, so an apostrophe followed by digits was decoded as another character on display and written back to IndexedDB on an unchanged edit/save. Reproduced with synthetic data (`Line '24 upgrade` → `Line པ upgrade` stored). Hotfix: one shared `escapeHtml` for all templates, a static guard against local copies, and display/edit/save regression tests. Released as `0.1.2-alpha.1` because it is P0 integrity work (GATE-01); it does **not** start the rest of v0.1.2, which still awaits authorization. Already-damaged text cannot be repaired automatically without risking legitimate characters; the user checks affected Experiences (H103).
+
+
+## 2026-10-10 — PR #18 merged; update, navigation and design decisions
+
+PR #18 (CP-012.0 Experience text integrity hotfix, `0.1.2-alpha.1`) was merged by the user; main CI run 38027577090 built, tested and deployed; the live `sw.js` serves `careerproof-v0.1.2-alpha.1` (a non-cache-busted fetch about 10 minutes after deploy still returned the previous file, confirming GitHub Pages edge caching adds delay). The user reports entering only work history and education; H103 applies only if Experience Portfolio entries exist. Device checks H101/H102 remain open.
+
+Decisions DEC-028 to DEC-031 recorded above. CP-012.1 (`0.1.2-alpha.2`) implements DEC-028; CP-012.2 (`0.1.2-alpha.3`) will implement DEC-029/030.
