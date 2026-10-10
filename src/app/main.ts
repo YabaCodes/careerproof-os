@@ -6,6 +6,7 @@ import { portfolioPage,portfolioCards,portfolioForm,readPortfolioForm,updatePort
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup, inspectLocalData, type PreparedBackup } from '../data/backup.js';
 import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
+import {escapeHtml} from '../ui/html.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
 import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,achievementEnrichmentDetails} from '../ui/achievementIntelligence.js';
@@ -52,7 +53,7 @@ let toastMessage='';
 let toastKind:'success'|'error'='success';
 const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships'};
 
-function escape(value:unknown):string {return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]!));}
+const escape=escapeHtml;
 const formatDate=formatPrecisionDate;
 function relativeDate(v:string):string {if(!v)return 'Never';return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(new Date(v));}
 function titleCase(v:string):string {return v.charAt(0).toUpperCase()+v.slice(1);}

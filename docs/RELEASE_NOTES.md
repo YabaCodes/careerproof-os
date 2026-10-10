@@ -1,5 +1,14 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.1 — CP-012.0 Experience text integrity hotfix (review)
+
+- **Fixes a data-corrupting defect present since 0.1.1-alpha.8 (CP-011C).** The Experience Portfolio used its own HTML-escaping helper that wrote `&#39` without the closing semicolon. Browsers decode an apostrophe followed by digits as a different character (`'24` → `པ`, `'12` → `༈`, `FY'25` → `FYཕ`). The card displayed the wrong text, and **opening Edit and saving, even unchanged, stored the corrupted text** in name, objective, scope, responsibilities, outcome and technologies.
+- All templates now use one shared `escapeHtml` (`src/ui/html.ts`). A static test fails if another local escaping helper appears.
+- New regression tests: a Node unit test that every character reference is terminated, and a browser test covering display, edit form value, unchanged save and stored value. The browser test fails on the previous code.
+- **Existing records:** text is damaged only if an apostrophe directly before a digit was typed into an Experience field **and** that Experience was later edited and saved. The fix cannot safely reverse such characters automatically because the same code points can be legitimate text (for example, CJK characters). See acceptance check H103.
+- No schema, backup-format, record or navigation change. App version, service-worker cache and the offline app shell (new `html.js` module) are updated.
+
+
 ## Documentation — v0.1.1 status reconciliation and milestone tracker (docs-only, no app version change)
 
 - Reconciles documentation that still described the `v0.1.1` final promotion (PR #16) as pending; it is merged and deployed.

@@ -2,6 +2,7 @@ import type {BaseRecord, CareerCollections, Credential, Education, Employer, Pre
 import {datesInOrder,formatPrecisionDate,precisionDateFromInput} from '../domain/dates.js';
 import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
+import {escapeHtml} from './html.js';
 
 export type CareerKind='employers'|'roles'|'education'|'credentials';
 export type CareerRecord=Employer|Role|Education|Credential;
@@ -11,7 +12,7 @@ export type CareerWrite =
   | {kind:'education';record:Omit<Education,'createdAt'|'updatedAt'>}
   | {kind:'credentials';record:Omit<Credential,'createdAt'|'updatedAt'>};
 
-const html=(value:unknown):string=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]!));
+const html=escapeHtml;
 const dateLabel=(value:PrecisionDate|null):string=>value?formatPrecisionDate(value.value):'Not specified';
 const action=(kind:CareerKind,id:string,verb:'edit'|'delete'):string=>
   '<button class="career-action" type="button" data-action="'+verb+'-career" data-kind="'+kind+'" data-id="'+html(id)+'" aria-label="'+(verb==='edit'?'Edit':'Delete')+' '+kind.slice(0,-1)+'">'+icon(verb==='edit'?'edit':'trash',15)+'<span>'+(verb==='edit'?'Edit':'Delete')+'</span></button>';

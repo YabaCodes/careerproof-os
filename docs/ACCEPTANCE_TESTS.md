@@ -9,6 +9,15 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-012.0 — Experience text integrity hotfix (0.1.2-alpha.1, device gate)
+
+Use the existing Home Screen app; do not reinstall it or clear storage. Export a backup first.
+
+- [ ] **H101:** Settings shows `0.1.2-alpha.1`; all existing records are present.
+- [ ] **H102:** Create a synthetic Experience named `Test '24` with objective `from '12 to '9`. The card shows the text exactly; Edit shows it exactly; Save without changes, reopen, and it is still exact. Delete the synthetic Experience afterwards.
+- [ ] **H103 (your real records):** Open each Experience where you may have typed an apostrophe directly before a number (for example `FY'25`, `'24`). If you see an unexpected symbol in its place (such as `པ`, `ཕ`, `༈`, `Ɖ`), retype the original text and save. The app cannot tell these apart from legitimate characters automatically.
+
+
 ## Final v0.1.1 release promotion — accepted rc.1 device gate
 
 **Accepted on physical iPhone:** User reported all eight `v0.1.1-rc.1` checks passed after PR #15 was merged and deployed. These include version/data retention, verified backup download, read-only Check data, career and Experience linking, rich achievements/competencies/Vault filters, corrected Quick Capture keyboard/layout, and offline reopen.

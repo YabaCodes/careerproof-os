@@ -1,6 +1,6 @@
 # CareerProof OS — Milestone Tracker
 
-**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-10 · **Current released version:** `v0.1.1` · **main:** `398f892` (PR #16)
+**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-10 · **Current released version:** `v0.1.1` · **main:** `605731f` (PR #17)
 
 This is the authoritative per-feature progress record. It is updated in **every** PR. Module-level completion stages remain in [ROADMAP.md §5](ROADMAP.md); scope and acceptance criteria are defined in [ROADMAP.md](ROADMAP.md), [PRODUCT_SPEC.md](PRODUCT_SPEC.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md) and [CAREER_INTELLIGENCE.md](CAREER_INTELLIGENCE.md).
 
@@ -25,7 +25,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 - **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 is next and awaits authorization.
 - **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
 - **Automated baseline at `398f892`:** 42/42 Node, 102/102 browser (CI run 38021279551; reproduced locally).
-- **Open acceptance items:** post-promotion v0.1.1 smoke (F101–F102), CP-011B.2 update/restart notice device check, E219 synthetic destructive restore, E220 user hygiene confirmation.
+- **Open acceptance items:** post-promotion v0.1.1 smoke (F101–F102), CP-011B.2 update/restart notice device check, E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 hotfix H101–H103.
 
 ## Version ledger
 
@@ -33,7 +33,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 |---|---|---|---|---|
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
-| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | Planned | — | — |
+| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | Planned (0.1.2-alpha.1 integrity hotfix In Review) | pending | — |
 | v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
@@ -56,7 +56,8 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | Platform | v0.1.1 final version promotion | — | P0 | Device Testing | 0.1.1 | #16 | 42 Node / 102 browser | F101–F102 pending | — | User reports F101–F102 |
 | Platform | v0.1.1 Git tag / GitHub Release | — | — | Not Started | 0.1.1 | — | — | — | No tag exists | User decision |
 | Platform | Public-repo data hygiene | E220 | P0 | Device Testing | — | — | Agent scan of branch tips + history: no identifying terms | — | User confirmation pending | User confirms |
-| Platform | Docs status reconciliation + this tracker | DEC-027 | — | In Review | docs only | #17 | npm test 42 + 102 (unchanged) | n/a | — | User review/merge |
+| Platform | Docs status reconciliation + this tracker | DEC-027 | — | Merged | docs only | #17 | CI run 38024672956 ✓ (build, tests, deploy) | n/a (docs) | — | — |
+| Platform | **DATA-017** Experience text corrupted by unterminated `&#39` escape (apostrophe + digits) | CP-012.0 | P0 | In Review | 0.1.2-alpha.1 | pending | html-escape (Node), experience-portfolio CP-012.0 (browser) | H101–H103 pending | Already-damaged text needs manual retype (H103) | User review/merge, then H101–H103 |
 | M01 Career Profile | Profile basics | CP-FR-001 | P0 | Accepted | 0.1.0 | initial, #1 | domain, ui-regression | E211 | — | — |
 | M01 Career Profile | Employers, roles, promotions, primary role | CP-FR-001, CP-011B | P0 | Accepted | 0.1.1-alpha.5 | #9 | career-history | User verified before CP-011C; E214 | — | — |
 | M01 Career Profile | Compact 2-line timeline, More/Less | CP-011B.1 | P0 | Accepted | 0.1.1-alpha.6 | #10 | career-compact | E214 | — | — |

@@ -181,3 +181,10 @@ PR #16 (final `v0.1.1` promotion) was merged by the user at 03:38 UTC. Main CI r
 Still open and **not** to be assumed: (1) a short post-promotion iPhone smoke of the final version (Settings shows `v0.1.1`, existing records intact, no reinstall); (2) whether to create a `v0.1.1` Git tag/GitHub Release, which is a user decision; (3) E219 synthetic-only destructive restore and E220 public-data hygiene confirmation by the user (an automated scan of branch tips and history for personal/employer-identifying terms found nothing).
 
 Development continues with a new agent under the same governance: branch + PR, no automatic merge or tag, synthetic fixtures only, physical iPhone acceptance before a milestone is marked Accepted. A persistent per-feature tracker is introduced (DEC-027). **Known spec/code divergence, unchanged:** DEC-015 names target destinations Home/Vault/Growth/Studio/Profile, while the shipped and accepted mobile bar is Home/Vault/Add/Profile/Settings; the shipped layout stays until a navigation redesign is separately approved.
+
+
+## 2026-10-10 — PR #17 merged; CP-012.0 Experience text integrity hotfix (0.1.2-alpha.1)
+
+PR #17 (docs reconciliation and milestone tracker) was merged by the user; main CI run 38024672956 built, tested and deployed successfully (docs only, unchanged `dist/`).
+
+A post-merge review found a data-corrupting defect in the Experience Portfolio: its private HTML escape helper emitted `&#39` without a semicolon, so an apostrophe followed by digits was decoded as another character on display and written back to IndexedDB on an unchanged edit/save. Reproduced with synthetic data (`Line '24 upgrade` → `Line པ upgrade` stored). Hotfix: one shared `escapeHtml` for all templates, a static guard against local copies, and display/edit/save regression tests. Released as `0.1.2-alpha.1` because it is P0 integrity work (GATE-01); it does **not** start the rest of v0.1.2, which still awaits authorization. Already-damaged text cannot be repaired automatically without risking legitimate characters; the user checks affected Experiences (H103).

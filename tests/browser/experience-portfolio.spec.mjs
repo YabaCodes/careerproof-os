@@ -167,3 +167,27 @@ test('project links round-trip through private backup; no schema changes',async(
   });
   expect(result).toEqual({schema:2,format:2,projectCount:1,same:true});
 });
+test('CP-012.0 apostrophes followed by digits survive display, edit and unchanged save',async({page})=>{
+  await page.setViewportSize({width:390,height:844});
+  await pageStart(page);await portfolio(page);
+  const name="Line '24 upgrade",objective="Cut takt from '12 s baseline; FY'25 scope";
+  await addExperience(page,name);
+  await page.locator('#portfolio-objective').fill(objective);
+  await save(page);
+  const card=page.locator('details.portfolio-card').first();
+  await expect(card).toContainText(name);
+  await card.locator('summary').click();
+  await expect(card).toContainText(objective);
+  await card.locator('[data-action=edit-project]').click();
+  await expect(page.locator('#portfolio-name')).toHaveValue(name);
+  await expect(page.locator('#portfolio-objective')).toHaveValue(objective);
+  await save(page);
+  const stored=(await snapshot(page)).projects[0];
+  expect([stored.name,stored.objective]).toEqual([name,objective]);
+  // Every shared template decodes back to the original text.
+  const decoded=await page.evaluate(async samples=>{
+    const {escapeHtml}=await import('/app/ui/html.js');
+    return samples.map(s=>{const t=document.createElement('template');t.innerHTML=`<p title="${escapeHtml(s)}">${escapeHtml(s)}</p>`;const p=t.content.firstElementChild;return [p.textContent,p.getAttribute('title')];});
+  },["'24","'1'2'3",'<b>&"\'</b>']);
+  expect(decoded).toEqual([["'24","'24"],["'1'2'3","'1'2'3"],['<b>&"\'</b>','<b>&"\'</b>']]);
+});
