@@ -211,3 +211,17 @@ Implements DEC-029/030 as decided by the user: tabs Home · Vault · Experience 
 PRs #19 and #20 were merged by the user and deployed (main CI runs 38032685213 and 38033308166, build/test/deploy successful; live `sw.js` `careerproof-v0.1.2-alpha.3`). The user reported **"All good"** for the six alpha.3 checks (update and restart, version and data intact, five-tab bar with header ＋/Settings, Home, Vault/Experience/Skills, Quick Capture with keyboard): A101–A106 accepted. Because the two releases deployed 10 minutes apart, the phone moved from alpha.1 directly to alpha.3 and showed the previous banner; the alpha.2 banner (U103–U104) is first observable at alpha.4.
 
 CP-012A proceeds per DEC-031 with the defaults proposed to the user and not objected to: (1) the proposed critical/advisory list; (2) **no** "request persistent storage" button — persistence is reported only; (3) drafts shown as a plain count, no age threshold. Additional choices: export staleness threshold 14 days (as in Wealth OS); no persisted health results; completeness suggestions consider Recorded achievements only. Known limitation: a database that fails validation stops the app at the startup error screen, so such problems cannot reach the Settings report; improving that screen (for example, an emergency raw export) is a candidate for CP-012E.
+
+
+## 2026-10-10 — alpha.4 accepted on iPhone; CP-012B controlled removal (0.1.2-alpha.5)
+
+PR #21 was merged by the user and deployed (main CI run 38039174416; live `sw.js` `careerproof-v0.1.2-alpha.4`). The user reported **"All good"** for the alpha.4 checks: the new update banner (U103–U104) and Data Health DH101–DH104. Accepted.
+
+CP-012B implements the roadmap's controlled unlink/reassignment with these choices (handover open question E.2, decided without further input under the user's instruction to proceed; changeable on request):
+- **One review sheet for every career-record delete.** It shows dependents first, then offers *Move to another …* (compatible targets only; duplicate links merged; one primary experience per achievement) or *Remove the links*. Dependents require an explicit choice plus a confirmation tick; records without dependents delete from the sheet with one tap.
+- **No cascades.** Achievements, metrics and evidence are never deleted by removal; only the chosen record is deleted, and dependents are re-pointed or lose the link.
+- **Employers:** roles must move to another employer (they cannot exist without one); experiences may move or become independent.
+- **Primary role:** removing it explicitly clears or moves `primaryRoleId`, replacing the earlier "clear the primary flag before deleting" step. The sheet states the consequence.
+- **Custom skills:** *Delete…* added beside Archive; the sheet notes that Archive keeps history.
+- **Single-target moves only** (no splitting dependents across several targets) to keep the flow simple; revisit if needed.
+- **Atomicity:** the plan is recomputed inside the write transaction, the record revision is re-checked, and the full dataset is validated before commit.

@@ -43,7 +43,8 @@ export function competencyGroups(c:CareerCollections,query:string,category:strin
           (!skill.isBuiltIn?'<div class="portfolio-actions">'+(skill.status==='active'?
             '<button class="button button-outline" data-action="edit-competency" data-id="'+esc(skill.id)+'">Edit custom skill</button>'+
             '<button class="button button-outline" data-action="archive-competency" data-id="'+esc(skill.id)+'">Archive</button>':
-            '<button class="button button-outline" data-action="restore-competency" data-id="'+esc(skill.id)+'">Restore skill</button>')+'</div>':'')+
+            '<button class="button button-outline" data-action="restore-competency" data-id="'+esc(skill.id)+'">Restore skill</button>')+
+            '<button class="button button-danger-soft" data-action="delete-competency" data-id="'+esc(skill.id)+'">Delete…</button></div>':'')+
           '</div></details>';
       }).join('')+'</section>';
   }).join('');

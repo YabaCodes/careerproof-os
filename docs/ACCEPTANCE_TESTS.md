@@ -9,6 +9,17 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-012B — controlled removal (0.1.2-alpha.5, device gate)
+
+Export a backup first. **Use synthetic test records only**: never delete real records just to test.
+
+- [ ] **RM101:** The update banner names alpha.5 and offers Back up first / Restart app; after restart all records are intact.
+- [ ] **RM102:** Create a test employer "Test Co" with a test role "Test Role" and a test experience linked to that role. Delete the role: the sheet lists the linked experience; **Move** offers only compatible roles; **Remove the links** explains the effect; Delete stays disabled until you choose and tick the confirmation.
+- [ ] **RM103:** Choose **Remove the links** → confirm. The role is gone; the test experience still exists. Then delete "Test Co": with no roles left, choose **Remove the links** (not Move, so no test data lands on a real employer); the test experience becomes independent.
+- [ ] **RM104:** Delete the test experience and an unused test credential: the sheet says nothing else links to them and deletes with one tap.
+- [ ] **RM105:** Layout fits the screen in light and dark (the selected option is visible in dark), and an expanded Experience card stays open after closing a dialog.
+
+
 ## CP-012A — Data Health (0.1.2-alpha.4, device gate)
 
 Existing Home Screen app only; no reinstall or storage clearing.

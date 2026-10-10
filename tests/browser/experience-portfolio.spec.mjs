@@ -122,7 +122,8 @@ test('achievement captured from project is atomically linked and accessible',asy
   expect(records.recordLinks.find(x=>x.linkType==='achievement-project')).toMatchObject({
     sourceId:records.achievements[0].id,targetId:records.projects[0].id,isPrimary:false
   });
-  await page.locator('details.portfolio-card summary').click();
+  // CP-012B: an expanded card stays open after its dialog closes.
+  await expect(page.locator('details.portfolio-card')).toHaveAttribute('open','');
   await expect(page.locator('[data-action=portfolio-achievement]')).toContainText('Synthetic validation milestone');
   await page.locator('[data-action=portfolio-achievement]').click();
   await expect(page.getByRole('dialog')).toContainText('Synthetic validation milestone');
@@ -135,19 +136,25 @@ test('linked experiences protect achievements; deletions require confirmation',a
   await page.locator('[data-action=project-capture]').click();
   await page.locator('#title').fill('Linked synthetic draft');
   await page.locator('[data-action=save-achievement][data-status=draft]').click();
-  await page.locator('details.portfolio-card summary').click();
+  await expect(page.locator('details.portfolio-card')).toHaveAttribute('open','');
+  // CP-012B: a linked experience opens the dependency preview instead of deleting.
   await page.locator('[data-action=remove-project]').click();
-  await expect(page.locator('#toast')).toContainText('Cannot delete');
+  await expect(page.getByRole('dialog')).toContainText('1 achievement');
+  await expect(page.locator('#removal-mode-move')).toBeDisabled(); // no other experience exists
+  await expect(page.locator('#removal-mode-unlink')).toBeChecked();
+  await expect(page.locator('[data-action=confirm-removal]')).toBeDisabled();
+  await page.locator('.close-dialog').click();
   expect((await snapshot(page)).projects).toHaveLength(1);
   await addExperience(page,'Unlinked Synthetic');
   await save(page);
   const unlinked=(await snapshot(page)).projects.find(p=>p.name==='Unlinked Synthetic');
   await page.locator('details.portfolio-card[data-project-id="'+unlinked.id+'"] summary').click();
-  page.once('dialog',d=>d.dismiss());
   await page.locator('details.portfolio-card[data-project-id="'+unlinked.id+'"] [data-action=remove-project]').click();
+  await expect(page.getByRole('dialog')).toContainText('Nothing else links to it.');
+  await page.locator('.modal [data-action=close]').last().click();
   expect((await snapshot(page)).projects).toHaveLength(2);
-  page.once('dialog',d=>d.accept());
   await page.locator('details.portfolio-card[data-project-id="'+unlinked.id+'"] [data-action=remove-project]').click();
+  await page.locator('[data-action=confirm-removal]').click();
   await expect.poll(async()=> (await snapshot(page)).projects.length).toBe(1);
   expect((await snapshot(page)).achievements).toHaveLength(1);
 });

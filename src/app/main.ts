@@ -1,10 +1,12 @@
 import { type AchievementView as Achievement, type Profile, type AchievementStatus, type P0Store, type CareerCollections, IMPACT_CATEGORIES, APP_VERSION, SCHEMA_VERSION, P0_STORES, localDate, PROFILE_ID } from '../domain/models.js';
 import { validateAchievementInput, validateProfileInput, summarizeAchievements, ValidationError } from '../domain/validation.js';
 import { initialize, getProfile, saveProfile, listAchievements, getAchievement, saveAchievement, removeAchievement, getMeta, setMeta, database } from '../data/db.js';
-import { careerSections, careerForm, readCareerForm, dependentCareerRecords, syncCareerDisclosures, toggleCareerDisclosure, type CareerKind, type CareerRecord } from '../ui/careerHistory.js';
+import { careerSections, careerForm, readCareerForm, syncCareerDisclosures, toggleCareerDisclosure, type CareerKind, type CareerRecord } from '../ui/careerHistory.js';
 import { portfolioPage,portfolioCards,portfolioForm,readPortfolioForm,updatePortfolioRoleChoices,type PortfolioFilters } from '../ui/experiencePortfolio.js';
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup, inspectDataHealth, type PreparedBackup } from '../data/backup.js';
 import { dataHealthReport } from '../ui/dataHealth.js';
+import { removalImpact, type RemovableKind } from '../domain/removal.js';
+import { removalContent, defaultRemovalChoice, removalReady, type RemovalChoice } from '../ui/removal.js';
 import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
 import {escapeHtml} from '../ui/html.js';
@@ -15,7 +17,7 @@ import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetenc
 import {dateBounds} from '../domain/dates.js';
 
 type Screen='home'|'vault'|'profile'|'portfolio'|'competencies';
-type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|null;
+type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|'remove'|null;
 const root=document.getElementById('app')!;
 let profile:Profile;
 let achievements:Achievement[]=[];
@@ -44,6 +46,7 @@ let skillCategory='';
 let skillShowArchived=false;
 let skillScope:SkillScope|null=null;
 let vaultFiltersOpen=false;
+let removal:({kind:RemovableKind;id:string}&RemovalChoice)|null=null;
 let sortOrder='recent';
 let theme=localStorage.getItem('careerproof-theme')||'system';
 let lastExportAt:string|null=null;
@@ -279,6 +282,7 @@ function modalView():string {
   }
   if(modal==='competency'&&careerCollections)content=customCompetencyForm(careerCollections,
     careerCollections.competencies.find(x=>x.id===selectedId));
+  if(modal==='remove')content=removalView();
   if(modal==='settings')content=settingsView();
   if(modal==='restore')content=restoreView();
   return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1" class="modal ${modal==='capture'?'capture-modal':''}">${content}</section></div>`;
@@ -327,18 +331,49 @@ function settingsView():string {
   <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Data health</strong><p>Read-only check that your records and backup format are intact, plus suggestions for what is worth completing or protecting. Nothing is changed, uploaded or scored.</p></div><button id="check-integrity" class="button button-outline" data-action="check-integrity">Check data</button></div><p id="integrity-check-result" class="integrity-check-result" role="status" aria-live="polite"></p><div id="data-health-report" class="data-health-report"></div><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
   <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="settings-line"><div><strong>Check for updates</strong><p id="pwa-update-status">${pwaUpdateReady?'Update ready. Close Settings to back up or restart.':`Checks automatically each time you open CareerProof, without removing the app or your records. ${lastCheckedText()}`}</p></div><button class="button button-outline" data-action="check-updates">Check now</button></div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
 }
+function removalView():string{
+  if(!removal||!careerCollections)return '';
+  try{
+    const impact=removalImpact(careerCollections,removal.kind,removal.id);
+    const view=removalContent(impact,removal);
+    return dialogHeader(escape(view.title),escape(view.subtitle))+view.body+view.footer;
+  }catch(err){return `${dialogHeader('Record unavailable','It may have been changed or deleted elsewhere.')}<div class="modal-body"><p>${escape(errorMessage(err))}</p></div>`;}
+}
+/** CP-012B: every delete of a career record goes through the dependency preview. */
+function openRemoval(kind:RemovableKind,id:string){
+  if(!careerCollections)return notify('Career records are still loading.','error');
+  try{removal={kind,id,...defaultRemovalChoice(removalImpact(careerCollections,kind,id))};openModal('remove',id);}
+  catch(err){notify(errorMessage(err),'error');}
+}
+async function confirmRemoval(){
+  if(!removal||!careerCollections||saving)return;
+  const impact=removalImpact(careerCollections,removal.kind,removal.id);
+  if(!removalReady(impact,removal))return showError('Choose what happens to the linked records and confirm first.');
+  const record=(careerCollections[removal.kind] as {id:string;revision:number}[]).find(r=>r.id===removal!.id);
+  if(!record)return showError('This record no longer exists. Reload and try again.');
+  setSaving(true);
+  try{
+    const plan=await database.removeWithPlan(removal.kind,removal.id,record.revision,impact.hasDependents?removal.mode!:'delete',removal.mode==='move'?removal.targetId:null);
+    achievements=await listAchievements();await loadCareerCollections();
+    closeModal(true);notify(plan.summary);
+  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+}
 function restoreView():string {
   if(!pendingBackup)return '';
   const m=pendingBackup.backup.manifest;
   return `${dialogHeader('Restore career data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This replaces your current data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
 }
-function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();dialogs.update(Boolean(modal));syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}
+let lastRenderedScreen:Screen|null=null;
+/** Keep expanded Experience cards and skill entries open when the same screen redraws (e.g. after a dialog closes). */
+function openDisclosureKeys():string[]{return lastRenderedScreen===screen?[...root.querySelectorAll<HTMLDetailsElement>('details[open][data-project-id],details[open][data-skill]')].map(d=>d.dataset.projectId?'p:'+d.dataset.projectId:'s:'+(d.dataset.skill??'')):[];}
+function restoreDisclosures(keys:string[]){for(const key of keys){const [kind,id]=[key.slice(0,1),key.slice(2)];const el=[...root.querySelectorAll<HTMLDetailsElement>(kind==='p'?'details[data-project-id]':'details[data-skill]')].find(d=>(kind==='p'?d.dataset.projectId:d.dataset.skill)===id);if(el)el.open=true;}}
+function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';const openKeys=openDisclosureKeys();root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;dialogs.update(Boolean(modal));syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}
   if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(modal){dialogs.focusFirst();}
 }
 function toastView(inDialog=false):string{return `<div id="toast" role="status" aria-live="polite" class="toast ${inDialog?'toast-in-dialog':''} ${toastMessage?'visible':''} toast-${toastKind}">${toastMessage?`${icon(toastKind==='success'?'check':'alert',20)}<span>${escape(toastMessage)}</span>`:''}</div>`;}
 function notify(message:string,kind:'success'|'error'='success'){toastMessage=message;toastKind=kind;window.clearTimeout(toastTimer);const el=document.getElementById('toast');if(el){el.innerHTML=`${icon(kind==='success'?'check':'alert',20)}<span>${escape(message)}</span>`;el.classList.add('visible');el.classList.toggle('toast-error',kind==='error');el.classList.toggle('toast-success',kind==='success');}toastTimer=window.setTimeout(()=>{toastMessage='';document.getElementById('toast')?.classList.remove('visible');},kind==='error'?10000:5000);}
 function openModal(kind:Modal,id:string|null=null,edit=false){if(!modal)dialogs.rememberInvoker();modal=kind;selectedId=id;editing=edit;isDirty=false;render();}
-function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;captureProjectId=null;render();dialogs.restoreFocus();}
+function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;captureProjectId=null;removal=null;render();dialogs.restoreFocus();}
 function showError(message:string){const el=document.getElementById('form-error');if(el){el.hidden=false;el.textContent=message;el.scrollIntoView({block:'nearest',behavior:'smooth'});}else notify(message,'error');}
 function setSaving(value:boolean){saving=value;const dialog=document.querySelector<HTMLElement>('.modal');dialog?.setAttribute('aria-busy',String(value));for(const button of dialog?.querySelectorAll<HTMLButtonElement>('button[data-action]')??[])button.disabled=value;}
 function readAchieveInput(status:'draft'|'recorded') {
@@ -393,17 +428,6 @@ async function saveCareerForm(){
     await loadCareerCollections();closeModal(true);notify('Career record saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
-async function deleteCareer(kind:CareerKind,id:string){
-  if(saving||!careerCollections)return;
-  const record=careerCollections[kind].find(r=>r.id===id);
-  if(!record)return notify('Record no longer available. Reload this page.','error');
-  const dependencies=dependentCareerRecords(kind,id,careerCollections);
-  if(dependencies.length){notify('Cannot delete: this record is referenced by '+dependencies.join(', ')+'. Reassign or unlink these records first.','error');return;}
-  if(!window.confirm('Permanently delete this '+(kind==='education'?'education entry':kind==='credentials'?'credential':kind==='roles'?'role':'employer')+'? This cannot be undone.'))return;
-  try{await database.removeRecord(kind,id,record.revision);await loadCareerCollections();render();notify('Career record deleted.');}
-  catch(err){notify(errorMessage(err),'error');}
-}
-
 async function saveProjectForm(){
   if(saving||!careerCollections)return;
   setSaving(true);
@@ -416,20 +440,6 @@ async function saveProjectForm(){
     await loadCareerCollections();
     closeModal(true);notify('Experience saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
-}
-async function removeProject(id:string){
-  if(saving||!careerCollections)return;
-  const project=careerCollections.projects.find(p=>p.id===id);
-  if(!project){notify('Experience no longer exists. Reload the page.','error');return;}
-  const linked=careerCollections.recordLinks.filter(l=>l.targetId===id&&(l.linkType==='role-project'||l.linkType==='achievement-project'));
-  if(linked.length){
-    const roles=linked.filter(l=>l.linkType==='role-project').length,achievements=linked.length-roles;
-    notify('Cannot delete: '+roles+' linked role(s) and '+achievements+' linked achievement(s). Unlink them before deleting this experience.','error');
-    return;
-  }
-  if(!window.confirm('Permanently delete "'+project.name+'"? This cannot be undone.'))return;
-  try{await database.removeRecord('projects',id,project.revision);await loadCareerCollections();render();notify('Experience deleted.');}
-  catch(err){notify(errorMessage(err),'error');}
 }
 function currentSkillScope():SkillScope{return skillScope??(careerCollections?defaultSkillScope(careerCollections):'all');}
 function refreshCompetencies(){
@@ -533,14 +543,16 @@ function runAction(node:HTMLElement){
     case 'add-project':openModal('project');break;
     case 'edit-project':openModal('project',node.dataset.id??null,true);break;
     case 'save-project':void saveProjectForm();break;
-    case 'remove-project':void removeProject(node.dataset.id??'');break;
+    case 'remove-project':openRemoval('projects',node.dataset.id??'');break;
+    case 'delete-competency':openRemoval('competencies',node.dataset.id??'');break;
+    case 'confirm-removal':void confirmRemoval();break;
     case 'portfolio-achievement':openModal('detail',node.dataset.id??null);break;
     case 'project-capture':captureProjectId=node.dataset.id??null;openModal('capture');break;
     case 'edit-profile':openModal('profile');break;
     case 'add-career':openCareer(node.dataset.kind as CareerKind,null,node.dataset.employer);break;
     case 'edit-career':openCareer(node.dataset.kind as CareerKind,node.dataset.id??null);break;
     case 'toggle-career-details':toggleCareerDisclosure(node);break;
-    case 'delete-career':void deleteCareer(node.dataset.kind as CareerKind,node.dataset.id??'');break;
+    case 'delete-career':openRemoval(node.dataset.kind as RemovableKind,node.dataset.id??'');break;
     case 'save-career':void saveCareerForm();break;
     case 'settings':openModal('settings');break;
     case 'check-updates':void checkPwaUpdates(true);break;
@@ -602,6 +614,13 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
 document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;refreshCompetencies();}
+  if(removal&&t.closest('#removal-form')){
+    if(t.name==='removal-mode')removal.mode=t.value==='move'?'move':'unlink';
+    if(t.id==='removal-target')removal.targetId=t.value;
+    if(t.id==='removal-confirm')removal.confirmed=(t as HTMLInputElement).checked;
+    if(removal.mode==='move'&&!removal.targetId&&careerCollections)removal.targetId=removalImpact(careerCollections,removal.kind,removal.id).targets[0]?.id??'';
+    render(true);return;
+  }
   if(t.id==='rich-primaryProjectId'||t.name==='projectId')isDirty=true;
   if(t.name==='projectId'){const form=t.closest('form');if(form)updatePrimaryOptions(form);}
   if(t.id==='role-filter'){filterRole=t.value;refreshVaultResults();}

@@ -56,19 +56,29 @@ test('employers group multiple overlapping roles; primary role stays consistent'
   await page.locator('.mobile-nav [data-screen=profile]').click();
   await expect(page.locator('.career-primary')).toHaveCount(1);
   await expect(page.getByRole('heading',{name:'Team Lead'})).toBeVisible();
-  // A referenced employer must not be silently deleted.
+  // CP-012B: a referenced employer is never silently deleted. Its roles need an employer
+  // and there is no other employer to move them to, so nothing can be confirmed.
   await page.locator('[data-action=delete-career][data-kind=employers]').click();
-  const present=await snapshot(page);expect(present.employers).toHaveLength(1);
-  // A designated primary role must be explicitly cleared before deletion.
+  await expect(page.getByRole('dialog')).toContainText('Linked to this employer');
+  await expect(page.getByRole('dialog')).toContainText('2 roles');
+  await expect(page.locator('#removal-mode-move')).toBeDisabled();
+  await expect(page.locator('#removal-mode-unlink')).toBeDisabled();
+  await expect(page.locator('[data-action=confirm-removal]')).toBeDisabled();
+  await page.locator('.close-dialog').click();
+  expect((await snapshot(page)).employers).toHaveLength(1);
+  // The primary role shows its dependents and needs an explicit choice plus confirmation.
   await page.locator('[data-action="delete-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
-  expect((await snapshot(page)).roles).toHaveLength(2);
-  await page.locator('[data-action="edit-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
-  await page.locator('#career-isPrimary').uncheck();
-  await save(page);
-  expect((await snapshot(page)).profiles[0].primaryRoleId).toBeNull();
-  page.once('dialog',dialog=>dialog.accept());
-  await page.locator('[data-action="delete-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
+  await expect(page.getByRole('dialog')).toContainText('Your primary role');
+  await expect(page.locator('#removal-mode-move')).toBeChecked(); // another role at the same employer exists
+  await page.locator('#removal-mode-unlink').check();
+  await expect(page.getByRole('dialog')).toContainText('Your primary role will be cleared.');
+  await expect(page.locator('[data-action=confirm-removal]')).toBeDisabled();
+  await page.locator('#removal-confirm').check();
+  await page.locator('[data-action=confirm-removal]').click();
+  await expect(page.locator('#toast')).toContainText('Role deleted.');
   await expect.poll(async()=>(await snapshot(page)).roles.length).toBe(1);
+  expect((await snapshot(page)).profiles[0].primaryRoleId).toBeNull();
+  expect((await snapshot(page)).employers).toHaveLength(1);
 });
 
 test('year/month/day precision, optional dates and validation errors',async({page})=>{
