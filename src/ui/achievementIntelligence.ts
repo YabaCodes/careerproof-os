@@ -1,8 +1,9 @@
 import type {AchievementView, CareerCollections, ImpactMetric, EvidenceReference, Confidentiality, RecordLink} from '../domain/models.js';
 import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
+import {escapeHtml} from './html.js';
 
-const html=(v:unknown):string=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]!));
+const html=escapeHtml;
 const optional=(items:string[])=>items.filter(Boolean).join('');
 const field=(name:string,label:string,value:string,area=false)=>{
   const attrs='id="rich-'+name+'" name="'+name+'" maxlength="6000"';

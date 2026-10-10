@@ -2,7 +2,8 @@ import type {CareerCollections,Competency} from '../domain/models.js';
 import {normalizeName} from '../domain/taxonomy.js';
 import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
-const esc=(v:unknown):string=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]!));
+import {escapeHtml} from './html.js';
+const esc=escapeHtml;
 export function competencyGroups(c:CareerCollections,query:string,category:string,showArchived=false):string{
   const active=c.competencies.filter(r=>r.status==='active'||showArchived);
   const filtered=active.filter(r=>(!category||r.categoryId===category)&&

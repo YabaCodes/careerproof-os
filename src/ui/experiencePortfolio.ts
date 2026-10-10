@@ -2,10 +2,11 @@ import type {CareerCollections,PrecisionDate,Project,Role,RecordLink} from '../d
 import {datesInOrder,formatPrecisionDate,precisionDateFromInput} from '../domain/dates.js';
 import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
+import {escapeHtml} from './html.js';
 
 export type PortfolioFilters={query:string;type:string;status:string};
 export type ProjectWrite={record:Omit<Project,'createdAt'|'updatedAt'>;roleIds:string[]};
-const esc=(v:unknown)=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39'}[ch]!));
+const esc=escapeHtml;
 const typeNames:Record<Project['experienceType'],string>={project:'Project',initiative:'Initiative','ongoing-responsibility':'Ongoing responsibility'};
 const statuses:Record<Project['status'],string>={planned:'Planned',active:'Active','on-hold':'On hold',completed:'Completed'};
 const dateLabel=(date:PrecisionDate|null)=>date?formatPrecisionDate(date.value):'Not specified';
