@@ -9,6 +9,7 @@
 - `sw.js` answers a version request so the banner can name the incoming release.
 - New tests: every foreground checks (no 5-minute throttle) and duplicate events merge; a simulated new deploy shows the banner with version, Back up first keeps it, Restart app loads the update with records unchanged, and the banner clears the bottom navigation at 320/375/430px. All three fail on the previous code.
 - **Note:** this code takes effect from the *next* release. Moving to alpha.2 itself still uses the old path (Settings → Check now → Restart app).
+- **Test defect fixed (QA-018):** the "pending save shows busy state" browser test gated `saveAchievement`, which the editor stopped using in CP-011D (it saves through `saveAchievementBundle`). The gate never engaged, so the test passed only when the real save happened to be slow (3 of 8 runs failed on unchanged `main`). It now gates the real method and asserts the gate engaged; 10 of 10 repeated runs pass.
 - No schema, backup-format, record or navigation change.
 
 
