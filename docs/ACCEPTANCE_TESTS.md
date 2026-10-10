@@ -9,20 +9,32 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## Final v0.1.1 release promotion — accepted rc.1 device gate
+
+**Accepted on physical iPhone:** User reported all eight `v0.1.1-rc.1` checks passed after PR #15 was merged and deployed. These include version/data retention, verified backup download, read-only Check data, career and Experience linking, rich achievements/competencies/Vault filters, corrected Quick Capture keyboard/layout, and offline reopen.
+
+**Final promotion PR:** Change **only** version/package and service-worker cache identifiers from `0.1.1-rc.1` to `0.1.1`, adjust exact-version regression expectations, and reconcile user docs. Full Node/build/browser CI and user review/merge required; no automatic merge, release tag, schema or backup migration.
+
+After final PR merge and successful GitHub Pages deployment: verify Settings shows `v0.1.1`, locally stored career records remain intact, and the existing installed Home Screen PWA updates safely without reinstalling or clearing storage. Do not restore a synthetic test backup over real records.
+
+
+
 ## CP-011E — integrated release candidate v0.1.1-rc.1
 
-- [ ] E211: Existing Home Screen PWA updates without reinstall; version rc.1 and all existing data remain intact.
-- [ ] E212: Full JSON backup export is physically present in a secure location; it is not encrypted.
-- [ ] E213: Settings Check data passes online/offline without upload, replacement or mutation.
-- [ ] E214: Employer/role, education, credentials, Experience Portfolio, partial dates and relationships persist.
-- [ ] E215: Rich achievements, metric/evidence records, role/project/skill links, custom skill history and Vault filters work (also closes remaining CP-011D checks).
-- [ ] E216: Physical iPhone Quick Capture More details, Outcome keyboard and label spacing function in both themes.
-- [ ] E217: Compact five-slot navigation and no horizontal overflow.
-- [ ] E218: Installed PWA reopens offline with all four career modules and records.
+**Status:** Eight physical iPhone checks E211–E218 accepted by user on deployed candidate. E219 remains a synthetic-only destructive-recovery check and E220 is separate public-data hygiene; do not imply either was performed on personal device.
+
+- [x] E211: Existing Home Screen PWA updates without reinstall; version rc.1 and all existing data remain intact.
+- [x] E212: Full JSON backup export is physically present in a secure location; it is not encrypted.
+- [x] E213: Settings Check data passes online/offline without upload, replacement or mutation.
+- [x] E214: Employer/role, education, credentials, Experience Portfolio, partial dates and relationships persist.
+- [x] E215: Rich achievements, metric/evidence records, role/project/skill links, custom skill history and Vault filters work (also closes remaining CP-011D checks).
+- [x] E216: Physical iPhone Quick Capture More details, Outcome keyboard and label spacing function in both themes.
+- [x] E217: Compact five-slot navigation and no horizontal overflow.
+- [x] E218: Installed PWA reopens offline with all four career modules and records.
 - [ ] E219: Any destructive restore test is limited to an isolated, disposable synthetic dataset; NEVER replace real user records merely to test.
 - [ ] E220: Public repository fixtures and commits contain no personal career or employer-sensitive information.
 
-Passing automated Chromium tests does not replace iOS WebKit acceptance. Final release v0.1.1 is NOT accepted at this candidate gate. See [CP-011E plan](CP_011E_RELEASE_QUALIFICATION.md).
+The candidate passed automated CI and the user confirmed the eight installed-iPhone UAT checks. Final release v0.1.1 still requires a separately reviewed, fully tested version-promotion PR and post-merge deployment smoke check. See [CP-011E plan](CP_011E_RELEASE_QUALIFICATION.md).
 
 
 
