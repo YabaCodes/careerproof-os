@@ -193,11 +193,15 @@ test('pending achievement save exposes busy state and prevents duplicate button 
   await page.locator('#contribution').fill('Synthetic contribution');
   await page.evaluate(async()=>{
     const {database}=await import('/app/data/db.js');
-    const original=database.saveAchievement.bind(database);
+    // The editor saves through saveAchievementBundle (CP-011D). Gating the old
+    // saveAchievement method never engaged and let this test pass by timing.
+    const original=database.saveAchievementBundle.bind(database);
     const gate=new Promise(resolve=>window.syntheticReleaseSave=resolve);
-    database.saveAchievement=async input=>{await gate;return original(input);};
+    window.syntheticGateEngaged=false;
+    database.saveAchievementBundle=async(...args)=>{window.syntheticGateEngaged=true;await gate;return original(...args);};
   });
   await action(page,'[data-status="recorded"]');
+  await expect.poll(()=>page.evaluate(()=>window.syntheticGateEngaged)).toBe(true);
   await expect(page.getByRole('dialog')).toHaveAttribute('aria-busy','true');
   await expect(page.locator('[data-status="recorded"]')).toBeDisabled();
   await expect(page.locator('.close-dialog')).toBeDisabled();

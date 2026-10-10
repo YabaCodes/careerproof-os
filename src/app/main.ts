@@ -47,6 +47,8 @@ let lastExportAt:string|null=null;
 let pwaUpdateReady=false;
 let pwaRegistration:ServiceWorkerRegistration|null=null;
 let pwaLastCheck=0;
+let pwaCheckInFlight:Promise<void>|null=null;
+let pwaReadyVersion='';
 let pwaHadController=false;
 let toastTimer:number|undefined;
 let toastMessage='';
@@ -63,15 +65,25 @@ function currentNav():Screen {const name=location.hash.replace('#/','');return n
 function applyTheme(){document.documentElement.dataset.theme=theme;}
 async function setTheme(value:string){if(!['system','light','dark'].includes(value))return;try{await setMeta('preferences',{theme:value});theme=value;localStorage.setItem('careerproof-theme',theme);applyTheme();}catch(err){notify(errorMessage(err),'error');}}
 function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${(screen===id||(id==='profile'&&(screen==='portfolio'||screen==='competencies')))?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
+function pwaUpdateMessage():string {
+  const target=pwaReadyVersion?`version ${pwaReadyVersion}`:'the new version';
+  return `Restart to load ${target}. Your records stay on this device. You can export a backup first.`;
+}
 function pwaUpdateNotice():string {
-  return pwaUpdateReady?'<div id="pwa-update-notice" class="pwa-update-notice" role="status" aria-live="polite"><div><strong>New version ready</strong><p>Restart CareerProof to load the update. Your saved career records stay on this device.</p></div><button class="button button-primary" data-action="reload-update">Restart app</button></div>':'';
+  // CP-012.1 (DEC-028): restart stays user-controlled so a backup can be taken first.
+  return pwaUpdateReady?`<div id="pwa-update-notice" class="pwa-update-notice" role="status" aria-live="polite"><div><strong>New version ready</strong><p id="pwa-update-version">${escape(pwaUpdateMessage())}</p></div><div class="pwa-update-actions"><button class="button button-outline" data-action="export">${icon('download',16)} Back up first</button><button class="button button-primary" data-action="reload-update">Restart app</button></div></div>`:'';
 }
 function displayPwaUpdateNotice(){
   pwaUpdateReady=true;
   // Never rerender an active editor merely because a new worker activated.
   if(!document.getElementById('pwa-update-notice'))root.insertAdjacentHTML('beforeend',pwaUpdateNotice());
   const message=document.getElementById('pwa-update-status');
-  if(message)message.textContent='Update ready. Close Settings to access Restart app.';
+  if(message)message.textContent='Update ready. Close Settings to back up or restart.';
+  // Ask the newly active worker which release it carries; older workers do not answer.
+  navigator.serviceWorker?.controller?.postMessage({type:'careerproof-version'});
+}
+function lastCheckedText():string {
+  return pwaLastCheck?`Last checked ${new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(pwaLastCheck))}.`:'';
 }
 async function checkPwaUpdates(userInitiated=false):Promise<void>{
   if(!('serviceWorker' in navigator)){
@@ -80,7 +92,17 @@ async function checkPwaUpdates(userInitiated=false):Promise<void>{
   if(!navigator.onLine){
     if(userInitiated)notify('Connect to the internet to check for app updates.','error');return;
   }
-  if(!userInitiated&&Date.now()-pwaLastCheck<5*60*1000)return;
+  // CP-012.1: no time throttle. Every launch/foreground checks; an in-flight
+  // guard only merges duplicate events (visibilitychange + pageshow + online).
+  if(pwaCheckInFlight){
+    if(!userInitiated)return;
+    await pwaCheckInFlight.catch(()=>{});
+  }
+  const run=runPwaUpdateCheck(userInitiated);
+  pwaCheckInFlight=run;
+  try{await run;}finally{if(pwaCheckInFlight===run)pwaCheckInFlight=null;}
+}
+async function runPwaUpdateCheck(userInitiated:boolean):Promise<void>{
   pwaLastCheck=Date.now();
   try {
     // The service-worker script is fetched outside the app's cache-first
@@ -92,11 +114,13 @@ async function checkPwaUpdates(userInitiated=false):Promise<void>{
     }
     pwaRegistration=registration;
     await registration.update();
-    if(userInitiated){
-      const status=document.getElementById('pwa-update-status');
-      if(status)status.textContent=pwaUpdateReady?'Update ready. Close Settings to restart.':'Update check completed. We will show a restart button when a newer version is ready.';
-      notify(pwaUpdateReady?'New version ready. Close Settings to restart.':'Update check completed. We will notify you if a newer version activates.');
-    }
+    const status=document.getElementById('pwa-update-status');
+    const downloading=Boolean(registration.installing||registration.waiting);
+    const text=pwaUpdateReady?'Update ready. Close Settings to back up or restart.':
+      downloading?'A newer version is downloading. A Restart app button will appear when it is ready.':
+      `You have the latest version available (v${APP_VERSION}). A new release can take up to about 10 minutes to reach your phone after it is published. ${lastCheckedText()}`;
+    if(status&&(userInitiated||pwaUpdateReady||downloading))status.textContent=text;
+    if(userInitiated)notify(pwaUpdateReady?'New version ready. Close Settings to back up or restart.':downloading?'Downloading the new version…':'No newer version found yet.');
   }catch{
     if(userInitiated)notify('Update check failed. Keep your data and try again with an internet connection.','error');
   }
@@ -104,6 +128,15 @@ async function checkPwaUpdates(userInitiated=false):Promise<void>{
 function configurePwaUpdates():void {
   if(!('serviceWorker' in navigator)||location.protocol==='file:')return;
   pwaHadController=Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('message',event=>{
+    const data=event.data as {type?:unknown;cache?:unknown}|null;
+    if(data?.type!=='careerproof-version'||typeof data.cache!=='string')return;
+    const version=data.cache.replace(/^careerproof-v/,'');
+    if(!/^[0-9A-Za-z.+-]{1,40}$/.test(version))return;
+    pwaReadyVersion=version;
+    const target=document.getElementById('pwa-update-version');
+    if(target)target.textContent=pwaUpdateMessage();
+  });
   navigator.serviceWorker.addEventListener('controllerchange',()=>{
     // Initial SW installation also raises controllerchange. It is NOT an
     // application update and must not prompt users to restart.
@@ -114,12 +147,13 @@ function configurePwaUpdates():void {
     pwaRegistration=registration;
     void checkPwaUpdates();
   }).catch(()=>{/* Local records and offline usage remain available. */});
-  // Installed iOS PWAs often stay suspended in memory. Explicitly check on
-  // foreground/resume, throttled to avoid repeated network requests.
+  // Installed iOS PWAs often stay suspended in memory. Check every time the
+  // app is opened, brought to the foreground or regains a connection.
   document.addEventListener('visibilitychange',()=>{
     if(!document.hidden)void checkPwaUpdates();
   });
   window.addEventListener('pageshow',()=>{void checkPwaUpdates();});
+  window.addEventListener('online',()=>{void checkPwaUpdates();});
 }
 function shell():string {
   return `<div class="app-shell">
@@ -251,7 +285,7 @@ function settingsView():string {
   return `${dialogHeader('Settings & data','Your workspace preferences and data controls.')}
   <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line"><div><strong>Color theme</strong><p>Choose your preferred display style.</p></div><select id="theme-select" aria-label="Color theme"><option value="system" ${theme==='system'?'selected':''}>System</option><option value="light" ${theme==='light'?'selected':''}>Light</option><option value="dark" ${theme==='dark'?'selected':''}>Dark</option></select></div></div>
   <div class="settings-group"><h3>Data management</h3><div class="settings-line"><div><strong>Export career backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Check local data integrity</strong><p>Read-only check of record links, field values and complete backup-format round trip. No upload, replacement or local data changes.</p></div><button id="check-integrity" class="button button-outline" data-action="check-integrity">Check data</button></div><p id="integrity-check-result" class="integrity-check-result" role="status" aria-live="polite"></p><div class="settings-line"><div><strong>Restore from backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
-  <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="settings-line"><div><strong>Check for updates</strong><p id="pwa-update-status">Checks for a new release without removing the installed app or local records.</p></div><button class="button button-outline" data-action="check-updates">Check now</button></div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
+  <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="settings-line"><div><strong>Check for updates</strong><p id="pwa-update-status">${pwaUpdateReady?'Update ready. Close Settings to back up or restart.':`Checks automatically each time you open CareerProof, without removing the app or your records. ${lastCheckedText()}`}</p></div><button class="button button-outline" data-action="check-updates">Check now</button></div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
 }
 function restoreView():string {
   if(!pendingBackup)return '';

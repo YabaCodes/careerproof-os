@@ -1,6 +1,6 @@
 # CareerProof OS — Milestone Tracker
 
-**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-10 · **Current released version:** `v0.1.1` · **main:** `605731f` (PR #17)
+**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-10 · **Current released version:** `v0.1.1` · **main:** `2ef0501` (PR #18)
 
 This is the authoritative per-feature progress record. It is updated in **every** PR. Module-level completion stages remain in [ROADMAP.md §5](ROADMAP.md); scope and acceptance criteria are defined in [ROADMAP.md](ROADMAP.md), [PRODUCT_SPEC.md](PRODUCT_SPEC.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md) and [CAREER_INTELLIGENCE.md](CAREER_INTELLIGENCE.md).
 
@@ -25,7 +25,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 - **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 is next and awaits authorization.
 - **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
 - **Automated baseline at `398f892`:** 42/42 Node, 102/102 browser (CI run 38021279551; reproduced locally).
-- **Open acceptance items:** post-promotion v0.1.1 smoke (F101–F102), CP-011B.2 update/restart notice device check, E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 hotfix H101–H103.
+- **Open acceptance items:** post-promotion v0.1.1 smoke (F101–F102), CP-011B.2 update/restart notice device check, E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 hotfix H101–H102, CP-012.1 U101–U104.
 
 ## Version ledger
 
@@ -33,7 +33,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 |---|---|---|---|---|
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
-| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | Planned (0.1.2-alpha.1 integrity hotfix In Review) | #18 | — |
+| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1 hotfix merged; alpha.2 update detection in review; alpha.3 redesign next) | #18 | alpha.1 H101–H102 pending |
 | v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
@@ -49,7 +49,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | Platform | UI stabilization, CP monogram branding, icons | CP-011A.1 | P0 | Accepted | 0.1.1-alpha.2 | #5 | ui-polish, assets | Covered by rc.1 E211, E217 | — | — |
 | Platform | iOS date controls, compact nav/footer | CP-011A.2 | P0 | Accepted | 0.1.1-alpha.3 | #6 | ios-refinement | Covered by rc.1 E214, E217 | — | — |
 | Platform | Modal click-through fix, five-slot mobile nav | v0.1.0 hotfix | P0 | Accepted | 0.1.0 | #1 | ui-regression, ios-refinement | User confirmed 2026-10-09 | — | — |
-| Platform | Installed-PWA update check, Check now, Restart notice | CP-011B.2 | P0 | Device Testing | 0.1.1-alpha.7 | #11 | pwa-updates | E211 (updated without reinstall) only | CP-B222/B223 not separately confirmed | Observe at next real release update |
+| Platform | Installed-PWA update check, Check now, Restart notice | CP-011B.2 | P0 | Device Testing | 0.1.1-alpha.7 | #11 | pwa-updates | E211 (updated without reinstall) only | CP-B222/B223 not separately confirmed; superseded by CP-012.1 | Verify via U103–U104 |
 | Platform | Offline app shell / installed PWA | CP-FR-015 | P0 | Accepted | 0.1.1 | #11, #15 | compatibility, release-qualification | E218 | — | Re-verify each release (G7) |
 | Platform | Read-only Settings → Check data | CP-FR-008 (part), CP-011E | P0 | Accepted | 0.1.1-rc.1 | #15 | CP-E101, CP-E201 | E213 | Not an external backup | Extend in CP-012A |
 | Platform | Stale-restore protection (generation + revision) | CP-011E | P0 | Device Testing | 0.1.1-rc.1 | #15 | CP-E104, CP-E202 | — | E219 synthetic-only destructive restore not performed | User runs E219 on a disposable profile, or fold into CP-012E |
@@ -57,7 +57,10 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | Platform | v0.1.1 Git tag / GitHub Release | — | — | Not Started | 0.1.1 | — | — | — | No tag exists | User decision |
 | Platform | Public-repo data hygiene | E220 | P0 | Device Testing | — | — | Agent scan of branch tips + history: no identifying terms | — | User confirmation pending | User confirms |
 | Platform | Docs status reconciliation + this tracker | DEC-027 | — | Merged | docs only | #17 | CI run 38024672956 ✓ (build, tests, deploy) | n/a (docs) | — | — |
-| Platform | **DATA-017** Experience text corrupted by unterminated `&#39` escape (apostrophe + digits) | CP-012.0 | P0 | In Review | 0.1.2-alpha.1 | #18 | html-escape (Node), experience-portfolio CP-012.0 (browser) | H101–H103 pending | Already-damaged text needs manual retype (H103) | User review/merge, then H101–H103 |
+| Platform | **DATA-017** Experience text corrupted by unterminated `&#39` escape (apostrophe + digits) | CP-012.0 | P0 | Device Testing | 0.1.2-alpha.1 | #18 | html-escape (Node), experience-portfolio CP-012.0 (browser); main CI 38027577090 ✓ deployed | H101–H102 pending; H103 only if Experience Portfolio entries exist | — | User reports H101–H102 |
+| Platform | **QA-018** busy-state test gated a save method the editor no longer uses (passed by timing) | CP-012.1 | P0 | In Review | 0.1.2-alpha.2 | #19 | ui-polish pending-save (10/10 repeats) | n/a | — | Merge with alpha.2 |
+| Platform | Update detection: check on every open/foreground, banner with version, Back up first + Restart app (DEC-028) | CP-012.1 | P0 | In Review | 0.1.2-alpha.2 | #19 | pwa-updates (3 cases, fail on old code) | U101–U102 now; U103–U104 at next release | Pages edge cache can still add ~10 min | User review/merge |
+| Platform | Navigation (Home/Vault/Experience/Skills/Profile, ＋ and Settings in header) + Wealth OS design language (DEC-029/030) | CP-012.2 | P0 | In Development | 0.1.2-alpha.3 | — | — | — | Replaces accepted nav; needs geometry tests + iPhone UAT | Build after alpha.2 PR |
 | M01 Career Profile | Profile basics | CP-FR-001 | P0 | Accepted | 0.1.0 | initial, #1 | domain, ui-regression | E211 | — | — |
 | M01 Career Profile | Employers, roles, promotions, primary role | CP-FR-001, CP-011B | P0 | Accepted | 0.1.1-alpha.5 | #9 | career-history | User verified before CP-011C; E214 | — | — |
 | M01 Career Profile | Compact 2-line timeline, More/Less | CP-011B.1 | P0 | Accepted | 0.1.1-alpha.6 | #10 | career-compact | E214 | — | — |
