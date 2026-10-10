@@ -85,8 +85,11 @@ test('adding metrics and references persists after reload and restores from priv
   await page.reload();await openEdit(page);
   await expect(page.locator('.metric-row')).toHaveCount(2);
   await expect(page.locator('.evidence-row')).toHaveCount(2);
-  await page.locator('.metric-row').last().locator('[data-action=remove-rich-row]').click();
-  await page.locator('.evidence-row').last().locator('[data-action=remove-rich-row]').click();
+  // Select by identity rather than IndexedDB key enumeration order.
+  await page.locator('.metric-row').filter({has:page.locator('[name=metricName][value="First pass yield"]')})
+    .locator('[data-action=remove-rich-row]').click();
+  await page.locator('.evidence-row').filter({has:page.locator('[name=label][value="Synthetic report"]')})
+    .locator('[data-action=remove-rich-row]').click();
   await save(page);
   c=await snapshot(page);
   expect(c.impactMetrics).toHaveLength(1);
