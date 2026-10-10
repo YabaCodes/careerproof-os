@@ -147,3 +147,8 @@ The user accepted CP-011C on the physical iPhone and explicitly authorized CP-01
 ## 2026-10-10 — CP-011D.1 iPhone Quick Capture layout regression
 
 Following alpha.9 release, a physical iPhone screenshot demonstrated More details, experience & evidence overlapping the What did you do? field label. The original UI placed the optional disclosure before the contribution field and used stacking overrides inside the independently scrolling capture grid. Corrective alpha.10 moves the disclosure after Outcome, shortens its text, uses intrinsic row sizing rather than elevated paint layers, and checks field geometry before and after expansion at 320, 375, 390 and 430px in light/dark. No schema, backup or data changes; corrective PR must pass all CI and iPhone acceptance before CP-011D closes.
+
+
+## 2026-10-10 — CP-011E release candidate, awaiting review
+
+The user accepted the alpha.10 iPhone Quick Capture overlap fix and authorized CP-011E. The proposed `v0.1.1-rc.1` candidate adds full-data read-only backup round-trip verification in Settings and guards against ordinary edits made after a backup preview was selected (both dataset generation and revision must match). No schema or backup format change. Remaining alpha.9 feature UAT is consolidated into the final physical iPhone gate, not assumed complete. Candidate CI, user merge and native-device UAT are pending; **do not tag or call it final v0.1.1**. See [CP-011E](CP_011E_RELEASE_QUALIFICATION.md).
