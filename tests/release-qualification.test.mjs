@@ -82,7 +82,7 @@ test('CP-E103 valid-looking corrupted full backups are rejected before any repla
     b=>{b.collections.recordLinks[1].isPrimary=true;b.collections.recordLinks.push({...b.collections.recordLinks[1],id:'second-primary'});},
     b=>{b.collections.achievements[0].confidentiality='public';},
     b=>{b.collections.projects[0].startDate={value:'2024-02-30',precision:'day'};},
-    b=>{b.collections.impactMetrics[0].resultValue=Infinity;},
+    b=>{b.collections.impactMetrics[0].resultValue='not-a-number';},
     b=>{b.collections.evidenceReferences[0].referenceType='url';b.collections.evidenceReferences[0].referenceValue='javascript:alert(1)';},
     b=>{b.collections.competencies[0].name='Corrupted built-in skill';},
     b=>{b.collections.roles[0].employerId='missing';},
