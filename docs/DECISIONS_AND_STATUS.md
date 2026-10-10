@@ -1,8 +1,18 @@
 # CP-DRG-001 — Design Decisions, Actual Status and Codex Handover
 
-**Last reviewed:** 2026-10-09. **Owner approval:** Product design and P0/P1 scope approved in the CareerProof planning conversation. **This document is the starting handover record, not an assertion that planned functionality has shipped.**
+**Last reviewed:** 2026-10-10. **Owner approval:** Product design and P0/P1 scope approved in the CareerProof planning conversation. **This document is the starting handover record, not an assertion that planned functionality has shipped.**
 
 ## 1. Current truth: repository and release state
+
+### Verified current state (2026-10-10)
+
+- `main` = `398f892974f3fab037656d8bc1d923df461c6397` (merge of PR #16). App **`v0.1.1`**, DB schema **2**, backup format **2** (legacy format 1 importable), taxonomy **1.0**, 12 P0 stores plus `meta`.
+- PR #16 final promotion merged by the user; main CI run 38021279551 built, passed 42/42 Node and 102/102 browser tests, and deployed to GitHub Pages. Live service worker cache is `careerproof-v0.1.1`.
+- Physical iPhone: the eight `v0.1.1-rc.1` checks were accepted by the user. A post-promotion smoke of the final `v0.1.1` is **not yet reported**. No Git tag/GitHub Release exists.
+- No open PRs at handover. Next roadmap candidate: **v0.1.2** (P0 reliability), not started and awaiting explicit authorization.
+- Per-feature status, PRs, tests and device evidence: [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md).
+
+### Historical status entries (superseded by the block above; kept for traceability)
 
 - GitHub repository: **YabaCodes/careerproof-os**, default branch `main`.
 - Deployment: GitHub Pages via **GitHub Actions**, build output `dist/`. Public URL: https://yabacodes.github.io/careerproof-os/
@@ -46,6 +56,7 @@
 | DEC-025 | User-selected Concept 1 Modern Monogram and supplied nav family | Latest selection supersedes earlier rejected concepts; editable vector plus platform PNG assets; no automatic merge/deploy |
 | DEC-026 | CP-011A.2 precedes CP-011B; Wealth OS density reference | Native date presentation reset, compact 60px navigation, shared dialog context/spacing; preserve selected branding and every data contract; user verifies iPhone before B |
 | DEC-020 | Use GitHub documentation as durable Codex source of truth | Do not assume Codex has full past chat history |
+| DEC-027 | Persistent per-feature milestone tracker (`docs/MILESTONE_TRACKER.md`) with lifecycle Not Started → Planned → In Development → In Review → Merged → Device Testing → Accepted | User instruction at the 2026-10-10 development handover. Updated in every PR; a feature is Accepted only after the user's physical-device confirmation. Module-level completion vocabulary in ROADMAP §5 remains |
 
 ## 3. Design artifacts and precedence
 
@@ -107,7 +118,7 @@ Use this prompt after the documentation PR is merged:
 
 ## 7. Future workflow
 
-Plan/review here in ChatGPT; sync approved design decisions into GitHub docs; use Codex to implement/test on a branch and open PR; user reviews/merges; GitHub Actions deploys; then test on an actual device. Next implementable plan: [CP-IMP-011](V0.1.1_IMPLEMENTATION_BRIEF.md). Keep this status document and ROADMAP.md updated as part of each feature PR.
+Plan/review here in ChatGPT; sync approved design decisions into GitHub docs; use Codex to implement/test on a branch and open PR; user reviews/merges; GitHub Actions deploys; then test on an actual device. [CP-IMP-011](V0.1.1_IMPLEMENTATION_BRIEF.md) is complete (v0.1.1 released); the next candidate is v0.1.2 in [ROADMAP.md](ROADMAP.md), pending authorization. Keep this status document, ROADMAP.md and [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md) updated as part of each feature PR.
 
 ## 8. Privacy reminder
 
@@ -161,3 +172,12 @@ The user explicitly confirmed that **all eight final iPhone acceptance checks pa
 The release promotion changes only app/package version strings, service-worker cache key, exact-version test expectations, README and release/acceptance documentation. **Do not migrate or clear IndexedDB, change backup format 2, reset the installed Home Screen PWA, create a release tag, or claim final deployment before the user merges and GitHub Pages reports success.** Final build/Node/browser CI remains a mandatory gate. After deployment, confirm `v0.1.1` is shown on the existing PWA and retained records remain accessible.
 
 The future planned `v0.1.2` reliability/dashboard improvements and `v0.1.3+` competency assessment/review/CV/job-fit capabilities are not included in the v0.1.1 release.
+
+
+## 2026-10-10 — v0.1.1 final merged and deployed; development handover
+
+PR #16 (final `v0.1.1` promotion) was merged by the user at 03:38 UTC. Main CI run 38021279551 built, passed 42/42 Node and 102/102 browser tests and deployed to GitHub Pages; the live service worker serves `careerproof-v0.1.1`. The local test suite reproduces the same 42 + 102 baseline at `398f892`. The earlier entry headed "authorized (not yet merged)" is superseded.
+
+Still open and **not** to be assumed: (1) a short post-promotion iPhone smoke of the final version (Settings shows `v0.1.1`, existing records intact, no reinstall); (2) whether to create a `v0.1.1` Git tag/GitHub Release, which is a user decision; (3) E219 synthetic-only destructive restore and E220 public-data hygiene confirmation by the user (an automated scan of branch tips and history for personal/employer-identifying terms found nothing).
+
+Development continues with a new agent under the same governance: branch + PR, no automatic merge or tag, synthetic fixtures only, physical iPhone acceptance before a milestone is marked Accepted. A persistent per-feature tracker is introduced (DEC-027). **Known spec/code divergence, unchanged:** DEC-015 names target destinations Home/Vault/Growth/Studio/Profile, while the shipped and accepted mobile bar is Home/Vault/Add/Profile/Settings; the shipped layout stays until a navigation redesign is separately approved.

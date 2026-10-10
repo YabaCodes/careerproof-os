@@ -1,6 +1,6 @@
 # CP-011C — Experience Portfolio (v0.1.1-alpha.8)
 
-**Status:** Implemented on an unmerged feature branch; release pending CI and physical iPhone acceptance.
+**Status:** Merged in PR #12 (alpha.8); user accepted Experience create/edit, role association and linked achievement capture on a physical iPhone; released in `v0.1.1`. *(Status updated 2026-10-10; body below is the original implementation record.)*
 
 ## Capability
 

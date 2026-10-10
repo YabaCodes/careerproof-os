@@ -1,7 +1,7 @@
 # CP-011E — Integration, Backup & Release Qualification
 
-**Accepted candidate:** CareerProof OS `v0.1.1-rc.1`; final version promotion to `v0.1.1` is a separate user-reviewed PR.  
-**Status:** RC PR #15 merged/deployed; 42/42 Node and 102/102 browser tests passed; **all eight physical iPhone checks reported passed by the user**. Separate final-version promotion PR pending merge.  
+**Accepted candidate:** CareerProof OS `v0.1.1-rc.1`; promoted to final `v0.1.1` in user-merged PR #16.  
+**Status:** RC PR #15 merged/deployed; 42/42 Node and 102/102 browser tests passed; **all eight physical iPhone checks reported passed by the user**. Final version-only promotion PR #16 **merged 2026-10-10 and deployed** (main CI run 38021279551: build, 42/42 Node, 102/102 browser, Pages deploy all successful). Post-promotion iPhone smoke of the final version not yet reported; no release tag created.  
 **Scope:** Final integration for `v0.1.1 — Professional Experience & Evidence`. Builds on CP-011A–D and the accepted CP-011D.1 Quick Capture overlap fix.
 
 ## What's included
@@ -52,7 +52,9 @@ The user explicitly confirmed all eight physical-iPhone acceptance checks on the
 
 Any lost/corrupted records, unexpected relationship deletions, broken keyboard/scrolling, failed offline launch, failed backup, false success notification, stale restore overwrite, or regression in mobile controls **blocks release acceptance**.
 
-Device acceptance of the eight listed checks has passed. A *separate* final version-only promotion from `v0.1.1-rc.1` to `v0.1.1` is prepared for user review and full CI. Do not merge automatically or create a release tag. Once merged and deployed by GitHub Actions, verify the final version and preservation of local records on the existing Home Screen PWA. Destructive restore remains appropriate only for disposable synthetic datasets.
+Device acceptance of the eight listed checks has passed. The *separate* final version-only promotion from `v0.1.1-rc.1` to `v0.1.1` was merged by the user (PR #16) and deployed by GitHub Actions. Remaining: verify on the existing Home Screen PWA that Settings shows `v0.1.1` and local records are preserved (no reinstall, no storage clearing). A release tag is created only on explicit user authorization. Destructive restore remains appropriate only for disposable synthetic datasets.
+
+**E220 note (2026-10-10):** an automated scan of every branch tip and the commit history for personal and employer-identifying terms found no matches. This is agent-performed evidence, not the user's own review, so the checkbox above stays open until the user confirms.
 
 ## Data-security boundaries
 

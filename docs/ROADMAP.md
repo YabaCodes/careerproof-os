@@ -25,7 +25,7 @@ The first builds are useful but **not certified for irreplaceable data** until P
 | v0.1.6 | Job Fit Analyzer: paste description, parse/classify, map, inspect sources and edit overrides | Transparent requirement matrix; explicit unknowns and qualifications |
 | v0.1.7 | Cross-module integration, regression, migration compatibility, privacy, UX and release checks | No critical data loss, confidentiality or relationship defects; P0/P1 acceptance passed |
 
-**v0.1.1 release acceptance (2026-10-10):** The user merged PRs #4–#15, completed CP-011A–E, accepted the targeted native iPhone fixes, and explicitly reported all **eight final physical iPhone checks** for `v0.1.1-rc.1` as passing. The accepted candidate passed **42 Node + 102 browser tests** and deployed through GitHub Pages. The separate `v0.1.1` final version-and-documentation promotion is in a user-reviewed PR, **not yet merged or deployed**. No schema 2 or backup format 2 changes are required for promotion. [CP-011E release qualification](CP_011E_RELEASE_QUALIFICATION.md).
+**v0.1.1 release acceptance (2026-10-10):** The user merged PRs #4–#15, completed CP-011A–E, accepted the targeted native iPhone fixes, and explicitly reported all **eight final physical iPhone checks** for `v0.1.1-rc.1` as passing. The accepted candidate passed **42 Node + 102 browser tests** and deployed through GitHub Pages. The separate version-only `v0.1.1` final promotion was **merged by the user in [PR #16](https://github.com/YabaCodes/careerproof-os/pull/16)** (`398f892`) and **deployed** by main CI run 38021279551 (42 Node + 102 browser passed). No schema 2 or backup format 2 changes. Outstanding: a short post-promotion iPhone smoke check of the final version, and no release tag exists (user decision). [CP-011E release qualification](CP_011E_RELEASE_QUALIFICATION.md).
 
 **Release boundary:** v0.1.1 covers the professional record foundation and evidence linking; `v0.1.2` remains planned for extended data-health reporting, controlled deletion improvements, dashboard expansion and additional P0 reliability hardening. The later career studios, evidence/proficiency assessment and job-fit tools are not part of this release.
 
@@ -77,6 +77,8 @@ Automated tests must use synthetic data, and manual browser/device tests are tra
 
 ## 5. Eight-module completion tracker (update on each implementation PR)
 
+Module-level summary below; per-feature lifecycle status is in [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md).
+
 | Module | Current repository evidence | Next planned development |
 |---|---|---|
 | M01 Profile | Core Complete: employer/role history, promotions, education and credentials; compact timeline and iPhone acceptance passed | Additional improvements after v0.1.1 |
@@ -88,7 +90,7 @@ Automated tests must use synthetic data, and manual browser/device tests are tra
 | M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
 | M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls | Expanded P0 dashboard v0.1.2; advanced later |
 
-CP-011A was merged in PR #4 as **0.1.1-alpha.1**; the user confirmed all five iPhone smoke checks. This is not completion of v0.1.1. **CP-011A.1 (0.1.1-alpha.2)** was merged by the user in PR #5. iPhone review found native-date overflow, premature focus scrolling and excessive navigation/footer density. **CP-011A.2 (0.1.1-alpha.3)** is the authorized corrective branch: shared presentation and dialog interaction only, no new module/data scope. CP-011B–E remain open; B is paused until A.2 is reviewed, merged and explicitly verified on iPhone. Production is unchanged by this branch. See [correction evidence and device gate](IOS_FORM_NAV_REFINEMENT.md).
+**v0.1.1 delivery history:** CP-011A (PR #4, alpha.1) → A.1–A.3 UI/iOS corrections (PRs #5–#8) → CP-011B with B.1/B.2 (PRs #9–#11) → CP-011C (PR #12) → CP-011D with D.1 (PRs #13–#14) → CP-011E rc.1 (PR #15) → final promotion (PR #16). All merged by the user. Per-feature status, PRs, test baselines and device-acceptance evidence are in the [milestone tracker](MILESTONE_TRACKER.md), which is the authoritative progress record and must be updated in every PR.
 
 **Module status vocabulary**: Not started / Foundation / Partial / Core Complete / Expanded / Deferred. Actual state follows merged code and acceptance evidence, not roadmap estimates.
 

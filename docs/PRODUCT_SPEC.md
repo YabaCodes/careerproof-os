@@ -1,6 +1,6 @@
 # CP-FDS-001 + CP-UX-001 — CareerProof Product, Functional and UX Specification
 
-**Status:** Approved working baseline, amended by CP-DRG-001. **Date:** 2026-10-09. **Implementation reality:** v0.1.0 with UI hotfix; most items below are requirements, not shipped features.
+**Status:** Approved working baseline, amended by CP-DRG-001. **Date:** 2026-10-09. **Implementation reality (updated 2026-10-10):** `v0.1.1` is shipped (Career Profile, Experience Portfolio, Achievement Vault with metrics/evidence/links, Competency Library, recovery and Check data, offline PWA). Studio, Growth/Roadmap, proficiency, CV, review and job-fit items below remain requirements, not shipped features; see [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md).
 
 ## 1. Vision, audience, value proposition
 
