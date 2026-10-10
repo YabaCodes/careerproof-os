@@ -1,6 +1,6 @@
 # CareerProof OS — Milestone Tracker
 
-**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-10 · **Current released version:** `v0.1.1` · **main:** `2ef0501` (PR #18)
+**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-10 · **Current released version:** `v0.1.2-alpha.3` (accepted on iPhone) · **main:** `85c5ca6` (PR #20)
 
 This is the authoritative per-feature progress record. It is updated in **every** PR. Module-level completion stages remain in [ROADMAP.md §5](ROADMAP.md); scope and acceptance criteria are defined in [ROADMAP.md](ROADMAP.md), [PRODUCT_SPEC.md](PRODUCT_SPEC.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md) and [CAREER_INTELLIGENCE.md](CAREER_INTELLIGENCE.md).
 
@@ -22,10 +22,10 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 ## Progress summary (2026-10-10)
 
-- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 is next and awaits authorization.
+- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 is in progress: alpha.1 integrity hotfix, alpha.2 update detection and alpha.3 navigation/design merged; alpha.3 accepted on iPhone; alpha.4 Data Health in review.
 - **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
-- **Automated baseline at `398f892`:** 42/42 Node, 102/102 browser (CI run 38021279551; reproduced locally).
-- **Open acceptance items:** post-promotion v0.1.1 smoke (F101–F102), CP-011B.2 update/restart notice device check, E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 hotfix H101–H102, CP-012.1 U101–U104.
+- **Automated baseline (alpha.4 branch):** 53/53 Node, 110/110 browser locally; main `85c5ca6` CI run 38033308166 ✓.
+- **Open acceptance items:** v0.1.1 smoke (F101–F102, superseded by later releases), E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 H102 (optional synthetic apostrophe check), CP-012.1 U103–U104 and CP-012A DH101–DH104 at the alpha.4 update.
 
 ## Version ledger
 
@@ -33,7 +33,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 |---|---|---|---|---|
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
-| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1 hotfix merged; alpha.2 update detection in review; alpha.3 redesign next) | #18 | alpha.1 H101–H102 pending |
+| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1–alpha.3 merged; alpha.3 accepted; alpha.4 Data Health in review) | #18–#20, #21 | alpha.3 A101–A106 accepted 2026-10-10 |
 | v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
@@ -57,12 +57,12 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | Platform | v0.1.1 Git tag / GitHub Release | — | — | Not Started | 0.1.1 | — | — | — | No tag exists | User decision |
 | Platform | Public-repo data hygiene | E220 | P0 | Device Testing | — | — | Agent scan of branch tips + history: no identifying terms | — | User confirmation pending | User confirms |
 | Platform | Docs status reconciliation + this tracker | DEC-027 | — | Merged | docs only | #17 | CI run 38024672956 ✓ (build, tests, deploy) | n/a (docs) | — | — |
-| Platform | **DATA-017** Experience text corrupted by unterminated `&#39` escape (apostrophe + digits) | CP-012.0 | P0 | Device Testing | 0.1.2-alpha.1 | #18 | html-escape (Node), experience-portfolio CP-012.0 (browser); main CI 38027577090 ✓ deployed | H101–H102 pending; H103 only if Experience Portfolio entries exist | — | User reports H101–H102 |
-| Platform | **QA-018** busy-state test gated a save method the editor no longer uses (passed by timing) | CP-012.1 | P0 | In Review | 0.1.2-alpha.2 | #19 | ui-polish pending-save (10/10 repeats) | n/a | — | Merge with alpha.2 |
-| Platform | Update detection: check on every open/foreground, banner with version, Back up first + Restart app (DEC-028) | CP-012.1 | P0 | In Review | 0.1.2-alpha.2 | #19 | pwa-updates (3 cases, fail on old code) | U101–U102 now; U103–U104 at next release | Pages edge cache can still add ~10 min | User review/merge |
-| Platform | Navigation (Home/Vault/Experience/Skills/Profile, ＋ and Settings in header) + Wealth OS design language (DEC-029/030) | CP-012.2 | P0 | In Review | 0.1.2-alpha.3 | #20 | home-navigation (new), ui-polish sweep incl. Experience/Skills, ios-refinement nav geometry | A101–A106 pending | Stacked on #19; Delete-in-editor follow-up | User review/merge after #19 |
-| M08 Career Analytics | **UX-019** Home "Export backup" left "Never" on screen until another redraw | CP-012.2 | P0 | In Review | 0.1.2-alpha.3 | #20 | home-navigation | A103 | — | Merge with alpha.3 |
-| M04 Competency Intelligence | **UX-020** archived-skills checkbox was a 19px tap target | CP-012.2 | P0 | In Review | 0.1.2-alpha.3 | #20 | ui-polish sweep (Skills) | A105 | — | Merge with alpha.3 |
+| Platform | **DATA-017** Experience text corrupted by unterminated `&#39` escape (apostrophe + digits) | CP-012.0 | P0 | Device Testing | 0.1.2-alpha.1 | #18 | html-escape (Node), experience-portfolio CP-012.0 (browser); main CI 38027577090 ✓ | H101 accepted (records intact through alpha.3); H102 optional; H103 n/a unless Experience entries exist | — | Optional H102 |
+| Platform | **QA-018** busy-state test gated a save method the editor no longer uses (passed by timing) | CP-012.1 | P0 | Merged | 0.1.2-alpha.2 | #19 | ui-polish pending-save (10/10 repeats); main CI 38032685213 ✓ | n/a (test only) | — | — |
+| Platform | Update detection: check on every open/foreground, banner with version, Back up first + Restart app (DEC-028) | CP-012.1 | P0 | Device Testing | 0.1.2-alpha.2 | #19 | pwa-updates (3 cases, fail on old code); main CI 38032685213 ✓ | Phone went alpha.1 → alpha.3 directly, so the old banner was shown; U103–U104 observable at the alpha.4 update | — | Watch for the new banner at alpha.4 |
+| Platform | Navigation (Home/Vault/Experience/Skills/Profile, ＋ and Settings in header) + Wealth OS design language (DEC-029/030) | CP-012.2 | P0 | Accepted | 0.1.2-alpha.3 | #20 | home-navigation, ui-polish sweep incl. Experience/Skills, ios-refinement nav geometry; main CI 38033308166 ✓ | A101–A106 accepted by user 2026-10-10 | Delete-in-editor follow-up (not started) | — |
+| M08 Career Analytics | **UX-019** Home "Export backup" left "Never" on screen until another redraw | CP-012.2 | P0 | Accepted | 0.1.2-alpha.3 | #20 | home-navigation | A103 accepted | — | — |
+| M04 Competency Intelligence | **UX-020** archived-skills checkbox was a 19px tap target | CP-012.2 | P0 | Accepted | 0.1.2-alpha.3 | #20 | ui-polish sweep (Skills) | A105 accepted | — | — |
 | M01 Career Profile | Profile basics | CP-FR-001 | P0 | Accepted | 0.1.0 | initial, #1 | domain, ui-regression | E211 | — | — |
 | M01 Career Profile | Employers, roles, promotions, primary role | CP-FR-001, CP-011B | P0 | Accepted | 0.1.1-alpha.5 | #9 | career-history | User verified before CP-011C; E214 | — | — |
 | M01 Career Profile | Compact 2-line timeline, More/Less | CP-011B.1 | P0 | Accepted | 0.1.1-alpha.6 | #10 | career-compact | E214 | — | — |
@@ -84,10 +84,10 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | M07 Job Readiness & Interview | CV Builder + PDF | CP-FR-012 | P1 | Planned | 0.1.5 | — | — | — | Two templates to approve | After v0.1.4 |
 | M07 Job Readiness & Interview | Job Fit Analyzer (pasted JD) | CP-FR-013 | P1 | Planned | 0.1.6 | — | — | — | Synonym dictionary/rule engine to approve; `jobAnalyses`/`jobRequirements` stores | After v0.1.5 |
 | M07 Job Readiness & Interview | Interview story bank / practice | — | Later | Not Started | — | — | — | — | — | Scope later |
-| M08 Career Analytics | Home dashboard: next action, truthful metrics, recent, quick capture | CP-FR-014 | P0 | In Review | 0.1.2-alpha.3 | #20 | home-navigation | A103 | Data Health (CP-012A) and fuller dashboard (CP-012C) still planned | Merge with alpha.3 |
+| M08 Career Analytics | Home dashboard: next action, truthful metrics, recent, quick capture | CP-FR-014 | P0 | Accepted | 0.1.2-alpha.3 | #20 | home-navigation | A103 accepted | Fuller dashboard (CP-012C) still planned | — |
 | M08 Career Analytics | Truthful dashboard + record completeness | CP-FR-014, CP-012C | P0 | Planned | 0.1.2 | — | — | — | Which summaries; backup-time honesty | Authorize within v0.1.2 |
 | M08 Career Analytics | Advanced longitudinal analytics | — | Later | Not Started | — | — | — | — | — | Scope later |
-| Platform | Data Health 2.0 (critical vs advisory, read-only) | CP-FR-008, CP-012A | P0 | Planned | 0.1.2 | — | — | — | Issue taxonomy to approve | **Recommended next increment** |
+| Platform | Data Health 2.0 (critical vs advisory, read-only, links to records) | CP-FR-008, CP-012A | P0 | In Review | 0.1.2-alpha.4 | #21 | data-health (9 Node incl. corruption + 5,000-record timing), data-health spec (3 browser) | DH101–DH104 pending | Problems that stop the app opening still show on the startup error screen, not in Settings | User review/merge |
 | Platform | Accessibility / large-dataset performance hardening | CP-012D | P0 | Planned | 0.1.2 | — | — | — | Measure, don't assume | Within v0.1.2 |
 | Platform | P0 recovery / upgrade certification | CP-012E | P0 | Planned | 0.1.2 | — | — | — | Includes E219-style synthetic restore | Within v0.1.2 |
 | Platform | First-cycle integration qualification | v0.1.7 | P1 | Planned | 0.1.7 | — | — | — | — | After v0.1.6 |
@@ -98,7 +98,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 1. Report post-promotion smoke F101–F102 for `v0.1.1`.
 2. Create a `v0.1.1` Git tag / GitHub Release, or not.
-3. Authorize the next increment (recommended: CP-012A Data Health 2.0) after reviewing its contract.
+3. Review and merge CP-012A Data Health (PR #21), then run DH101–DH104 and watch for the new update banner (U103–U104).
 4. v0.1.2 product choices: Data Health issue taxonomy and wording; unlink/reassign UX; dashboard summaries; how to show last-export time without implying a verified backup.
 5. Later: 32-skill rubric authoring, CV templates, job-fit rule dictionary, navigation redesign.
 

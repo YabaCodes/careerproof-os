@@ -1,5 +1,19 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.4 — CP-012A Data Health (review)
+
+- **Settings → Data health → Check data** now adds a read-only report under the existing backup round-trip result. It separates **critical** problems (records or backup format fail validation; reported, never thrown or auto-repaired) from **suggestions**:
+  - backup never exported from this device, last export more than 14 days ago, or records changed since the last export;
+  - browser storage not marked persistent (shown only when the browser says so) and backups above 80% of the 12 MiB limit;
+  - recorded achievements without a stated outcome, without any metric or evidence reference, without a skill link, or without a role or experience;
+  - experiences with no linked achievements, a profile without headline or summary, drafts not yet recorded, credentials past their recorded expiry date (precision-aware).
+- Each suggestion lists the records behind it; tapping one opens that achievement, experience, profile or credential editor. The report itself never edits, uploads, stores or scores anything.
+- Wording describes documentation, not ability ("not linked to a skill", "This is about documentation, not your ability"). Draft and archived achievements are excluded from completeness suggestions; drafts appear as a plain count.
+- Measured: 5,000 synthetic achievements assess in about 4 ms (Node), no persisted health state, no schema or backup-format change.
+- New modules `domain/dataHealth.js` and `ui/dataHealth.js` are in the offline app shell; version and cache key updated.
+- This is the first release delivered while the alpha.2 update code is running on the phone, so the new banner (version name, Back up first, Restart app) should appear.
+
+
 ## 0.1.2-alpha.3 — CP-012.2 Navigation and Wealth OS design language (review)
 
 **Navigation (DEC-029)**
