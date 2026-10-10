@@ -179,3 +179,64 @@ for(const width of [320,375,390,430]){
     await expect(page.locator('#outcome')).toBeVisible();
   });
 }
+
+
+// CP-011D.1 native iPhone report: the optional details control must never
+// share physical space with the "What did you do?" label or adjacent controls.
+for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
+  test('Quick Capture fields and More details never overlap: '+width+'px '+theme,async({page})=>{
+    await page.setViewportSize({width,height:812});
+    await start(page,theme);
+    await page.locator('.mobile-create').click();
+    const form=page.locator('#achievement-form');
+    const toggle=form.locator('[data-action=toggle-rich-panel]');
+    await expect(toggle).toHaveText(/More details/);
+    await expect(toggle).toHaveAttribute('aria-expanded','false');
+    await expect(form.locator('#rich-panel-content')).toBeHidden();
+
+    async function measure(){
+      return form.evaluate(el=>{
+        const rect=(selector)=>{
+          const node=el.querySelector(selector);
+          if(!node)throw Error('Missing field '+selector);
+          const r=node.getBoundingClientRect();
+          return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height};
+        };
+        return {title:rect('#title'),contribution:rect('#contribution'),
+          contributionLabel:rect('label[for=contribution]'),date:rect('#occurredOn'),
+          category:rect('#impactCategory'),outcome:rect('#outcome'),
+          outcomeLabel:rect('label[for=outcome]'),
+          panel:rect('#rich-detail-panel'),toggle:rect('.rich-expander'),
+          guidance:rect('.form-guidance'),
+          scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};
+      });
+    }
+    const collapsed=await measure();
+    expect(collapsed.contributionLabel.top).toBeGreaterThanOrEqual(collapsed.title.bottom+2);
+    expect(collapsed.date.top).toBeGreaterThanOrEqual(collapsed.contribution.bottom+2);
+    expect(collapsed.outcomeLabel.top).toBeGreaterThanOrEqual(collapsed.date.bottom+2);
+    expect(collapsed.panel.top).toBeGreaterThanOrEqual(collapsed.outcome.bottom+2);
+    expect(collapsed.guidance.top).toBeGreaterThanOrEqual(collapsed.panel.bottom+2);
+    expect(collapsed.toggle.top).toBeGreaterThanOrEqual(collapsed.panel.top);
+    expect(collapsed.toggle.bottom).toBeLessThanOrEqual(collapsed.panel.bottom);
+    expect(collapsed.toggle.height).toBeGreaterThanOrEqual(44);
+    expect(collapsed.scrollWidth-collapsed.clientWidth).toBeLessThanOrEqual(1);
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded','true');
+    await expect(form.locator('#rich-panel-content')).toBeVisible();
+    const expanded=await measure();
+    expect(expanded.guidance.top).toBeGreaterThanOrEqual(expanded.panel.bottom+2);
+    expect(expanded.panel.top).toBeGreaterThanOrEqual(expanded.outcome.bottom+2);
+    expect(expanded.scrollWidth-expanded.clientWidth).toBeLessThanOrEqual(1);
+
+    await toggle.click();
+    await expect(form.locator('#rich-panel-content')).toBeHidden();
+    const closedAgain=await measure();
+    expect(closedAgain.guidance.top).toBeGreaterThanOrEqual(closedAgain.panel.bottom+2);
+    await page.locator('#title').fill('Synthetic no-overlap draft');
+    await page.locator('[data-action=save-achievement][data-status=draft]').click();
+    await expect(form).toHaveCount(0);
+    expect((await snapshot(page)).collections.achievements.some(x=>x.title==='Synthetic no-overlap draft')).toBe(true);
+  });
+}

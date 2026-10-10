@@ -71,7 +71,7 @@ export function richAchievementFields(a:AchievementView|undefined,c:CareerCollec
   const confidentiality='<div class="field"><label for="rich-confidentiality">Confidentiality</label><select name="confidentiality" id="rich-confidentiality">'+
     [['confidential','Confidential (default)'],['standard-private','Standard private']].map(([v,l])=>
       '<option value="'+v+'" '+((a?.confidentiality??'confidential')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></div>';
-  return '<div class="rich-panel" id="rich-detail-panel"><button type="button" class="rich-expander" data-action="toggle-rich-panel" aria-expanded="false" aria-controls="rich-panel-content">More details, experience & evidence <span class="rich-summary-hint">Optional</span></button>'+
+  return '<div class="rich-panel" id="rich-detail-panel"><button type="button" class="rich-expander" data-action="toggle-rich-panel" aria-label="Show more achievement details, experience and evidence" aria-expanded="false" aria-controls="rich-panel-content"><span>More details</span><span class="rich-summary-hint">Optional</span></button>'+
     '<div class="rich-panel-body" id="rich-panel-content" hidden>'+
     field('situation','Situation / challenge',a?.situation??'',true)+
     field('actions','Actions taken',a?.actions??'',true)+field('notes','Additional notes',a?.notes??'',true)+

@@ -1,5 +1,15 @@
 # CareerProof release notes
 
+## 0.1.1-alpha.10 — CP-011D.1 iPhone Quick Capture overlap correction (review)
+
+- Corrects a confirmed physical iPhone alpha.9 regression: the optional More details control visually overlaid the What did you do? label in the achievement editor.
+- Returns optional enrichment below the five core Quick Capture fields (after Outcome); uses a short More details / Optional control to avoid wrapping over primary content.
+- Scopes explicit intrinsic grid-row sizing to the achievement form and removes stacking overrides responsible for painting optional controls above neighboring fields.
+- Adds eight mobile width/theme geometry and interaction regression checks, verifying no overlap collapsed, expanded or after collapsing; original Outcome keyboard checks remain.
+- Presentation-only release: no changes to IndexedDB schema 2, backup 2, career/achievement data, privacy, record links or installed PWA identity.
+- Physical iPhone acceptance remains required after deployment. Do not reinstall the PWA to update.
+
+
 ## 0.1.1-alpha.9 — CP-011D Expanded Achievements & Competency Linking (review)
 
 - Optional advanced achievement editor adds situation, actions, notes, explicit privacy, career role, multiple Experience and competency links, optional primary project, user-entered impact metrics and evidence references.

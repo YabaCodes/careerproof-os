@@ -520,8 +520,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 
 
 /* CP-011D — advanced achievement metadata is opt-in and does not inflate Quick Capture. */
-.rich-panel { position:relative;z-index:1;isolation:isolate;align-self:start;border:1px solid var(--line);border-radius:var(--radius-control);overflow:hidden;min-width:0; }
-.rich-panel>.rich-expander { position:relative;z-index:2;cursor:pointer;border:0;width:100%;text-align:left;color:var(--text);background:transparent;padding:var(--space-4);font-size:var(--type-body);font-weight:650;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2); }
+.rich-panel { position:relative;z-index:0;align-self:stretch;border:1px solid var(--line);border-radius:var(--radius-control);overflow:hidden;min-width:0; }
+.rich-panel>.rich-expander { cursor:pointer;border:0;width:100%;text-align:left;color:var(--text);background:transparent;padding:var(--space-4);font-size:var(--type-body);font-weight:650;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:var(--space-2); }
 .rich-panel>.rich-expander:focus-visible { outline:2px solid var(--teal);outline-offset:-2px; }
 .rich-summary-hint { color:var(--muted);font-size:var(--type-meta);font-weight:400; }
 .rich-panel-body { padding:var(--space-4);padding-top:0;display:grid;gap:var(--space-4);min-width:0; }
@@ -573,3 +573,10 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 
 .skill-archive-toggle { display:flex;align-items:center;gap:var(--space-2);min-height:44px;font-size:var(--type-meta);color:var(--muted);cursor:pointer; }
 .skill-archive-toggle input { width:19px;height:19px;accent-color:var(--teal);flex:none; }
+
+/* CP-011D.1 — intrinsic grid rows prevent the optional panel from covering adjacent controls. */
+#achievement-form.form-grid { grid-template-columns:minmax(0,1fr); grid-auto-rows:max-content; }
+#achievement-form > .rich-panel { grid-column:1; }
+#achievement-form > .field,#achievement-form > .field-row { position:relative; }
+.rich-expander > span:first-child { min-width:0;overflow-wrap:anywhere; }
+.rich-expander > .rich-summary-hint { flex:none; }

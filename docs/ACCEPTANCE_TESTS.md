@@ -9,6 +9,17 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-011D.1 — iPhone Quick Capture overlap correction, alpha.10
+
+- [ ] D211: Settings reports alpha.10 after the existing installed Home Screen PWA updates. Previously saved records remain present; export backup first.
+- [ ] D212: In the Capture Achievement modal, Achievement title, What did you do?, Occurrence date, Impact category and Outcome display in natural order with no text/control overlap. The optional More details control follows Outcome.
+- [ ] D213: Tap More details, inspect expanded fields, collapse and repeat. No overlapping labels, clipped button text, or horizontal overflow; all controls remain tappable.
+- [ ] D214: Repeat in light and dark mode with the native keyboard showing for Outcome; ensure keyboard does not cover active field.
+- [ ] D215: Save a synthetic draft and edit an existing achievement without unexpected data changes. Original alpha.9 rich achievement/competency checks remain required.
+
+Automated mobile Chromium viewport tests supplement, not replace, physical iPhone verification. Never uninstall the installed PWA or clear site data to force an update.
+
+
 ## CP-011D — rich achievements and competencies (alpha.9, device gate)
 
 User confirmed that CP-011C Experience creation/editing, role association and linked achievement capture work on their physical iPhone before authorizing this checkpoint.
