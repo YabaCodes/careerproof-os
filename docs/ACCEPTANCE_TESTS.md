@@ -9,6 +9,17 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-012A — Data Health (0.1.2-alpha.4, device gate)
+
+Existing Home Screen app only; no reinstall or storage clearing.
+
+- [ ] **U103/U104 (update path):** after the merge, opening or returning to the app shows *New version ready — version 0.1.2-alpha.4* with **Back up first** and **Restart app**, without tapping Check now. Back up first saves a file and keeps the banner; Restart app loads alpha.4 with records intact.
+- [ ] **DH101:** Settings → Check data shows *Check passed* and *No critical problems* with your real records; nothing changes afterwards (same records, same Last export on Home).
+- [ ] **DH102:** Suggestions match reality (for example *No backup exported* if you never exported; experiences with no achievements; profile headline). Wording reads as documentation advice, not judgement.
+- [ ] **DH103:** Tapping a listed record opens the right editor; closing it returns to the app without changes.
+- [ ] **DH104:** Export a backup, run Check data again: the backup suggestion disappears. Layout fits the screen in light and dark.
+
+
 ## CP-012.2 — navigation and design (0.1.2-alpha.3, device gate)
 
 Existing Home Screen app only; no reinstall or storage clearing. This release is also the first chance to observe the alpha.2 update behaviour (U103–U104).

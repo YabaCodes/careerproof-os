@@ -1,6 +1,7 @@
 import { generateBackup, validateBackup, validateCollections, ValidationError, obj } from '../domain/validation.js';
 import { database, type CareerDatabase } from './db.js';
 import { type CareerBackup, MAX_BACKUP_BYTES } from '../domain/models.js';
+import { assessDataHealth, criticalIssue, type HealthIssue } from '../domain/dataHealth.js';
 export interface PreparedBackup { backup: CareerBackup; legacy: boolean; expectedGeneration: number; expectedRevision: number }
 export function checkBackupSize(json:string):void {
   if(new TextEncoder().encode(json).byteLength>MAX_BACKUP_BYTES)throw new ValidationError('Backup exceeds the supported 12 MiB limit. No export or restore was performed.');
@@ -56,6 +57,31 @@ export async function inspectLocalData(repo:CareerDatabase=database):Promise<Int
     jsonBytes:new TextEncoder().encode(json).byteLength,
     counts:parsed.manifest.counts
   };
+}
+/**
+ * CP-012A: read-only Data Health report. Runs the existing round-trip check,
+ * then derives advisories from the same snapshot. Never writes, repairs,
+ * uploads or scores anything; a failed validation is reported, not thrown.
+ */
+export interface DataHealthReport { checkedAt:string; integrity:IntegrityReport|null; issues:HealthIssue[]; storagePersisted:boolean|null }
+export async function storagePersisted():Promise<boolean|null>{
+  try{
+    const storage=(globalThis as {navigator?:{storage?:{persisted?:()=>Promise<boolean>}}}).navigator?.storage;
+    return typeof storage?.persisted==='function'?await storage.persisted():null;
+  }catch{return null;}
+}
+export async function inspectDataHealth(repo:CareerDatabase=database,persisted:()=>Promise<boolean|null>=storagePersisted):Promise<DataHealthReport>{
+  const checkedAt=new Date().toISOString();
+  let integrity:IntegrityReport;
+  try{integrity=await inspectLocalData(repo);}
+  catch(err){return {checkedAt,integrity:null,issues:[criticalIssue(err instanceof Error?err.message:'Unknown validation error.')],storagePersisted:null};}
+  const snapshot=await repo.readSnapshot();
+  if(snapshot.generation!==integrity.generation||snapshot.revision!==integrity.revision)
+    throw new ValidationError('Career records changed during the check. Run it again.');
+  const [lastExportAt,lastChangeAt,isPersisted]=await Promise.all([repo.getMeta('lastExportAt'),repo.getMeta('lastChangeAt'),persisted()]);
+  const issues=assessDataHealth(snapshot.collections,{now:checkedAt,lastExportAt:typeof lastExportAt==='string'?lastExportAt:null,
+    lastChangeAt:typeof lastChangeAt==='string'?lastChangeAt:null,backupBytes:integrity.jsonBytes,storagePersisted:isPersisted});
+  return {checkedAt,integrity,issues,storagePersisted:isPersisted};
 }
 export function downloadBackup(name:string,json:string):void {
   checkBackupSize(json);
