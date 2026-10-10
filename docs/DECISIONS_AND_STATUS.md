@@ -152,3 +152,12 @@ Following alpha.9 release, a physical iPhone screenshot demonstrated More detail
 ## 2026-10-10 — CP-011E release candidate, awaiting review
 
 The user accepted the alpha.10 iPhone Quick Capture overlap fix and authorized CP-011E. The proposed `v0.1.1-rc.1` candidate adds full-data read-only backup round-trip verification in Settings and guards against ordinary edits made after a backup preview was selected (both dataset generation and revision must match). No schema or backup format change. Remaining alpha.9 feature UAT is consolidated into the final physical iPhone gate, not assumed complete. Candidate CI, user merge and native-device UAT are pending; **do not tag or call it final v0.1.1**. See [CP-011E](CP_011E_RELEASE_QUALIFICATION.md).
+
+
+## 2026-10-10 — v0.1.1 final version promotion authorized (not yet merged)
+
+The user explicitly confirmed that **all eight final iPhone acceptance checks passed** for the deployed `v0.1.1-rc.1` candidate, including retained records and exported backup, read-only integrity check, Career Profile/Experience associations, enriched achievement metrics/evidence, competencies/Vault filters, corrected native keyboard/Quick Capture layout, and offline reopening. The merged candidate passed **42/42 Node and 102/102 browser tests**. The user then authorized a **separate final `v0.1.1` promotion PR with no automatic merge**.
+
+The release promotion changes only app/package version strings, service-worker cache key, exact-version test expectations, README and release/acceptance documentation. **Do not migrate or clear IndexedDB, change backup format 2, reset the installed Home Screen PWA, create a release tag, or claim final deployment before the user merges and GitHub Pages reports success.** Final build/Node/browser CI remains a mandatory gate. After deployment, confirm `v0.1.1` is shown on the existing PWA and retained records remain accessible.
+
+The future planned `v0.1.2` reliability/dashboard improvements and `v0.1.3+` competency assessment/review/CV/job-fit capabilities are not included in the v0.1.1 release.
