@@ -63,7 +63,9 @@ test('CP-E102 complete cross-module bundle, dates, privacy, primary experience a
   assert.equal(prepared.legacy,false);
   assert.deepEqual(prepared.backup.manifest.counts,Object.fromEntries(P0_STORES.map(s=>[s,before.collections[s].length])));
   await repo.saveProfile({...before.collections.profiles[0],headline:'Synthetic profile mutation'});
-  await restoreBackup(prepared,repo);
+  await assert.rejects(()=>restoreBackup(prepared,repo),/changed since you selected/i);
+  const confirmed=await parseBackupJson(backup.json,repo);
+  await restoreBackup(confirmed,repo);
   const after=await repo.readSnapshot();
   assert.deepEqual(sorted(after.collections),sorted(before.collections));
   assert.deepEqual(after.preferences,before.preferences);
@@ -110,11 +112,11 @@ test('CP-E104 restore preview generation rejects stale confirmation after anothe
   const pending=await parseBackupJson((await createBackup(repo)).json,repo);
   const a=current.collections.achievements[0];
   await other.saveAchievement({...a,title:'Synthetic concurrent change'});
-  // Ordinary writes do not bump the dataset *generation*: confirmation is
-  // currently protected from intervening restores, not ordinary edits.
   const updated=await repo.readSnapshot();
   assert.equal(updated.generation,pending.expectedGeneration);
   assert.ok(updated.revision>current.revision);
+  await assert.rejects(()=>restoreBackup(pending,repo),/changed since you selected/i);
+  assert.deepEqual(await repo.readSnapshot(),updated);
   await other.close();await repo.close();
 });
 test('CP-E105 legacy import explicitly replaces newer collections while recreating the four protected taxonomy categories and 32 skills',async()=>{
