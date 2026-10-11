@@ -30,7 +30,7 @@ async function seed(page,theme){
 async function layout(page,state){
   const result=await page.evaluate(()=>{
     const visible=el=>el.getClientRects().length>0&&!el.closest('[inert]');
-    const controls=[...document.querySelectorAll('button,input:not([type=file]),select')].filter(visible);
+    const controls=[...document.querySelectorAll('button,input:not([type=file]),select,textarea')].filter(visible);
     return {
       overflow:document.documentElement.scrollWidth-innerWidth,
       small:controls.filter(el=>{const r=el.getBoundingClientRect();return r.width<43.9||r.height<43.9;}).map(el=>el.id||el.textContent.trim()),
