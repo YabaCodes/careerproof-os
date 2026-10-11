@@ -1,13 +1,33 @@
 # CareerProof — Acceptance test plan
 
+## CP-012E — Recovery and Upgrade Certification (0.1.2-alpha.11 candidate)
+
+**Do not restore any backup over your real CareerProof data.** Destructive recovery E219 runs exclusively in isolated synthetic fake-indexeddb and Playwright browser contexts. This release gate certifies the existing backup/restore and migration code; it does not authorize any personal-data import or storage reset.
+
+Automated certification: E219 isolated full P0 synthetic format-2 export → close/reopen → mutate disposable dataset → explicitly preview/restore → close/reopen and compare all stores, links, confidential fields, preferences and generation. Also verify corrupt/future backup rejection, stale-preview protection, v1→v2 migration, and the existing quota/constraint rollback and browser restore-preview tests.
+
+Physical iPhone **non-destructive** gate after merge/deploy:
+- [ ] **RE101:** Installed Home Screen app updates to alpha.11 without reinstall, clear-site-data or data loss.
+- [ ] **RE102:** Settings → Check data reports no critical integrity errors. Review any advisory gaps separately; incomplete career entries are not corruption.
+- [ ] **RE103:** Export a JSON backup to Files. Confirm the file is present, readable, and kept securely; it is unencrypted. Do not upload it to GitHub or this chat.
+- [ ] **RE104:** Confirm saved employers, roles, Experience links, achievements, metrics/evidence, skills and dates still display correctly after reopening the app.
+- [ ] **RE105:** In Settings select the valid exported backup only to inspect its restore preview/counts, then **cancel** without confirming restore. Verify the current records are unchanged.
+- [ ] **E220:** Confirm public GitHub repository and test fixtures contain no private employer/project data (repository scanning is separately documented; personal confirmation required).
+
+**Release decision:** P0 final promotion is blocked until CI passes, E219 synthetic restore is verified, RE101–RE105 pass or exceptions are explicitly reviewed, E220 is confirmed, and a separate final promotion PR is reviewed. No destructive test on a real iPhone.
+
+## CP-012D.2 — Accessible validation and full-layout regression (0.1.2-alpha.10, device gate)
+
+**User accepted on physical iPhone 2026-10-11:** AE101–AE104 passed. AE105 (Reduce Motion) was marked N/A/not tested and the user explicitly waived it for this milestone. Automated reduced-motion coverage exists; do not rewrite AE105 as passed.
+
 ## CP-012D.2 — Accessible validation and full-layout regression (0.1.2-alpha.10, device gate)
 
 **Pending physical iPhone verification after review, merge, and deployment.** This is the second/final planned CP-012D slice. It expands 14-viewport/theme sweeps to textarea labeling/touch geometry and adds validation error focus tests; it is not a formal WCAG 2.2 AA certification or a measured iPhone performance benchmark.
 
-- [ ] **AE101:** Existing Home Screen app updates to alpha.10 without reinstalling, clearing data or losing any role/Experience/achievement links.
-- [ ] **AE102:** In Capture Achievement, leave the required title empty and tap Save achievement. A visible error appears; VoiceOver (if available) announces the error and focus moves to the error message without opening the keyboard.
-- [ ] **AE103:** Correct the title, enter a contribution, save and reopen the achievement. No data loss, blocked form, clipped error or stuck focus.
-- [ ] **AE104:** Recheck all five tabs, Settings, Experience editor and Capture in light/dark themes; no clipped fields or inaccessible buttons when the iOS keyboard is open.
+- [x] **AE101:** Existing Home Screen app updates to alpha.10 without reinstalling, clearing data or losing any role/Experience/achievement links.
+- [x] **AE102:** In Capture Achievement, leave the required title empty and tap Save achievement. A visible error appears; VoiceOver (if available) announces the error and focus moves to the error message without opening the keyboard.
+- [x] **AE103:** Correct the title, enter a contribution, save and reopen the achievement. No data loss, blocked form, clipped error or stuck focus.
+- [x] **AE104:** Recheck all five tabs, Settings, Experience editor and Capture in light/dark themes; no clipped fields or inaccessible buttons when the iOS keyboard is open.
 - [ ] **AE105:** With Reduce Motion enabled in iOS accessibility settings (if available), error feedback and dialogs remain usable and do not require animation.
 
 ## CP-012D.1 — Keyboard accessibility and role-summary performance (0.1.2-alpha.9, device gate)
