@@ -330,7 +330,7 @@ function profileForm():string {
 }
 function settingsView():string {
   return `${dialogHeader('Settings & Data','Your workspace preferences and data controls.')}
-  <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line settings-line-stack"><div><strong>Theme</strong><p>System follows your phone's light or dark setting.</p></div><div class="segmented" role="radiogroup" aria-label="Color theme">${(['system','light','dark'] as const).map(value=>`<button type="button" class="segment" role="radio" aria-checked="${theme===value}" data-action="set-theme" data-value="${value}">${capitalize(value)}</button>`).join('')}</div></div></div>
+  <div class="modal-body settings-body"><div class="settings-group"><h3>Appearance</h3><div class="settings-line settings-line-stack"><div><strong>Theme</strong><p>System follows your phone's light or dark setting.</p></div><div class="segmented" role="radiogroup" aria-label="Color theme">${(['system','light','dark'] as const).map(value=>`<button type="button" class="segment" role="radio" aria-checked="${theme===value}" tabindex="${theme===value?0:-1}" data-action="set-theme" data-value="${value}">${capitalize(value)}</button>`).join('')}</div></div></div>
   <div class="settings-group"><h3>Data Management</h3><div class="settings-line"><div><strong>Export Career Backup</strong><p>Download all career records, relationships, taxonomy and preferences as an unencrypted JSON file (up to 12 MiB).</p></div><button id="export-backup" class="button button-outline" data-action="export">${icon('download',16)} Export</button></div><div class="settings-line"><div><strong>Data Health</strong><p>Read-only check that your records and backup format are intact, plus suggestions for what is worth completing or protecting. Nothing is changed, uploaded or scored.</p></div><button id="check-integrity" class="button button-outline" data-action="check-integrity">Check data</button></div><p id="integrity-check-result" class="integrity-check-result" role="status" aria-live="polite"></p><div id="data-health-report" class="data-health-report"></div><div class="settings-line"><div><strong>Restore from Backup</strong><p>Replace local records with a validated CareerProof backup.</p></div><button class="button button-outline" data-action="choose-restore">${icon('upload',16)} Restore</button></div><input id="restore-file" type="file" accept=".json,application/json" hidden/><p class="backup-note">${lastExportAt?`Last export generated: ${relativeDate(lastExportAt)}`:'No export generated from this browser yet.'} Your downloaded JSON is not encrypted. Keep it somewhere secure.</p></div>
   <div class="settings-group"><h3>Application</h3><div class="settings-line"><div><strong>CareerProof OS</strong><p>Local-first PWA · v${APP_VERSION} · Database schema ${SCHEMA_VERSION}</p></div>${icon('shield',20)}</div><div class="settings-line"><div><strong>Check for Updates</strong><p id="pwa-update-status">${pwaUpdateReady?'Update ready. Close Settings to back up or restart.':`Checks automatically each time you open CareerProof, without removing the app or your records. ${lastCheckedText()}`}</p></div><button class="button button-outline" data-action="check-updates">Check now</button></div><div class="form-guidance">${icon('info',18)}<p>Closing this app does not delete saved records, but browser data may be cleared or lost. This version has no cloud sync; export backups regularly.</p></div></div></div>`;
 }
@@ -631,7 +631,11 @@ function runAction(node:HTMLElement){
       break;
     case 'set-theme':{
       const value=node.dataset.value??'system';
-      void setTheme(value).then(()=>document.querySelectorAll<HTMLElement>('[data-action="set-theme"]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.value===theme))));
+      void setTheme(value).then(()=>document.querySelectorAll<HTMLElement>('[data-action="set-theme"]').forEach(b=>{
+        const selected=b.dataset.value===theme;
+        b.setAttribute('aria-checked',String(selected));
+        b.tabIndex=selected?0:-1;
+      }));
       break;
     }
   }
@@ -667,7 +671,19 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
   }
   if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form,#competency-form'))isDirty=true;});
 document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}});
-document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Enter'&&(e.target as HTMLElement|null)?.id==='inline-experience-name'){e.preventDefault();addInlineExperienceFromForm();return;}if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+document.addEventListener('keydown',e=>{
+  if(!modal)return;
+  // A native radiogroup changes selection with arrow keys, not repeated Tab.
+  // The Settings theme buttons are custom radios and require that behavior.
+  const radio=e.target instanceof HTMLElement?e.target.closest<HTMLButtonElement>('[data-action="set-theme"][role="radio"]'):null;
+  if(radio&&e.target===radio){
+    const buttons=Array.from(radio.closest('[role="radiogroup"]')?.querySelectorAll<HTMLButtonElement>('button[role="radio"]')??[]);
+    const index=buttons.indexOf(radio);
+    const direction=e.key==='ArrowRight'||e.key==='ArrowDown'?1:e.key==='ArrowLeft'||e.key==='ArrowUp'?-1:0;
+    const next=direction?(index+direction+buttons.length)%buttons.length:e.key==='Home'?0:e.key==='End'?buttons.length-1:-1;
+    if(next>=0){e.preventDefault();buttons[next]?.focus();buttons[next]?.click();return;}
+  }
+  if(e.key==='Enter'&&(e.target as HTMLElement|null)?.id==='inline-experience-name'){e.preventDefault();addInlineExperienceFromForm();return;}if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('resize',()=>syncCareerDisclosures(root),{passive:true});
 window.addEventListener('hashchange',()=>{const next=currentNav();if(next===screen)return;screen=next;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof Couldn't Open Your Local Database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}

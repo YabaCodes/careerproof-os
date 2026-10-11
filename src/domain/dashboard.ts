@@ -32,15 +32,30 @@ export interface RoleCoverage {
  * Archived achievements are left out, matching the Vault's default view.
  */
 export function roleCoverage(c: CareerCollections): { roles: RoleCoverage[]; withoutRole: number } {
-  const active = c.achievements.filter(a => a.status !== 'archived');
-  const roles = [...c.roles].sort(compareRolesByRecency).map(r => {
-    const mine = active.filter(a => a.roleId === r.id);
-    return {
-      roleId: r.id, title: r.title, employer: c.employers.find(e => e.id === r.employerId)?.name ?? '',
-      current: r.isCurrent, startDate: r.startDate, endDate: r.endDate,
-      achievements: mine.length, drafts: mine.filter(a => a.status === 'draft').length,
-      experiences: c.recordLinks.filter(l => l.linkType === 'role-project' && l.sourceId === r.id).length
-    };
-  });
-  return { roles, withoutRole: active.filter(a => !a.roleId).length };
+  // CP-012D: aggregate once, rather than re-filter every achievement/link for
+  // each role. Large histories should not make Home cost O(roles * records).
+  const achievementCounts = new Map<string, {achievements: number; drafts: number}>();
+  let withoutRole = 0;
+  for (const a of c.achievements) {
+    if (a.status === 'archived') continue;
+    if (!a.roleId) { withoutRole++; continue; }
+    const count = achievementCounts.get(a.roleId) ?? {achievements: 0, drafts: 0};
+    count.achievements++;
+    if (a.status === 'draft') count.drafts++;
+    achievementCounts.set(a.roleId, count);
+  }
+  const experienceCounts = new Map<string, number>();
+  for (const link of c.recordLinks) {
+    if (link.linkType !== 'role-project') continue;
+    experienceCounts.set(link.sourceId, (experienceCounts.get(link.sourceId) ?? 0) + 1);
+  }
+  const employerNames = new Map(c.employers.map(e => [e.id, e.name]));
+  const roles = [...c.roles].sort(compareRolesByRecency).map(r => ({
+    roleId: r.id, title: r.title, employer: employerNames.get(r.employerId) ?? '',
+    current: r.isCurrent, startDate: r.startDate, endDate: r.endDate,
+    achievements: achievementCounts.get(r.id)?.achievements ?? 0,
+    drafts: achievementCounts.get(r.id)?.drafts ?? 0,
+    experiences: experienceCounts.get(r.id) ?? 0
+  }));
+  return { roles, withoutRole };
 }

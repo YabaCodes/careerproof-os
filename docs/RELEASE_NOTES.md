@@ -1,5 +1,18 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.9 — CP-012D.1 Keyboard accessibility and Home performance (PR review)
+
+- **Keyboard accessibility:** Settings' three appearance options now behave as a single ARIA radio group. Only the selected theme is in the Tab order; arrow keys wrap between System / Light / Dark, and Home / End choose endpoints. The selected state, focus order, and saved theme stay in sync.
+- **Dashboard efficiency:** Achievements by Role now counts active achievements/drafts and Experience links in single passes, rather than filtering whole collections once per role. Drafts and Archived remain classified exactly as before. Tests include a synthetic 800-role, 8,000-achievement fixture with a generous CI performance ceiling.
+- **Regression tests:** a new Playwright keyboard + reduced-motion focused-control suite, plus a deterministic Node benchmark and count parity checks. Existing responsive/theme/keyboard tests remain in the full suite.
+- **Device gates:** AD101–AD105 pending physical iPhone checks after user review/merge/deploy. No claim of full WCAG certification or full CP-012D completion.
+- **Safety:** No IndexedDB schema, backup, record, privacy, or navigation change. Service-worker cache/version updated for safe PWA refresh.
+
+## 2026-10-11 — v0.1.2-alpha.8 accepted on iPhone
+
+- PR #26 merged at `d19e9a2`; user explicitly passed all five physical-iPhone gates D101–D105 (app/data, Home completeness, role filtering, Data Health link, light/dark layout). This acceptance is for alpha.8, not alpha.9.
+
+
 ## 0.1.2-alpha.8 — CP-012C Home dashboard (review)
 
 - **Complete Your Record** on Home lists what is missing from your recorded work, using the same rules and wording as Data Health:
