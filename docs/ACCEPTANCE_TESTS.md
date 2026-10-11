@@ -1,4 +1,14 @@
-## CP-011A.3 keyboard visibility — alpha.4 (iPhone UAT required)
+# CareerProof — Acceptance test plan
+
+## CP-012C — Home dashboard (0.1.2-alpha.8, device gate)
+
+- [ ] **D101:** The update banner names alpha.8; after restart all records are intact.
+- [ ] **D102:** Home → **Complete Your Record** lists gaps that match your records, for example achievements without an outcome. Expand one and tap a record to open it. Add the missing detail and save: the line updates on Home. A line you expanded stays open after closing the record.
+- [ ] **D103:** **Achievements by Role** shows your roles with the current one first and sensible counts. Tapping a role opens the Vault filtered to that role with the same number of achievements. A role with nothing recorded says "No achievements recorded yet".
+- [ ] **D104:** **Data Health →** opens Settings and runs the full check.
+- [ ] **D105:** Home fits the screen in light and dark mode, with no sideways scrolling.
+
+ha.4 (iPhone UAT required)
 
 User-reported after merged PR #6: **Outcome is covered when the keyboard opens and requires manual scrolling.** The CP-UI204 keyboard portion of alpha.3 was **not accepted**. The focused alpha.4 code attempts to repair this with viewport-settled modal-body scrolling; actual Safari verification remains pending.
 

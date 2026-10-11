@@ -792,3 +792,20 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .inline-experience-status:empty { display: none; }
 .inline-experience-status { margin-top: var(--space-1); }
 .rich-new-tag { margin-left: auto; flex: none; border-radius: 999px; padding: 2px 8px; font-size: var(--type-small); font-weight: 600; background: var(--surface-alt); color: var(--teal); }
+
+/* CP-012C: Home dashboard — what is missing, and achievements by role. */
+.home-gaps { display: grid; gap: var(--space-2); padding: var(--space-4); }
+.home-gaps-note { margin: 0 0 var(--space-1); color: var(--muted); font-size: var(--type-meta); }
+.home-gaps-done { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; color: var(--text); font-size: var(--type-meta); }
+.home-gaps-done svg { flex: none; color: var(--teal); margin-top: 1px; }
+.role-coverage .role-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 64px; padding: var(--space-3) 0; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); color: var(--text); font: inherit; }
+.role-coverage .role-row:last-child { border-bottom: 0; }
+button.role-row { cursor: pointer; }
+button.role-row:hover strong { color: var(--teal); }
+button.role-row:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.role-row-text { display: grid; gap: 2px; flex: 1 1 auto; min-width: 0; }
+.role-row-text strong { overflow-wrap: anywhere; }
+.role-row-text small { color: var(--muted); font-size: var(--type-meta); overflow-wrap: anywhere; }
+.role-row-counts { font-size: var(--type-meta); font-weight: 600; color: var(--teal); }
+.role-row-counts.is-empty, .role-row-none .role-row-counts { color: var(--muted); font-weight: 500; }
+.role-coverage .role-row .row-arrow { display: inline-flex; }

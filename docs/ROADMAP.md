@@ -88,7 +88,7 @@ Module-level summary below; per-feature lifecycle status is in [MILESTONE_TRACKE
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |
 | M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
-| M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls | Expanded P0 dashboard v0.1.2; advanced later |
+| M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls; from 0.1.2-alpha.8 Home adds Complete Your Record and Achievements by Role (DEC-035) | Trends and advanced analytics later |
 
 **v0.1.1 delivery history:** CP-011A (PR #4, alpha.1) → A.1–A.3 UI/iOS corrections (PRs #5–#8) → CP-011B with B.1/B.2 (PRs #9–#11) → CP-011C (PR #12) → CP-011D with D.1 (PRs #13–#14) → CP-011E rc.1 (PR #15) → final promotion (PR #16). All merged by the user. Per-feature status, PRs, test baselines and device-acceptance evidence are in the [milestone tracker](MILESTONE_TRACKER.md), which is the authoritative progress record and must be updated in every PR.
 

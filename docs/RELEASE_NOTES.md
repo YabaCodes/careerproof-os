@@ -1,5 +1,17 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.8 — CP-012C Home dashboard (review)
+
+- **Complete Your Record** on Home lists what is missing from your recorded work, using the same rules and wording as Data Health:
+  - achievements without a stated outcome, without a metric or evidence reference, without a skill, or without a role or experience;
+  - experiences with no linked achievements, and credentials past their recorded expiry.
+  Each line expands to the records behind it, and tapping one opens it. A line disappears once its records are complete, and an expanded line stays open while you edit. When nothing is missing, Home says so plainly. **Data Health →** opens the full report, which also covers drafts, the profile and backups.
+- **Achievements by Role** lists your roles most recent first, with their achievements (drafts noted) and linked experiences. Tapping a role opens the Vault filtered to that role, showing the same count. Roles with nothing recorded say so, and achievements without a role are counted separately.
+- Counts describe what is documented, not ability: no scores, targets or streaks. Archived achievements are not counted.
+- Expanded cards on Experience, Skills and Home now share one mechanism to stay open after a dialog closes.
+- Tests: 2 Node (Home gaps match Data Health exactly; role counts, order, drafts, archived, without-role) and 3 browser (gaps open records and update after an edit, gap stays open, role row opens the filtered Vault, empty and complete states at 320px). The Data Health browser test now looks inside the report, because Home shows the same items behind the dialog.
+- No schema or backup-format change. New modules `domain/dashboard.js` and `ui/homeDashboard.js` are in the offline app shell.
+
 ## Maintenance 2026-10-11 — device acceptance and CI diagnostics (no app change)
 
 - alpha.5, alpha.6 and alpha.7 were accepted on iPhone (RM101–RM105, T101–T104, X101–X105).

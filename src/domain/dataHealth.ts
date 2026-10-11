@@ -85,8 +85,16 @@ function recoveryIssues(ctx: HealthContext): HealthIssue[] {
 }
 
 export function assessDataHealth(c: CareerCollections, ctx: HealthContext): HealthIssue[] {
-  const issues = recoveryIssues(ctx);
-  const today = ctx.now.slice(0, 10);
+  return [...recoveryIssues(ctx), ...completenessIssues(c, ctx.now.slice(0, 10))];
+}
+
+/**
+ * Documentation gaps in valid data, in a fixed order. Shared by the Data Health
+ * report and the Home dashboard (CP-012C) so both always say the same thing.
+ * `today` is a local YYYY-MM-DD date used only for credential expiry.
+ */
+export function completenessIssues(c: CareerCollections, today: string): HealthIssue[] {
+  const issues: HealthIssue[] = [];
 
   const projectLinks = new Map<string, number>(), achievementProjects = new Set<string>(), achievementSkills = new Set<string>();
   for (const l of c.recordLinks) {

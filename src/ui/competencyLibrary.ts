@@ -32,7 +32,7 @@ export function competencyGroups(c:CareerCollections,query:string,category:strin
       items.map(skill=>{
         const links=c.recordLinks.filter(l=>l.linkType==='achievement-competency'&&l.targetId===skill.id);
         const examples=links.map(l=>c.achievements.find(a=>a.id===l.sourceId)).filter((a):a is NonNullable<typeof a>=>Boolean(a));
-        return '<details class="skill-entry" data-skill="'+esc(skill.id)+'"><summary><span><strong>'+esc(skill.name)+'</strong>'+
+        return '<details class="skill-entry" data-skill="'+esc(skill.id)+'" data-keep-open="skill:'+esc(skill.id)+'"><summary><span><strong>'+esc(skill.name)+'</strong>'+
           (skill.isBuiltIn?'':' <span class="career-primary">Custom</span>')+(skill.status==='archived'?' <span class="career-meta">Archived</span>':'')+
           '<small>'+examples.length+' linked example'+(examples.length===1?'':'s')+'</small></span>'+
           icon('chevron',17)+'</summary><div class="skill-entry-details">'+

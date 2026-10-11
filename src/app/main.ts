@@ -5,6 +5,7 @@ import { careerSections, careerForm, readCareerForm, syncCareerDisclosures, togg
 import { portfolioPage,portfolioCards,portfolioForm,readPortfolioForm,updatePortfolioRoleChoices,type PortfolioFilters } from '../ui/experiencePortfolio.js';
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup, inspectDataHealth, type PreparedBackup } from '../data/backup.js';
 import { dataHealthReport } from '../ui/dataHealth.js';
+import { homeGapsSection, roleCoverageSection } from '../ui/homeDashboard.js';
 import { removalImpact, type RemovableKind } from '../domain/removal.js';
 import { removalContent, defaultRemovalChoice, removalReady, type RemovalChoice } from '../ui/removal.js';
 import { formatPrecisionDate } from '../domain/dates.js';
@@ -226,6 +227,7 @@ function homeView():string {
     ${metricCard('Last export',age.days===null?'Never':age.days===0?'Today':`${plural(age.days,'day')} ago`,age.days===null?'no export from this device yet':'generated on this device',age.stale?'metric-warn':'')}
   </section>
   ${recent.length?`<div class="section-title"><h2>Recent</h2><button class="text-action" data-action="nav" data-screen="vault">View all ${icon('arrow',16)}</button></div><section class="panel list-card"><div class="achievement-list">${recent.map(smallAchievement).join('')}</div></section>`:''}
+  ${careerCollections?homeGapsSection(careerCollections,localDate())+roleCoverageSection(careerCollections):''}
   <div class="section-title"><h2>Quick Capture</h2></div>
   <div class="quick-grid">${quick('Achievement','trophy','data-action="capture"')}${quick('Experience','layers','data-action="add-project"')}${quick('Employer','briefcase','data-action="add-career" data-kind="employers"')}${quick('Credential','badge','data-action="add-career" data-kind="credentials"')}</div>
   <p class="footer-note">${icon('lock',14)} Local-first: your records stay on this device. There is no account or sync, so export backups regularly.</p>`;
@@ -366,8 +368,9 @@ function restoreView():string {
 }
 let lastRenderedScreen:Screen|null=null;
 /** Keep expanded Experience cards and skill entries open when the same screen redraws (e.g. after a dialog closes). */
-function openDisclosureKeys():string[]{return lastRenderedScreen===screen?[...root.querySelectorAll<HTMLDetailsElement>('details[open][data-project-id],details[open][data-skill]')].map(d=>d.dataset.projectId?'p:'+d.dataset.projectId:'s:'+(d.dataset.skill??'')):[];}
-function restoreDisclosures(keys:string[]){for(const key of keys){const [kind,id]=[key.slice(0,1),key.slice(2)];const el=[...root.querySelectorAll<HTMLDetailsElement>(kind==='p'?'details[data-project-id]':'details[data-skill]')].find(d=>(kind==='p'?d.dataset.projectId:d.dataset.skill)===id);if(el)el.open=true;}}
+// Expanded cards (any details[data-keep-open]) stay open when the same screen re-renders, e.g. after a dialog closes.
+function openDisclosureKeys():string[]{return lastRenderedScreen===screen?[...root.querySelectorAll<HTMLDetailsElement>('details[open][data-keep-open]')].map(d=>d.dataset.keepOpen??''):[];}
+function restoreDisclosures(keys:string[]){if(!keys.length)return;const all=[...root.querySelectorAll<HTMLDetailsElement>('details[data-keep-open]')];for(const key of keys){const el=all.find(d=>d.dataset.keepOpen===key);if(el)el.open=true;}}
 function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';const openKeys=openDisclosureKeys();root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;dialogs.update(Boolean(modal));syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}
   if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(modal){dialogs.focusFirst();}
 }
@@ -592,6 +595,12 @@ function runAction(node:HTMLElement){
     case 'delete-achievement':void deleteCurrent();break;
     case 'export':void doExport();break;
     case 'check-integrity':void doIntegrityCheck();break;
+    case 'open-data-health':openModal('settings');document.getElementById('check-integrity')?.scrollIntoView({block:'center'});void doIntegrityCheck();break;
+    case 'role-achievements':{
+      // CP-012C: a role row on Home opens exactly that role's active achievements.
+      searchText='';filterStatus='active';sortOrder='recent';filterRole=node.dataset.id??'';filterProject='';filterCompetency='';filterDateStart='';filterDateEnd='';
+      vaultFiltersOpen=true;navigate('vault');break;
+    }
     case 'health-open':{
       // CP-012A: open the record behind a suggestion; the report itself never edits.
       const kind=node.dataset.kind,id=node.dataset.id||null;
