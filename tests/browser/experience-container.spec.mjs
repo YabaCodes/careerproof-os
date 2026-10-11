@@ -47,6 +47,9 @@ test('CP-012.4 new experiences use the container form; earlier notes stay visibl
   // Clearing one earlier note saves it empty; it then disappears and the others stay.
   await card.locator('[data-action=edit-project]').click();
   await page.locator('#portfolio-outcome').fill('');
+  // QA-023: verify the form was cleared before saving, so an intermittent
+  // timing/input problem is attributable to the editor rather than the assertion.
+  await expect(page.locator('#portfolio-outcome')).toHaveValue('');
   await saveProject(page);
   expect(await project(page,'project-1')).toMatchObject({outcome:'',objective:'Example',personalResponsibility:'Example',scope:'Example'});
   await card.locator('[data-action=edit-project]').click();
