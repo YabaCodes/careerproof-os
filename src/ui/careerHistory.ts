@@ -1,5 +1,6 @@
 import type {BaseRecord, CareerCollections, Credential, Education, Employer, PrecisionDate, Profile, Role} from '../domain/models.js';
 import {datesInOrder,formatPrecisionDate,precisionDateFromInput} from '../domain/dates.js';
+import {compareRolesByRecency,employersByRecency} from '../domain/chronology.js';
 import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
 import {escapeHtml} from './html.js';
@@ -72,9 +73,10 @@ function roleCard(role:Role,primaryRoleId:string|null):string {
 }
 
 export function careerSections(profile:Profile,collections:CareerCollections):string {
-  const employers=[...collections.employers].sort((a,b)=>a.name.localeCompare(b.name));
+  // CP-012.3: most recent employer first, regardless of entry order or name.
+  const employers=employersByRecency(collections.employers,collections.roles);
   const employerContent=employers.map(e=>{
-    const roles=collections.roles.filter(r=>r.employerId===e.id).sort((a,b)=>b.startDate.value.localeCompare(a.startDate.value));
+    const roles=collections.roles.filter(r=>r.employerId===e.id).sort(compareRolesByRecency);
     return '<article class="career-employer"><div class="career-employer-head"><div><h3>'+html(e.name)+'</h3>'+
       meta([e.industry,e.location].filter(Boolean).join(' · '))+
       disclosure('employers',e.id,e.name,e.description,
@@ -98,12 +100,12 @@ export function careerSections(profile:Profile,collections:CareerCollections):st
       (r.verificationUrl?'<a class="career-link" target="_blank" rel="noopener noreferrer" href="'+html(r.verificationUrl)+'">Verification link (user provided)</a>':''))+
     '</div><div class="career-entry-actions">'+action('credentials',r.id,'edit')+action('credentials',r.id,'delete')+'</div></article>').join('');
   return '<div class="career-sections" aria-label="Career history and qualifications">'+
-    '<section class="panel career-panel">'+heading('Employment history','employers')+
+    '<section class="panel career-panel">'+heading('Employment History','employers')+
     (employerContent||empty('Record an employer to begin your career timeline.'))+
     (employers.length?'<button class="career-inline-add" data-action="add-career" data-kind="roles">'+icon('plus',15)+' Add another role</button>':'')+
     '</section><section class="panel career-panel">'+heading('Education','education')+
     (qualifications||empty('Add a degree, qualification, or education experience.'))+
-    '</section><section class="panel career-panel">'+heading('Certifications & credentials','credentials')+
+    '</section><section class="panel career-panel">'+heading('Certifications & Credentials','credentials')+
     (credentialContent||empty('Record professional certifications, licenses, or credentials.'))+
     '</section></div>';
 }
@@ -122,7 +124,7 @@ const dateControl=(name:string,label:string,value:PrecisionDate|null,required=fa
     ['year','month','day'].map(p=>'<option value="'+p+'" '+(precision===p?'selected':'')+'>'+({year:'Year',month:'Month',day:'Day'} as Record<string,string>)[p]+'</option>').join('')+'</select>'+
     '<input id="career-'+name+'" name="'+name+'" type="'+type+'" value="'+html(value?.value??'')+'" '+(precision==='year'?'inputmode="numeric" maxlength="4" placeholder="YYYY"':'')+' '+(required?'required':'')+' aria-label="'+html(label)+'"/></div></div>';
 };
-const formTitle:Record<CareerKind,string>={employers:'Employer',roles:'Employment role',education:'Education',credentials:'Credential'};
+const formTitle:Record<CareerKind,string>={employers:'Employer',roles:'Employment Role',education:'Education',credentials:'Credential'};
 export function careerForm(kind:CareerKind,record:CareerRecord|undefined,collections:CareerCollections,employerId?:string):string {
   const e=kind==='employers'?record as Employer|undefined:undefined;
   const r=kind==='roles'?record as Role|undefined:undefined;

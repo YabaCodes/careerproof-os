@@ -23,7 +23,7 @@ test('CP-012B moving an experience re-points links, keeps one primary and never 
   await card.locator('summary').click();
   await card.locator('[data-action=remove-project]').click();
   const dialog=page.getByRole('dialog');
-  await expect(dialog).toContainText('Linked to this experience');
+  await expect(dialog).toContainText('Linked to This Experience');
   await expect(dialog.locator('.removal-flag')).toHaveText('primary');
   await expect(page.locator('#removal-mode-move')).toBeChecked();
   await page.locator('#removal-target').selectOption('project-2');
@@ -45,7 +45,7 @@ test('CP-012B custom skill can be deleted from Skills with its links removed and
   await page.locator('.mobile-nav [data-screen=competencies]').click();
   await page.locator('details.skill-entry[data-skill=custom-competency] summary').click();
   await page.locator('[data-action=delete-competency][data-id=custom-competency]').click();
-  await expect(page.getByRole('dialog')).toContainText('Delete skill “Synthetic Skill”?');
+  await expect(page.getByRole('dialog')).toContainText('Delete Skill “Synthetic Skill”?');
   await page.locator('#removal-mode-unlink').check();
   await expect(page.getByRole('dialog')).toContainText('Archive keeps it instead');
   await page.locator('#removal-confirm').check();

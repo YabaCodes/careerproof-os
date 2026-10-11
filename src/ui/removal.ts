@@ -5,6 +5,8 @@ import { icon } from './icons.js';
 export interface RemovalChoice { mode: RemovalMode | null; targetId: string; confirmed: boolean }
 const SHOWN = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+/** Removal nouns are plain words ("education entry"), so capitalising each word is title case. */
+const capitalized = (noun: string) => noun.replace(/\b[a-z]/g, ch => ch.toUpperCase());
 
 /** Sensible starting choice: move when a compatible target exists, else unlink when allowed. */
 export function defaultRemovalChoice(impact: RemovalImpact): RemovalChoice {
@@ -37,18 +39,18 @@ function unlinkConsequence(impact: RemovalImpact): string {
   }
 }
 export function removalContent(impact: RemovalImpact, choice: RemovalChoice): { title: string; subtitle: string; body: string; footer: string } {
-  const title = `Delete ${impact.noun} “${impact.label}”?`;
+  const title = `Delete ${capitalized(impact.noun)} “${impact.label}”?`;
   const subtitle = impact.hasDependents ? 'Other records link to it. Choose what happens to them.' : 'Nothing else links to it.';
   let body = '<form id="removal-form" class="modal-body removal-body" novalidate><div id="form-error" class="form-error" role="alert" hidden></div>';
   if (!impact.hasDependents) {
     body += `<p class="removal-lead">Deleting this ${esc(impact.noun)} cannot be undone.</p>`;
   } else {
-    body += `<section class="removal-impact" aria-labelledby="removal-impact-title"><h3 id="removal-impact-title">Linked to this ${esc(impact.noun)}</h3><ul>`
+    body += `<section class="removal-impact" aria-labelledby="removal-impact-title"><h3 id="removal-impact-title">Linked to This ${esc(capitalized(impact.noun))}</h3><ul>`
       + refs(impact.achievements, 'achievement') + refs(impact.roles, 'role') + refs(impact.projects, 'experience')
       + (impact.primaryRole ? '<li><strong>Your primary role</strong><span>Shown as current on your profile</span></li>' : '')
       + '</ul></section>';
     const moveDisabled = !impact.targets.length;
-    body += '<fieldset class="removal-options"><legend>What should happen to them?</legend>'
+    body += '<fieldset class="removal-options"><legend>What Should Happen to Them?</legend>'
       + `<label class="removal-option${moveDisabled ? ' is-disabled' : ''}"><input type="radio" name="removal-mode" id="removal-mode-move" value="move" ${choice.mode === 'move' ? 'checked' : ''} ${moveDisabled ? 'disabled' : ''}/><span><strong>Move them to another ${esc(impact.noun)}</strong><small>${esc(impact.moveBlockedReason ?? 'They keep all their content and point to the one you choose. Duplicate links are merged.')}</small></span></label>`
       + (choice.mode === 'move' && !moveDisabled ? `<div class="field removal-target"><label for="removal-target">Move to</label><select id="removal-target">${impact.targets.map(t => `<option value="${esc(t.id)}" ${t.id === choice.targetId ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}</select></div>` : '')
       + `<label class="removal-option${impact.canUnlink ? '' : ' is-disabled'}"><input type="radio" name="removal-mode" id="removal-mode-unlink" value="unlink" ${choice.mode === 'unlink' ? 'checked' : ''} ${impact.canUnlink ? '' : 'disabled'}/><span><strong>Remove the links</strong><small>${esc(impact.unlinkBlockedReason ?? unlinkConsequence(impact))}</small></span></label>`

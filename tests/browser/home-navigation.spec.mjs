@@ -12,7 +12,7 @@ const next=page=>page.locator('.next-card');
 test('CP-012.2 Home next action follows first achievement → draft → backup → headline → recent win',async({page})=>{
   // Empty record: start with the first achievement.
   await seed(page);
-  await expect(next(page)).toContainText('Capture your first achievement');
+  await expect(next(page)).toContainText('Capture Your First Achievement');
   await expect(page.locator('.metric-card').filter({hasText:'Last export'})).toContainText('Never');
   await next(page).locator('[data-action=capture]').click();
   await expect(page.getByRole('dialog',{name:'Capture an achievement'})).toBeVisible();
@@ -22,20 +22,20 @@ test('CP-012.2 Home next action follows first achievement → draft → backup �
   const c=fullCollections();
   c.achievements.push(migrateLegacyAchievement(legacyAchievement('draft-1','draft')));
   await seed(page,c);
-  await expect(next(page)).toContainText('Finish 1 draft');
+  await expect(next(page)).toContainText('Finish 1 Draft');
   await next(page).locator('[data-action=detail]').click();
   await expect(page.getByRole('dialog')).toContainText('Draft');
   await page.locator('.close-dialog').click();
 
   // Without drafts and without an export, the backup comes next; exporting clears it.
   await seed(page,fullCollections());
-  await expect(next(page)).toContainText('Export a backup');
+  await expect(next(page)).toContainText('Export a Backup');
   await expect(page.locator('.metric-card.metric-warn')).toContainText('Never');
   const download=page.waitForEvent('download');await next(page).locator('[data-action=export]').click();await download;
   await expect(page.locator('.metric-card').filter({hasText:'Last export'})).toContainText('Today');
   await page.reload();
   await expect(page.locator('.metric-card.metric-warn')).toHaveCount(0);
-  await expect(next(page)).toContainText('Capture a recent win'); // the fixture profile has a headline
+  await expect(next(page)).toContainText('Capture a Recent Win'); // the fixture profile has a headline
 
   // Truthful counts and correct plurals.
   await expect(page.locator('.metric-card').filter({hasText:'Recorded'})).toContainText('1');
@@ -57,7 +57,7 @@ test('CP-012.2 five tabs open their own screens; Settings and capture live in th
   await expect(page.getByText('Back to Career Profile')).toHaveCount(0);
   await expect(page.getByText('Open Experience Portfolio')).toHaveCount(0);
   await page.locator('.mobile-nav [data-screen=vault]').click();
-  await expect(page.locator('.page-title p')).toHaveText('1 achievement · 0 drafts');
+  await expect(page.locator('.page-title p')).toHaveText('1 Achievement · 0 Drafts');
   await page.locator('.mobile-nav [data-screen=competencies]').click();
   await expect(page.locator('[data-action=skill-scope][data-scope=linked]')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('details.skill-entry')).toHaveCount(1);

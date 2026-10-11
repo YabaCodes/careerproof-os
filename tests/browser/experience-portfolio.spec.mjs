@@ -111,7 +111,7 @@ test('achievement captured from project is atomically linked and accessible',asy
   await save(page);
   await page.locator('details.portfolio-card summary').click();
   await page.locator('[data-action=project-capture]').click();
-  await expect(page.getByRole('dialog')).toContainText('Capture an achievement');
+  await expect(page.getByRole('dialog')).toContainText('Capture an Achievement');
   await page.locator('#title').fill('Synthetic validation milestone');
   await page.locator('#contribution').fill('Completed verification with synthetic fixtures');
   await page.locator('[data-action=save-achievement][data-status=recorded]').click();

@@ -16,7 +16,7 @@ export function metricRow(record?:ImpactMetric):string {
   const data='data-id="'+id+'" data-revision="'+revision+'"';
   const numeric=(name:string,label:string,value:number|null|undefined)=>
     '<div class="field"><label>'+html(label)+'<input name="'+name+'" type="number" inputmode="decimal" step="any" value="'+(value??'')+'" placeholder="Optional"/></label></div>';
-  return '<fieldset class="rich-row metric-row" '+data+'><legend>Impact metric</legend>'+
+  return '<fieldset class="rich-row metric-row" '+data+'><legend>Impact Metric</legend>'+
     '<div class="rich-row-grid"><div class="field"><label>Metric name<input name="metricName" maxlength="200" required placeholder="e.g. Cycle time" value="'+html(record?.metricName??'')+'"/></label></div>'+
     '<div class="field"><label>Unit<input name="unit" maxlength="80" placeholder="%, seconds, units" value="'+html(record?.unit??'')+'"/></label></div>'+
     numeric('baselineValue','Baseline',record?.baselineValue)+numeric('resultValue','Result',record?.resultValue)+
@@ -30,7 +30,7 @@ export function metricRow(record?:ImpactMetric):string {
 export function evidenceRow(record?:EvidenceReference):string {
   const data='data-id="'+html(record?.id??crypto.randomUUID())+'" data-revision="'+(record?.revision??0)+'" data-reviewed-at="'+html(record?.userReviewedAt??'')+'"';
   const options=[['description','Description'],['url','URL'],['document-reference','Document reference']];
-  return '<fieldset class="rich-row evidence-row" '+data+'><legend>Evidence reference</legend>'+
+  return '<fieldset class="rich-row evidence-row" '+data+'><legend>Evidence Reference</legend>'+
     '<div class="rich-row-grid"><div class="field"><label>Reference name<input name="label" maxlength="200" required value="'+html(record?.label??'')+'" placeholder="e.g. Test report"/></label></div>'+
     '<div class="field"><label>Reference type<select name="referenceType">'+
     options.map(([v,l])=>'<option value="'+v+'" '+(record?.referenceType===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label></div></div>'+
@@ -77,14 +77,14 @@ export function richAchievementFields(a:AchievementView|undefined,c:CareerCollec
     field('situation','Situation / challenge',a?.situation??'',true)+
     field('actions','Actions taken',a?.actions??'',true)+field('notes','Additional notes',a?.notes??'',true)+
     confidentiality+roleSelect+
-    '<fieldset class="rich-link-fieldset"><legend>Associated experiences</legend><div class="rich-choice-list">'+
+    '<fieldset class="rich-link-fieldset"><legend>Associated Experiences</legend><div class="rich-choice-list">'+
     (projectOptions||'<p class="career-empty">Create an Experience in Profile to link it here.</p>')+'</div>'+primaryOptions+'</fieldset>'+
-    '<fieldset class="rich-link-fieldset"><legend>Competencies demonstrated</legend><p class="field-hint">Link documented examples to skills. These are not proficiency scores.</p>'+
+    '<fieldset class="rich-link-fieldset"><legend>Competencies Demonstrated</legend><p class="field-hint">Link documented examples to skills. These are not proficiency scores.</p>'+
     '<div class="rich-choice-list rich-competencies">'+(competencyOptions||'<p class="career-empty">No active competencies available.</p>')+
     '</div></fieldset>'+
-    '<section><div class="rich-section-heading"><h3>Impact metrics</h3><button type="button" class="button button-outline" data-action="add-rich-metric">Add metric</button></div>'+
+    '<section><div class="rich-section-heading"><h3>Impact Metrics</h3><button type="button" class="button button-outline" data-action="add-rich-metric">Add metric</button></div>'+
     '<div id="rich-metrics">'+metrics.map(m=>metricRow(m)).join('')+'</div><p class="field-hint">Use measured values and state their source or context. Never estimate results as facts.</p></section>'+
-    '<section><div class="rich-section-heading"><h3>Evidence references</h3><button type="button" class="button button-outline" data-action="add-rich-evidence">Add reference</button></div>'+
+    '<section><div class="rich-section-heading"><h3>Evidence References</h3><button type="button" class="button button-outline" data-action="add-rich-evidence">Add reference</button></div>'+
     '<div id="rich-evidence">'+references.map(e=>evidenceRow(e)).join('')+'</div></section>'+
     '</div></div>';
 }

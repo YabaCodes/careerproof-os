@@ -4,12 +4,11 @@
 
 ## 1. Current truth: repository and release state
 
-### Verified current state (2026-10-10)
+### Verified current state (2026-10-10, updated at CP-012.3)
 
-- `main` = `398f892974f3fab037656d8bc1d923df461c6397` (merge of PR #16). App **`v0.1.1`**, DB schema **2**, backup format **2** (legacy format 1 importable), taxonomy **1.0**, 12 P0 stores plus `meta`.
-- PR #16 final promotion merged by the user; main CI run 38021279551 built, passed 42/42 Node and 102/102 browser tests, and deployed to GitHub Pages. Live service worker cache is `careerproof-v0.1.1`.
-- Physical iPhone: the eight `v0.1.1-rc.1` checks were accepted by the user. A post-promotion smoke of the final `v0.1.1` is **not yet reported**. No Git tag/GitHub Release exists.
-- No open PRs at handover. Next roadmap candidate: **v0.1.2** (P0 reliability), not started and awaiting explicit authorization.
+- `main` = `f2494804e58cd7cbd336bcb5d616d426016256a1` (merge of PR #22). App **`0.1.2-alpha.5`** deployed: main CI run 38055825278 built, tested and deployed to GitHub Pages; the live service worker cache is `careerproof-v0.1.2-alpha.5`. DB schema **2**, backup format **2** (legacy format 1 importable), taxonomy **1.0**, 12 P0 stores plus `meta`.
+- Physical iPhone: alpha.1–alpha.4 accepted by the user; CP-012B RM101–RM105 (alpha.5) not yet reported. The v0.1.1 post-promotion smoke (F101–F102) is still unreported. No Git tag/GitHub Release exists.
+- In review: CP-012.3 (`0.1.2-alpha.6`, Title Case and most-recent-first employment). Remaining v0.1.2: CP-012C dashboard, CP-012D accessibility/performance, CP-012E recovery certification.
 - Per-feature status, PRs, tests and device evidence: [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md).
 
 ### Historical status entries (superseded by the block above; kept for traceability)
@@ -60,6 +59,8 @@
 | DEC-029 | Mobile navigation becomes Home · Vault · Experience · Skills · Profile; **＋ (capture) and Settings move to the header** | User decision 2026-10-10. Experience and Competency Library get their own tabs; Settings no longer duplicated. Supersedes the accepted Home/Vault/Add/Profile/Settings bar from alpha.3 onward; requires new geometry tests and iPhone acceptance. DEC-015's Growth/Studio target is revisited when Studio ships (v0.1.4) |
 | DEC-030 | Adopt the Wealth OS design language (header, cards, tabs, buttons, segmented controls, ⋯ row menus, line icons) while keeping CareerProof navy/teal accents and the CP monogram app icon | User decision 2026-10-10; supersedes visual details of DEC-025/026 but not the brand mark |
 | DEC-031 | Sequence: 0.1.2-alpha.2 update detection → alpha.3 redesign/navigation → CP-012A Data Health and the rest of v0.1.2 | User decision 2026-10-10, so Data Health UI is built once in the new style |
+| DEC-032 | **Title Case** for app-authored titles and subtitles: page titles and subtitles, section and group headings, dialog titles, Settings row titles, form section headings (legends) and the Home next-action title. Minor words (a, an, and, as, at, but, by, for, from, in, into, nor, of, on, or, per, the, to, via, vs, with) stay lower case unless first, last or after a full stop. Sentences (descriptions, help text, messages, toasts), field labels, buttons and user-entered text keep their case | User request 2026-10-10 ("capitalized first letter for each word", e.g. "Employment History"). Standard title-case minor words chosen so headings stay readable; switching to every-word capitals is a one-line change if preferred |
+| DEC-033 | Employment History is **most recent first**: current role first, then latest role end (start if no end), precision-aware; ties by later start, then name; employers without roles follow the dated timeline. Roles inside an employer use the same rule | User request 2026-10-10 (current employer entered first stayed below an earlier employer added later, because employers were sorted by name). Display order only; no stored data changes |
 | DEC-027 | Persistent per-feature milestone tracker (`docs/MILESTONE_TRACKER.md`) with lifecycle Not Started → Planned → In Development → In Review → Merged → Device Testing → Accepted | User instruction at the 2026-10-10 development handover. Updated in every PR; a feature is Accepted only after the user's physical-device confirmation. Module-level completion vocabulary in ROADMAP §5 remains |
 
 ## 3. Design artifacts and precedence
@@ -225,3 +226,13 @@ CP-012B implements the roadmap's controlled unlink/reassignment with these choic
 - **Custom skills:** *Delete…* added beside Archive; the sheet notes that Archive keeps history.
 - **Single-target moves only** (no splitting dependents across several targets) to keep the flow simple; revisit if needed.
 - **Atomicity:** the plan is recomputed inside the write transaction, the record revision is re-checked, and the full dataset is validated before commit.
+
+
+## 2026-10-10 — PR #22 merged; CP-012.3 Title Case and employment order (0.1.2-alpha.6)
+
+PR #22 (CP-012B controlled removal) was merged by the user and deployed (main CI run 38055825278; live `sw.js` `careerproof-v0.1.2-alpha.5`). RM101–RM105 have not been reported yet, so CP-012B is in Device Testing.
+
+CP-012.3 implements DEC-032 (Title Case) and DEC-033 (most-recent-first employment) at the user's request. Root cause of the ordering report: `careerSections` sorted employers alphabetically by name while education was already sorted by date, which is why education behaved as expected.
+
+**Open question OQ-034 — Achievement vs Experience (user decision pending).** The user asked whether separate Achievement and Experience entries are redundant. Evaluation given 2026-10-10: the *concepts* are distinct and both are used downstream (an achievement is one dated, claimable result carrying metrics, evidence and skill links, and is the unit for CV bullets, review periods and interview stories; an experience is the project, programme or standing responsibility that groups several results, and is the "work context" for evidence breadth in CAREER_INTELLIGENCE §4). The *forms* overlap heavily: Experience's name, responsibilities, outcome, objective/scope, dates, employer/role and confidentiality restate what its achievements already hold, so the same story can be typed twice and drift. Options presented: (A) keep as is; (B, recommended) slim Experience into a light container (name, type, employer/role, dates, status, short context), roll up linked achievements' outcomes on the card instead of a separate Outcome field, and allow creating an experience inline from the achievement form, with existing text kept and shown, never deleted, and no schema change; (C) B plus moving Experience into the Vault as a segmented view, freeing a tab; (D) remove Experience (not recommended: loses grouping and the breadth context and would need a lossy migration). No structural change is made until the user decides.
+

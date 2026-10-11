@@ -1,5 +1,17 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.6 — CP-012.3 Title Case headings and most-recent-first employment (review)
+
+- **Employment History lists the most recent employer first**, however the records were entered. Previously employers were sorted alphabetically by name, so adding an earlier employer after the current one could put it on top (UX-022). Order now follows dates:
+  - a current role ranks above any ended role;
+  - otherwise an employer is as recent as the latest end date of its roles (start date when no end is recorded), precision-aware: "2022" counts as late as 31 Dec 2022;
+  - ties go to the later start date, then the name; employers without any role yet have no dates and follow the dated timeline.
+- Roles inside an employer use the same rule, so after a promotion the current role is listed first. Education and credentials keep their existing newest-first order.
+- **Titles and subtitles use Title Case** (DEC-032): page titles and the line under them, section headings ("Employment History", "Certifications & Credentials", "Quick Capture"), dialog titles, Settings group and row titles, form section headings and the Home next-action title. Short joining words (a, an, and, of, the, to, with…) stay lower case unless they start or end the title.
+- Sentences (dialog descriptions, help text, messages), form field labels, buttons and anything you typed keep their case. The Skills subtitle now reads "N of M Skills with Examples".
+- Tests: 5 Node (ordering rules, entry-order independence, precision, purity, rendered order) and 2 browser (the reported flow with three employers and a promotion, persisted after reload; a Title Case sweep across all five screens and the main dialogs that leaves user text alone). The new tests fail against the alpha.5 sort and headings. Existing tests that quoted old headings updated.
+- No schema or backup-format change; display order only, nothing stored is changed. New module `domain/chronology.js` is in the offline app shell.
+
 ## 0.1.2-alpha.5 — CP-012B Controlled unlink, move and delete (review)
 
 - Deleting an **employer, role, experience, education entry, credential or custom skill** now opens one review sheet instead of either blocking ("Cannot delete…") or a browser confirm.
