@@ -389,7 +389,7 @@ function showError(message:string){
   el.tabIndex=-1;
   el.focus({preventScroll:true});
   const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  el.scrollIntoView({block:'nearest',behavior:reduced?'instant':'smooth'});
+  el.scrollIntoView({block:'nearest',behavior:reduced?'auto':'smooth'});
 }
 function setSaving(value:boolean){saving=value;const dialog=document.querySelector<HTMLElement>('.modal');dialog?.setAttribute('aria-busy',String(value));for(const button of dialog?.querySelectorAll<HTMLButtonElement>('button[data-action]')??[])button.disabled=value;}
 function readAchieveInput(status:'draft'|'recorded') {
