@@ -1,6 +1,6 @@
 # CareerProof OS — Milestone Tracker
 
-**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-10 · **Current released version:** `v0.1.2-alpha.5` (deployed; device checks pending; alpha.4 accepted) · **main:** `f249480` (PR #22)
+**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-11 · **Current released version:** `v0.1.2-alpha.7` (deployed; accepted on iPhone) · **main:** `f14628b` (PR #24)
 
 This is the authoritative per-feature progress record. It is updated in **every** PR. Module-level completion stages remain in [ROADMAP.md §5](ROADMAP.md); scope and acceptance criteria are defined in [ROADMAP.md](ROADMAP.md), [PRODUCT_SPEC.md](PRODUCT_SPEC.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md) and [CAREER_INTELLIGENCE.md](CAREER_INTELLIGENCE.md).
 
@@ -20,12 +20,12 @@ This is the authoritative per-feature progress record. It is updated in **every*
 
 Rules: never mark a row Accepted without the user's device confirmation; never mark partial work complete; CI, merge, deploy and device acceptance are recorded separately.
 
-## Progress summary (2026-10-10)
+## Progress summary (2026-10-11)
 
-- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.4 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health); alpha.5 controlled removal merged and deployed (device checks pending); alpha.6 Title Case + most-recent-first employment in review (#23); alpha.7 Experience-as-container in review (#24, stacked on #23). Remaining v0.1.2: CP-012C dashboard, CP-012D accessibility/performance, CP-012E recovery certification.
-- **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
-- **Automated baseline (alpha.7 branch):** 72/72 Node, 118/118 browser locally; main `f249480` CI run 38055825278 ✓ (build, tests, deploy).
-- **Open acceptance items:** v0.1.1 smoke (F101–F102, superseded), E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 H102 (optional), CP-012B RM101–RM105 (alpha.5), CP-012.3 T101–T104 (alpha.6), CP-012.4 X101–X105 (alpha.7).
+- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.7 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health, controlled removal, Title Case + most-recent-first employment, Experience as a container). Remaining v0.1.2: CP-012C dashboard, CP-012D accessibility/performance, CP-012E recovery certification.
+- **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete (container model, DEC-034) · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
+- **Automated baseline (main `f14628b`, alpha.7):** 72/72 Node, 118/118 browser (3 consecutive full local runs). Main CI run 38098062177: attempt 1 failed in Build and test (QA-023, intermittent), attempt 2 ✓ build, tests, deploy; live `sw.js` `careerproof-v0.1.2-alpha.7`.
+- **Open acceptance items:** v0.1.1 smoke (F101–F102, superseded), E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 H102 (optional). RM101–RM105, T101–T104 and X101–X105 accepted 2026-10-11.
 
 ## Version ledger
 
@@ -33,7 +33,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 |---|---|---|---|---|
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
-| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1–alpha.4 accepted; alpha.5 deployed, device checks pending; alpha.6–alpha.7 in review) | #18–#24 | A101–A106, U103–U104, DH101–DH104 accepted 2026-10-10 |
+| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1–alpha.7 accepted; CP-012C–E remaining) | #18–#25 | A101–A106, U103–U104, DH101–DH104 accepted 2026-10-10; RM101–RM105, T101–T104, X101–X105 accepted 2026-10-11 |
 | v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
@@ -66,17 +66,18 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | M01 Career Profile | Profile basics | CP-FR-001 | P0 | Accepted | 0.1.0 | initial, #1 | domain, ui-regression | E211 | — | — |
 | M01 Career Profile | Employers, roles, promotions, primary role | CP-FR-001, CP-011B | P0 | Accepted | 0.1.1-alpha.5 | #9 | career-history | User verified before CP-011C; E214 | — | — |
 | M01 Career Profile | Compact 2-line timeline, More/Less | CP-011B.1 | P0 | Accepted | 0.1.1-alpha.6 | #10 | career-compact | E214 | — | — |
-| M01 Career Profile | **UX-022** Employment History sorted employers by name, so an earlier employer added later could sit above the current one; now most recent first (DEC-033) | CP-012.3 | P0 | In Review | 0.1.2-alpha.6 | #23 | chronology (5 Node), title-case-order spec (reported flow, 3 employers + promotion, reload); both fail on alpha.5 | T102–T103 pending | Experience cards still order by last edited (unchanged) | User review/merge |
-| Platform | Title Case for app titles and subtitles (DEC-032) | CP-012.3 | P0 | In Review | 0.1.2-alpha.6 | #23 | title-case-order sweep (5 screens + 7 dialogs; user text untouched); updated heading assertions | T104 pending | Sentences, field labels and buttons stay sentence case by design | User review/merge |
+| M01 Career Profile | **UX-022** Employment History sorted employers by name, so an earlier employer added later could sit above the current one; now most recent first (DEC-033) | CP-012.3 | P0 | Accepted | 0.1.2-alpha.6 | #23 | chronology (5 Node), title-case-order spec (reported flow, 3 employers + promotion, reload); both fail on alpha.5; main CI 38097710416 ✓ | T102–T103 accepted 2026-10-11 | Experience cards still order by last edited (unchanged) | — |
+| Platform | Title Case for app titles and subtitles (DEC-032) | CP-012.3 | P0 | Accepted | 0.1.2-alpha.6 | #23 | title-case-order sweep (5 screens + 7 dialogs; user text untouched); updated heading assertions; main CI 38097710416 ✓ | T101, T104 accepted 2026-10-11 | Sentences, field labels and buttons stay sentence case by design | — |
 | M01 Career Profile | Education and credentials | CP-FR-002, CP-011B | P0 | Accepted | 0.1.1-alpha.5 | #9 | career-history | User verified; E214 | — | — |
 | M02 Achievement Vault | Quick Capture, Draft/Recorded/Archived, Vault search | CP-FR-004, CP-FR-005 | P0 | Accepted | 0.1.0 | initial, #1 | ui-regression, release-qualification | E215, E217 | — | — |
 | M02 Achievement Vault | Outcome visible above iOS keyboard | CP-011A.3 | P0 | Accepted | 0.1.1-alpha.4 | #7, #8 | ios-keyboard-outcome | User confirmed alpha.4; E216 | — | Keep geometry tests |
 | M02 Achievement Vault | Rich fields, metrics, evidence references | CP-FR-005, CP-011D | P0 | Accepted | 0.1.1-alpha.9 | #13 | achievement-intelligence | E215 | Evidence is user-entered, not verified (by design) | — |
 | M02 Achievement Vault | Quick Capture overlap fix | CP-011D.1 | P0 | Accepted | 0.1.1-alpha.10 | #14 | ios-refinement (8 geometry cases) | User: "fix works"; E216 | — | — |
 | M02 Achievement Vault | Advanced Vault filters | CP-011D | P0 | Accepted | 0.1.1-alpha.9 | #13 | achievement-intelligence | E215, E217 | — | — |
-| M02 Achievement Vault | Controlled unlink / move / delete for employers, roles, experiences, credentials, education, custom skills | CP-012B | P0 | Device Testing | 0.1.2-alpha.5 | #22 | removal (8 Node incl. rollback + stale revision), removal spec (3 browser), career-history/experience-portfolio updated; main CI 38055825278 ✓ | RM101–RM105 pending | Single-target moves only | User runs RM101–RM105 |
-| M03 Experience Portfolio | **UX-021** expanded Experience cards and skill entries collapsed whenever a dialog closed | CP-012B | P0 | Device Testing | 0.1.2-alpha.5 | #22 | experience-portfolio (card stays open); main CI 38055825278 ✓ | RM105 pending | — | User runs RM105 |
-| M03 Experience Portfolio | Experience as a container (DEC-034): short Context, Earlier Notes kept, outcome roll-up from linked achievements, inline creation from the achievement form | CP-012.4, CP-06 amended | P0 | In Review | 0.1.2-alpha.7 | #24 | experience-container (6 Node incl. atomic creation + rollback; 3 browser incl. 320px, discard, duplicates); experience-portfolio updated | X101–X105 pending | Stacked on #23; experience cards still sort by last edited | User merges #23, then #24 |
+| M02 Achievement Vault | Controlled unlink / move / delete for employers, roles, experiences, credentials, education, custom skills | CP-012B | P0 | Accepted | 0.1.2-alpha.5 | #22 | removal (8 Node incl. rollback + stale revision), removal spec (3 browser), career-history/experience-portfolio updated; main CI 38055825278 ✓ | RM101–RM105 accepted 2026-10-11 (run at the alpha.7 update with synthetic Test Co / Test Role / Test Experience records) | Single-target moves only | — |
+| M03 Experience Portfolio | **UX-021** expanded Experience cards and skill entries collapsed whenever a dialog closed | CP-012B | P0 | Accepted | 0.1.2-alpha.5 | #22 | experience-portfolio (card stays open); main CI 38055825278 ✓ | RM105 accepted 2026-10-11 | — | — |
+| M03 Experience Portfolio | Experience as a container (DEC-034): short Context, Earlier Notes kept, outcome roll-up from linked achievements, inline creation from the achievement form | CP-012.4, CP-06 amended | P0 | Accepted | 0.1.2-alpha.7 | #24 | experience-container (6 Node incl. atomic creation + rollback; 3 browser incl. 320px, discard, duplicates); experience-portfolio updated; main CI 38098062177 attempt 2 ✓ | X101–X105 accepted 2026-10-11 | Experience cards still sort by last edited | — |
+| Platform | **QA-023** post-merge CI for #24 failed once in Build and test; identical tree passed the PR check, a re-run and 3 local full runs; the job log could not be read from the agent environment, so the failing test is unidentified | CP-012.4 follow-up | — | In Review | n/a (CI only) | #25 | Playwright in CI: one retry plus GitHub annotations for failures and flaky tests | n/a | Retries can hide a genuinely intermittent defect; flaky annotations are checked on every run | User review/merge; identify the test from the next flaky annotation |
 | M03 Experience Portfolio | Project / Initiative / Ongoing Responsibility, role links, contextual capture | CP-FR-003, CP-011C | P0 | Accepted | 0.1.1-alpha.8 | #12 | experience-portfolio | User accepted before CP-011D; E214 | — | — |
 | M04 Competency Intelligence | 4 categories / 32 built-in skills, links, custom skill CRUD/archive | CP-FR-006, CP-011A, CP-011D | P0 | Accepted | 0.1.1-alpha.9 | #4, #13 | achievement-intelligence, domain | E215, E217 | — | — |
 | M04 Competency Intelligence | Self-assessed L1–L4 history | CP-FR-009 | P1 | Planned | 0.1.3 | — | — | — | Needs `proficiencyAssessments` store + schema/backup version design | After v0.1.2 |
@@ -102,7 +103,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 1. Report post-promotion smoke F101–F102 for `v0.1.1`.
 2. Create a `v0.1.1` Git tag / GitHub Release, or not.
-3. Run RM101–RM105 (alpha.5) with synthetic records; review and merge CP-012.3 (PR #23), then CP-012.4 (PR #24); then T101–T104 and X101–X105.
+3. ~~RM101–RM105, T101–T104, X101–X105~~: all accepted 2026-10-11. Review PR #25 (tracker + CI diagnostics).
 4. v0.1.2 product choices: Data Health issue taxonomy and wording; unlink/reassign UX; dashboard summaries; how to show last-export time without implying a verified backup.
 5. Later: 32-skill rubric authoring, CV templates, job-fit rule dictionary, navigation redesign.
 6. ~~OQ-034 Achievement vs Experience~~: decided 2026-10-11, option B (DEC-034), implemented in PR #24.

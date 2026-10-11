@@ -1,5 +1,10 @@
 # CareerProof release notes
 
+## Maintenance 2026-10-11 — device acceptance and CI diagnostics (no app change)
+
+- alpha.5, alpha.6 and alpha.7 were accepted on iPhone (RM101–RM105, T101–T104, X101–X105).
+- QA-023: after PR #24 merged, one CI run failed once and blocked the deploy until it was re-run. In CI, Playwright now retries a failed test once and reports failures and flaky tests as GitHub annotations. Local runs are unchanged. The app version stays `0.1.2-alpha.7`.
+
 ## 0.1.2-alpha.7 — CP-012.4 Experience as a container for achievements (review)
 
 Implements the user's choice of option B for OQ-034 (DEC-034): achievements hold results; an experience groups them.

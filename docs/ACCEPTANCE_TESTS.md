@@ -11,30 +11,32 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 ## CP-012.4 — Experience as a container (0.1.2-alpha.7, device gate)
 
+**Accepted 2026-10-11:** the user reported all 14 combined alpha.5–alpha.7 checks passing on iPhone at the alpha.7 update (RM101–RM105, T101–T104, X101–X105), using synthetic Test Co / Test Role / Test Experience records that were then deleted.
+
 Export a backup first. Use synthetic test records for anything you create.
 
-- [ ] **X101:** The update banner names alpha.7; after restart all records are intact, including any Experience text you entered before.
-- [ ] **X102:** Experience → Add experience shows the shorter form (Context instead of Objective / My Responsibilities / Outcome). If an existing experience had that text, its card and editor show it under **Earlier Notes**, unchanged.
-- [ ] **X103:** An experience with linked achievements lists them newest first with their outcomes and "N of M have a stated outcome"; tapping one opens it.
-- [ ] **X104:** ＋ → More details → Associated Experiences → **New experience** → type a test name → Add and link. It appears ticked as "New". Save the achievement: the experience appears on the Experience tab, linked to the achievement (and to the role, if you chose one).
-- [ ] **X105:** Discarding an achievement after adding a new experience creates nothing. Typing the name of an existing experience links that one instead of making a copy. Layout fits in light and dark.
+- [x] **X101:** The update banner names alpha.7; after restart all records are intact, including any Experience text you entered before.
+- [x] **X102:** Experience → Add experience shows the shorter form (Context instead of Objective / My Responsibilities / Outcome). If an existing experience had that text, its card and editor show it under **Earlier Notes**, unchanged.
+- [x] **X103:** An experience with linked achievements lists them newest first with their outcomes and "N of M have a stated outcome"; tapping one opens it.
+- [x] **X104:** ＋ → More details → Associated Experiences → **New experience** → type a test name → Add and link. It appears ticked as "New". Save the achievement: the experience appears on the Experience tab, linked to the achievement (and to the role, if you chose one).
+- [x] **X105:** Discarding an achievement after adding a new experience creates nothing. Typing the name of an existing experience links that one instead of making a copy. Layout fits in light and dark.
 
 ## CP-012.3 — Title Case and employment order (0.1.2-alpha.6, device gate)
 
-- [ ] **T101:** The update banner names alpha.6 and offers Back up first / Restart app; after restart all records are intact.
-- [ ] **T102:** Profile → **Employment History**: your current employer is listed first and earlier employers follow in date order, even the one you entered after the current one. Inside an employer, the current role is first.
-- [ ] **T103:** Optional, synthetic only: add a test employer with an old ended role. It appears below your real employers (an employer with no role yet appears at the bottom until a role is added). Delete it afterwards with **Remove the links**.
-- [ ] **T104:** Titles read in Title Case on Home, Vault, Experience, Skills and Profile, in Settings and in the capture form. Your own entries (employer names, titles, notes) are unchanged.
+- [x] **T101:** The update banner names alpha.6 and offers Back up first / Restart app; after restart all records are intact.
+- [x] **T102:** Profile → **Employment History**: your current employer is listed first and earlier employers follow in date order, even the one you entered after the current one. Inside an employer, the current role is first.
+- [x] **T103:** Optional, synthetic only: add a test employer with an old ended role. It appears below your real employers (an employer with no role yet appears at the bottom until a role is added). Delete it afterwards with **Remove the links**.
+- [x] **T104:** Titles read in Title Case on Home, Vault, Experience, Skills and Profile, in Settings and in the capture form. Your own entries (employer names, titles, notes) are unchanged.
 
 ## CP-012B — controlled removal (0.1.2-alpha.5, device gate)
 
 Export a backup first. **Use synthetic test records only**: never delete real records just to test.
 
-- [ ] **RM101:** The update banner names alpha.5 and offers Back up first / Restart app; after restart all records are intact.
-- [ ] **RM102:** Create a test employer "Test Co" with a test role "Test Role" and a test experience linked to that role. Delete the role: the sheet lists the linked experience; **Move** offers only compatible roles; **Remove the links** explains the effect; Delete stays disabled until you choose and tick the confirmation.
-- [ ] **RM103:** Choose **Remove the links** → confirm. The role is gone; the test experience still exists. Then delete "Test Co": with no roles left, choose **Remove the links** (not Move, so no test data lands on a real employer); the test experience becomes independent.
-- [ ] **RM104:** Delete the test experience and an unused test credential: the sheet says nothing else links to them and deletes with one tap.
-- [ ] **RM105:** Layout fits the screen in light and dark (the selected option is visible in dark), and an expanded Experience card stays open after closing a dialog.
+- [x] **RM101:** The update banner names alpha.5 and offers Back up first / Restart app; after restart all records are intact.
+- [x] **RM102:** Create a test employer "Test Co" with a test role "Test Role" and a test experience linked to that role. Delete the role: the sheet lists the linked experience; **Move** offers only compatible roles; **Remove the links** explains the effect; Delete stays disabled until you choose and tick the confirmation.
+- [x] **RM103:** Choose **Remove the links** → confirm. The role is gone; the test experience still exists. Then delete "Test Co": with no roles left, choose **Remove the links** (not Move, so no test data lands on a real employer); the test experience becomes independent.
+- [x] **RM104:** Delete the test experience and an unused test credential: the sheet says nothing else links to them and deletes with one tap.
+- [x] **RM105:** Layout fits the screen in light and dark (the selected option is visible in dark), and an expanded Experience card stays open after closing a dialog.
 
 
 ## CP-012A — Data Health (0.1.2-alpha.4, device gate)
