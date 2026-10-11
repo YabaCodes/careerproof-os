@@ -1,13 +1,13 @@
 # CareerProof — Acceptance test plan
 
-## v0.1.2 Final Release — post-promotion iPhone smoke gate
+## v0.1.2 Final Release — accepted physical-iPhone smoke gate
 
-**Pending after the separate promotion PR is merged, CI has passed and GitHub Pages deployment has succeeded.** Do not mark the final release shipped until these checks are reported.
+**Accepted by user on 2026-10-11:** F201–F204 each reported PASS for the already merged final app. PR #30 merged at `5bb03e5`; PR-head CI run 38122015795 completed successfully. On-device checks confirm the final version was available, existing data and relationships were retained after reopen, Check data found no critical issues, the external backup remained safely stored and primary navigation/forms worked. Deployment was confirmed operationally by user device checks; a separate main-branch deployment job was not independently verified here.
 
-- [ ] **F201:** Existing installed Home Screen PWA updates to exactly `v0.1.2` (Settings), without uninstall, reinstall or clearing website data.
-- [ ] **F202:** Previously saved employers, roles, Experience associations, achievements, competencies and preferences are still available after closing and reopening the app. **Do not restore a backup to test this.**
-- [ ] **F203:** Settings → Check data reports no critical integrity errors; the exported alpha.11 backup remains available in secure Files storage. No imported or confirmed restore operation is required.
-- [ ] **F204:** The five primary tabs, Capture and Settings open normally; optionally confirm offline reopening if convenient. Any failed critical check blocks final acceptance.
+- [x] **F201:** Existing installed Home Screen PWA updates to exactly `v0.1.2` (Settings), without uninstall, reinstall or clearing website data.
+- [x] **F202:** Previously saved employers, roles, Experience associations, achievements, competencies and preferences are still available after closing and reopening the app. **Do not restore a backup to test this.**
+- [x] **F203:** Settings → Check data reports no critical integrity errors; the exported alpha.11 backup remains available in secure Files storage. No imported or confirmed restore operation is required.
+- [x] **F204:** The five primary tabs, Capture and Settings open normally; optionally confirm offline reopening if convenient. Any failed critical check blocks final acceptance.
 
 ## CP-012E — Accepted recovery and upgrade certification (v0.1.2-alpha.11)
 
