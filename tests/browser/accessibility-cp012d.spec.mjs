@@ -44,7 +44,9 @@ test('Reduced motion suppresses animation and transitions while preserving visib
   await expect(page.locator('.hero-card')).toBeVisible();
   await page.locator('[data-action="settings"]:visible').click();
   const close=page.locator('.close-dialog');
-  await close.focus();
+  await expect(page.getByRole('dialog')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
   const state=await close.evaluate(el=>{
     const styles=getComputedStyle(el);
     return {animation:styles.animationName,transition:styles.transitionProperty,outline:styles.outlineStyle,outlineWidth:styles.outlineWidth};
