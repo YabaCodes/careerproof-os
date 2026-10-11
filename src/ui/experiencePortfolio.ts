@@ -126,7 +126,7 @@ function card(p:Project,c:CareerCollections):string{
   const roles=linkedRoles(c,p),linked=experienceRollup(c,p.id).items.length,legacy=legacyExperienceNotes(p);
   const preview=p.scope||p.objective||p.personalResponsibility||p.outcome;
   const detail=(label:string,value:string)=>value?'<div class="portfolio-detail"><strong>'+esc(label)+'</strong><p>'+esc(value)+'</p></div>':'';
-  return '<details class="portfolio-card" data-project-id="'+esc(p.id)+'">'+
+  return '<details class="portfolio-card" data-project-id="'+esc(p.id)+'" data-keep-open="project:'+esc(p.id)+'">'+
     '<summary><div class="portfolio-summary-top"><h3>'+esc(p.name)+'</h3><span class="portfolio-type">'+esc(typeNames[p.experienceType])+'</span></div>'+
     '<p class="career-meta">'+meta([employer?.name||'Independent',range(p),statuses[p.status],plural(linked,'achievement')])+'</p>'+
     (preview?'<p class="portfolio-preview">'+esc(preview)+'</p>':'')+

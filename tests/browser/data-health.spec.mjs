@@ -43,8 +43,9 @@ for(const width of [320,390]){
     await page.locator('.close-dialog').click();
     await page.locator('.header-settings').click();
     await page.locator('[data-action=check-integrity]').click();
-    await page.locator('[data-code=experience-no-achievements] summary').click();
-    await page.locator('[data-action=health-open][data-kind=project][data-id=idle-project]').click();
+    // CP-012C: Home shows the same gaps behind the dialog, so stay inside the report.
+    await page.locator('#data-health-report [data-code=experience-no-achievements] summary').click();
+    await page.locator('#data-health-report [data-action=health-open][data-kind=project][data-id=idle-project]').click();
     await expect(page.locator('#portfolio-name')).toHaveValue('Idle synthetic experience');
     await page.locator('.close-dialog').click();
     expect(await state(page)).toEqual(before);

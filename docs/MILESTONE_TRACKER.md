@@ -22,7 +22,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 ## Progress summary (2026-10-11)
 
-- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.7 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health, controlled removal, Title Case + most-recent-first employment, Experience as a container). Remaining v0.1.2: CP-012C dashboard, CP-012D accessibility/performance, CP-012E recovery certification.
+- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.7 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health, controlled removal, Title Case + most-recent-first employment, Experience as a container). alpha.8 Home dashboard (CP-012C) in review (#26, stacked on #25). Remaining v0.1.2: CP-012D accessibility/performance, CP-012E recovery certification.
 - **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete (container model, DEC-034) · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
 - **Automated baseline (main `f14628b`, alpha.7):** 72/72 Node, 118/118 browser (3 consecutive full local runs). Main CI run 38098062177: attempt 1 failed in Build and test (QA-023, intermittent), attempt 2 ✓ build, tests, deploy; live `sw.js` `careerproof-v0.1.2-alpha.7`.
 - **Open acceptance items:** v0.1.1 smoke (F101–F102, superseded), E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 H102 (optional). RM101–RM105, T101–T104 and X101–X105 accepted 2026-10-11.
@@ -33,7 +33,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 |---|---|---|---|---|
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
-| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1–alpha.7 accepted; CP-012C–E remaining) | #18–#25 | A101–A106, U103–U104, DH101–DH104 accepted 2026-10-10; RM101–RM105, T101–T104, X101–X105 accepted 2026-10-11 |
+| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1–alpha.7 accepted; alpha.8 CP-012C in review; CP-012D–E remaining) | #18–#26 | A101–A106, U103–U104, DH101–DH104 accepted 2026-10-10; RM101–RM105, T101–T104, X101–X105 accepted 2026-10-11 |
 | v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
@@ -90,7 +90,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | M07 Job Readiness & Interview | Job Fit Analyzer (pasted JD) | CP-FR-013 | P1 | Planned | 0.1.6 | — | — | — | Synonym dictionary/rule engine to approve; `jobAnalyses`/`jobRequirements` stores | After v0.1.5 |
 | M07 Job Readiness & Interview | Interview story bank / practice | — | Later | Not Started | — | — | — | — | — | Scope later |
 | M08 Career Analytics | Home dashboard: next action, truthful metrics, recent, quick capture | CP-FR-014 | P0 | Accepted | 0.1.2-alpha.3 | #20 | home-navigation | A103 accepted | Fuller dashboard (CP-012C) still planned | — |
-| M08 Career Analytics | Truthful dashboard + record completeness | CP-FR-014, CP-012C | P0 | Planned | 0.1.2 | — | — | — | Which summaries; backup-time honesty | Authorize within v0.1.2 |
+| M08 Career Analytics | Truthful dashboard + record completeness: Home **Complete Your Record** (Data Health completeness rules, shared) and **Achievements by Role** (active counts per role, opens the filtered Vault) (DEC-035) | CP-FR-014, CP-01, CP-012C | P0 | In Review | 0.1.2-alpha.8 | #26 | dashboard (2 Node incl. parity with Data Health), home-dashboard (3 browser incl. live update, kept-open gap, 320px); data-health spec scoped to the report | D101–D105 pending | Trends deferred (later M08); stacked on #25 | User merges #25, then #26 |
 | M08 Career Analytics | Advanced longitudinal analytics | — | Later | Not Started | — | — | — | — | — | Scope later |
 | Platform | Data Health 2.0 (critical vs advisory, read-only, links to records) | CP-FR-008, CP-012A | P0 | Accepted | 0.1.2-alpha.4 | #21 | data-health (9 Node), data-health spec (3 browser); main CI 38039174416 ✓ | DH101–DH104 accepted 2026-10-10 | Problems that stop the app opening still show on the startup error screen | Emergency export in CP-012E |
 | Platform | Accessibility / large-dataset performance hardening | CP-012D | P0 | Planned | 0.1.2 | — | — | — | Measure, don't assume | Within v0.1.2 |
@@ -104,7 +104,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 1. Report post-promotion smoke F101–F102 for `v0.1.1`.
 2. Create a `v0.1.1` Git tag / GitHub Release, or not.
 3. ~~RM101–RM105, T101–T104, X101–X105~~: all accepted 2026-10-11. Review PR #25 (tracker + CI diagnostics).
-4. v0.1.2 product choices: Data Health issue taxonomy and wording; unlink/reassign UX; dashboard summaries; how to show last-export time without implying a verified backup.
+4. v0.1.2 product choices: Data Health issue taxonomy and wording; unlink/reassign UX (done, DEC per CP-012B); dashboard summaries (proposed in DEC-035, PR #26); last-export wording kept as "generated on this device".
 5. Later: 32-skill rubric authoring, CV templates, job-fit rule dictionary, navigation redesign.
 6. ~~OQ-034 Achievement vs Experience~~: decided 2026-10-11, option B (DEC-034), implemented in PR #24.
 

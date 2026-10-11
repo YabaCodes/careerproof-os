@@ -9,10 +9,14 @@ function itemButton(issue: HealthIssue, index: number): string {
   if (item.kind === 'settings') return `<button type="button" class="button button-outline health-export" data-action="export">${icon('download', 16)} Export backup now</button>`;
   return `<button type="button" class="health-link" data-action="health-open" data-kind="${item.kind}" data-id="${esc(item.id ?? '')}">${esc(item.label)} ${icon('chevron', 15)}</button>`;
 }
-function issueBlock(issue: HealthIssue): string {
+/**
+ * One expandable issue with links to its records. Exported for the Home
+ * dashboard (CP-012C); `keepOpen` lets the screen reopen it after a re-render.
+ */
+export function issueBlock(issue: HealthIssue, keepOpen = ''): string {
   const shown = Math.min(issue.items.length, MAX_ITEMS);
   const more = issue.items.length - shown;
-  return `<details class="health-issue health-${issue.severity}" data-code="${esc(issue.code)}"${issue.severity === 'critical' ? ' open' : ''}>`
+  return `<details class="health-issue health-${issue.severity}" data-code="${esc(issue.code)}"${keepOpen ? ` data-keep-open="${esc(keepOpen)}"` : ''}${issue.severity === 'critical' ? ' open' : ''}>`
     + `<summary><span class="health-title">${esc(issue.title)}</span>${icon('chevron', 16)}</summary>`
     + `<div class="health-body"><p>${esc(issue.detail)}</p>`
     + (shown ? `<div class="health-items">${Array.from({ length: shown }, (_, i) => itemButton(issue, i)).join('')}</div>` : '')
@@ -29,7 +33,7 @@ export function dataHealthReport(report: DataHealthReport): string {
   const storage = report.storagePersisted === true ? 'Browser storage is marked persistent.'
     : report.storagePersisted === null ? 'This browser does not report whether storage is persistent.' : '';
   return `<p class="health-headline ${critical.length ? 'is-critical' : ''}">${headline}</p>`
-    + (critical.length ? `<h4 class="health-group">Critical</h4>${critical.map(issueBlock).join('')}` : '')
-    + (advisory.length ? `<h4 class="health-group">Suggestions</h4>${advisory.map(issueBlock).join('')}` : '')
+    + (critical.length ? `<h4 class="health-group">Critical</h4>${critical.map(i => issueBlock(i)).join('')}` : '')
+    + (advisory.length ? `<h4 class="health-group">Suggestions</h4>${advisory.map(i => issueBlock(i)).join('')}` : '')
     + `<p class="health-note">${storage ? esc(storage) + ' ' : ''}Suggestions are about what is documented, not about your ability. Nothing was changed, uploaded or scored.</p>`;
 }
