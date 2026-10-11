@@ -378,7 +378,19 @@ function toastView(inDialog=false):string{return `<div id="toast" role="status" 
 function notify(message:string,kind:'success'|'error'='success'){toastMessage=message;toastKind=kind;window.clearTimeout(toastTimer);const el=document.getElementById('toast');if(el){el.innerHTML=`${icon(kind==='success'?'check':'alert',20)}<span>${escape(message)}</span>`;el.classList.add('visible');el.classList.toggle('toast-error',kind==='error');el.classList.toggle('toast-success',kind==='success');}toastTimer=window.setTimeout(()=>{toastMessage='';document.getElementById('toast')?.classList.remove('visible');},kind==='error'?10000:5000);}
 function openModal(kind:Modal,id:string|null=null,edit=false){if(!modal)dialogs.rememberInvoker();modal=kind;selectedId=id;editing=edit;isDirty=false;render();}
 function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;captureProjectId=null;removal=null;render();dialogs.restoreFocus();}
-function showError(message:string){const el=document.getElementById('form-error');if(el){el.hidden=false;el.textContent=message;el.scrollIntoView({block:'nearest',behavior:'smooth'});}else notify(message,'error');}
+function showError(message:string){
+  const el=document.getElementById('form-error');
+  if(!el){notify(message,'error');return;}
+  el.hidden=false;
+  el.textContent=message;
+  // CP-012D.2: focus the error summary so keyboard and screen-reader users
+  // encounter the reason for a failed save. Do not auto-focus a mobile input
+  // and unexpectedly summon the iOS keyboard.
+  el.tabIndex=-1;
+  el.focus({preventScroll:true});
+  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({block:'nearest',behavior:reduced?'instant':'smooth'});
+}
 function setSaving(value:boolean){saving=value;const dialog=document.querySelector<HTMLElement>('.modal');dialog?.setAttribute('aria-busy',String(value));for(const button of dialog?.querySelectorAll<HTMLButtonElement>('button[data-action]')??[])button.disabled=value;}
 function readAchieveInput(status:'draft'|'recorded') {
   const form=document.getElementById('achievement-form') as HTMLFormElement|null;
