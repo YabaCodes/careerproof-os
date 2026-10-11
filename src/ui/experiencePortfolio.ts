@@ -1,6 +1,7 @@
 import type {CareerCollections,PrecisionDate,Project,Role,RecordLink} from '../domain/models.js';
 import {datesInOrder,formatPrecisionDate,precisionDateFromInput} from '../domain/dates.js';
 import {ValidationError} from '../domain/validation.js';
+import {experienceRollup,legacyExperienceNotes,type LegacyExperienceField} from '../domain/experience.js';
 import {icon} from './icons.js';
 import {escapeHtml} from './html.js';
 
@@ -13,7 +14,8 @@ const dateLabel=(date:PrecisionDate|null)=>date?formatPrecisionDate(date.value):
 const range=(r:Project)=>r.startDate||r.endDate?dateLabel(r.startDate)+' – '+dateLabel(r.endDate):'Dates not specified';
 const meta=(items:(string|null|undefined)[])=>items.filter(Boolean).map(esc).join(' · ');
 const field=(name:string,label:string,value:string,max=6000,required=false)=>'<div class="field"><label for="portfolio-'+name+'">'+esc(label)+(required?' <span class="required">*</span>':'')+'</label><input type="text" name="'+name+'" id="portfolio-'+name+'" maxlength="'+max+'" value="'+esc(value)+'" '+(required?'required':'')+'/></div>';
-const area=(name:string,label:string,value:string)=>'<div class="field"><label for="portfolio-'+name+'">'+esc(label)+'</label><textarea rows="3" name="'+name+'" id="portfolio-'+name+'" maxlength="6000">'+esc(value)+'</textarea></div>';
+const area=(name:string,label:string,value:string,hint='',rows=3)=>'<div class="field"><label for="portfolio-'+name+'">'+esc(label)+'</label><textarea rows="'+rows+'" name="'+name+'" id="portfolio-'+name+'" maxlength="6000"'+(hint?' aria-describedby="portfolio-'+name+'-hint"':'')+'>'+esc(value)+'</textarea>'+(hint?'<p class="field-hint" id="portfolio-'+name+'-hint">'+esc(hint)+'</p>':'')+'</div>';
+const plural=(n:number,word:string)=>n+' '+word+(n===1?'':'s');
 function dateControl(name:string,label:string,date:PrecisionDate|null){
   const precision=date?.precision??'month';
   const type=precision==='year'?'text':precision==='month'?'month':'date';
@@ -35,23 +37,26 @@ export function portfolioForm(p:Project|undefined,c:CareerCollections):string{
   const typeOptions=Object.entries(typeNames).map(([id,name])=>({id,name}));
   const statusOptions=Object.entries(statuses).map(([id,name])=>({id,name}));
   const roles=[...c.roles].sort((a,b)=>a.title.localeCompare(b.title));
-  const fields=field('name','Experience / project name',p?.name??'',160,true)+
+  // CP-012.4 (DEC-034): an experience is a container. Results, responsibilities and
+  // outcomes belong to its linked achievements; earlier text stays editable below.
+  const legacy=p?legacyExperienceNotes(p):[];
+  const fields=field('name','Experience name',p?.name??'',160,true)+
+    '<p class="field-hint portfolio-form-intro">A project, initiative or ongoing responsibility. Record each result as an achievement linked to it.</p>'+
     select('experienceType','Experience type',typeOptions,p?.experienceType??'project')+
     select('status','Status',statusOptions,p?.status??'active')+
     select('employerId','Employer (optional)',[{id:'',name:'Independent / no employer'},...c.employers.map(e=>({id:e.id,name:e.name}))],p?.employerId??'')+
     '<div class="career-date-grid">'+dateControl('startDate','Start date',p?.startDate??null)+dateControl('endDate','End date',p?.endDate??null)+'</div>'+
-    area('objective','Objective / purpose',p?.objective??'')+
-    area('scope','Scope and context',p?.scope??'')+
-    area('personalResponsibility','My responsibilities',p?.personalResponsibility??'')+
+    area('scope','Context',p?.scope??'','One or two lines on what this was. Results belong in linked achievements.',2)+
     field('technologies','Technologies (comma separated)',p?.technologies.join(', ')??'',2000)+
-    area('outcome','Outcome or results',p?.outcome??'')+
     select('confidentiality','Confidentiality',[
       {id:'confidential',name:'Confidential (recommended)'},
       {id:'standard-private',name:'Standard private'}
     ],p?.confidentiality??'confidential')+
     '<fieldset class="portfolio-role-fieldset"><legend>Associated Employment Roles</legend><p class="career-meta">Optional. Choose existing roles; the employer must match if one is selected. These are links, not duplicate job records.</p>'+
-    '<div class="portfolio-role-options">'+(roles.length?roles.map(r=>roleCheck(r,c,selected)).join(''):'<p class="career-empty">No roles recorded yet. You can link them later.</p>')+'</div></fieldset>';
-  return '<div class="modal-header"><div><p class="eyebrow">EXPERIENCE PORTFOLIO</p><h2 id="dialog-title">'+(p?'Edit Experience':'Add Experience')+'</h2><p id="dialog-description">Document the work you owned and its outcomes. Avoid proprietary information.</p></div>'+
+    '<div class="portfolio-role-options">'+(roles.length?roles.map(r=>roleCheck(r,c,selected)).join(''):'<p class="career-empty">No roles recorded yet. You can link them later.</p>')+'</div></fieldset>'+
+    (legacy.length?'<fieldset class="portfolio-role-fieldset portfolio-legacy"><legend>Earlier Notes</legend><p class="career-meta">Written before results moved to linked achievements. Keep, edit or clear them. Nothing here is removed automatically.</p>'+
+      legacy.map(n=>area(n.key,n.label,n.value)).join('')+'</fieldset>':'');
+  return '<div class="modal-header"><div><p class="eyebrow">EXPERIENCE PORTFOLIO</p><h2 id="dialog-title">'+(p?'Edit Experience':'Add Experience')+'</h2><p id="dialog-description">The project or responsibility your achievements belong to. Avoid proprietary information.</p></div>'+
     '<button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">'+icon('close',24)+'</button></div>'+
     '<form id="portfolio-form" class="modal-body form-grid" novalidate><div id="form-error" class="form-error" role="alert" hidden></div>'+fields+'</form>'+
     '<div class="modal-footer"><button type="button" class="button button-outline" data-action="close">Cancel</button><button type="button" class="button button-primary" data-action="save-project">'+icon('check',17)+' Save experience</button></div>';
@@ -78,12 +83,15 @@ export function readPortfolioForm(form:HTMLFormElement,previous?:Project):Projec
   if(!['confidential','standard-private'].includes(confidentiality))throw new ValidationError('Choose a valid confidentiality setting.');
   const type=read(fd,'experienceType'),status=read(fd,'status');
   if(!(type in typeNames)||!(status in statuses))throw new ValidationError('Choose a valid experience type and status.');
+  // CP-012.4: fields that are not on the form keep their stored value, so editing
+  // never clears earlier text; a shown Earlier Notes field saves what it contains.
+  const kept=(key:LegacyExperienceField)=>fd.has(key)?read(fd,key):previous?.[key]??'';
   return {record:{
     id:previous?.id??crypto.randomUUID(),revision:previous?.revision??0,name,
     experienceType:type as Project['experienceType'],status:status as Project['status'],employerId:read(fd,'employerId')||null,
-    startDate,endDate,objective:read(fd,'objective'),scope:read(fd,'scope'),
-    personalResponsibility:read(fd,'personalResponsibility'),technologies:[...new Set(technologies)],
-    outcome:read(fd,'outcome'),confidentiality:confidentiality as Project['confidentiality']
+    startDate,endDate,objective:kept('objective'),scope:read(fd,'scope'),
+    personalResponsibility:kept('personalResponsibility'),technologies:[...new Set(technologies)],
+    outcome:kept('outcome'),confidentiality:confidentiality as Project['confidentiality']
   },roleIds};
 }
 export function updatePortfolioRoleChoices(form:HTMLFormElement):void {
@@ -99,29 +107,37 @@ function linkedRoles(c:CareerCollections,p:Project):Role[] {
   const ids=new Set(c.recordLinks.filter(r=>r.linkType==='role-project'&&r.targetId===p.id).map(r=>r.sourceId));
   return c.roles.filter(r=>ids.has(r.id));
 }
-function linkedAchievements(c:CareerCollections,p:Project){
-  const ids=new Set(c.recordLinks.filter(r=>r.linkType==='achievement-project'&&r.targetId===p.id).map(r=>r.sourceId));
-  return c.achievements.filter(a=>ids.has(a.id)).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+const statusLabel={draft:'Draft',recorded:'',archived:'Archived'} as const;
+/** CP-012.4: the results of an experience are its linked achievements and their stated outcomes. */
+function rollupSection(c:CareerCollections,p:Project):string{
+  const roll=experienceRollup(c,p.id),n=roll.items.length;
+  if(!n)return '<div class="portfolio-detail"><strong>Linked Achievements (0)</strong><p>No linked achievements yet. Use New Achievement to record a result from this experience.</p></div>';
+  return '<div class="portfolio-detail"><strong>Linked Achievements ('+n+')</strong>'+
+    '<p class="career-meta rollup-summary">'+roll.withOutcome+' of '+n+' '+(n===1?'has':'have')+' a stated outcome</p>'+
+    '<ul class="experience-rollup">'+roll.items.map(i=>'<li class="rollup-item">'+
+      '<div class="rollup-head"><button type="button" class="rollup-title" data-action="portfolio-achievement" data-id="'+esc(i.id)+'">'+esc(i.title)+'</button>'+
+      (statusLabel[i.status]?'<span class="status-tag status-'+i.status+'">'+statusLabel[i.status]+'</span>':'')+'</div>'+
+      (i.outcome?'<p class="rollup-outcome">'+esc(i.outcome)+'</p>':'<p class="rollup-outcome is-missing">No outcome stated yet</p>')+
+      (i.metrics?'<p class="rollup-metrics">'+plural(i.metrics,'metric')+'</p>':'')+
+      '</li>').join('')+'</ul></div>';
 }
 function card(p:Project,c:CareerCollections):string{
   const employer=c.employers.find(e=>e.id===p.employerId);
-  const roles=linkedRoles(c,p),achievements=linkedAchievements(c,p);
-  const objective=p.objective||p.personalResponsibility||p.scope||p.outcome;
+  const roles=linkedRoles(c,p),linked=experienceRollup(c,p.id).items.length,legacy=legacyExperienceNotes(p);
+  const preview=p.scope||p.objective||p.personalResponsibility||p.outcome;
   const detail=(label:string,value:string)=>value?'<div class="portfolio-detail"><strong>'+esc(label)+'</strong><p>'+esc(value)+'</p></div>':'';
   return '<details class="portfolio-card" data-project-id="'+esc(p.id)+'">'+
     '<summary><div class="portfolio-summary-top"><h3>'+esc(p.name)+'</h3><span class="portfolio-type">'+esc(typeNames[p.experienceType])+'</span></div>'+
-    '<p class="career-meta">'+meta([employer?.name||'Independent',range(p),statuses[p.status]])+'</p>'+
-    (objective?'<p class="portfolio-preview">'+esc(objective)+'</p>':'')+
+    '<p class="career-meta">'+meta([employer?.name||'Independent',range(p),statuses[p.status],plural(linked,'achievement')])+'</p>'+
+    (preview?'<p class="portfolio-preview">'+esc(preview)+'</p>':'')+
     '<span class="portfolio-summary-hint">'+icon('chevron',15)+' <span class="portfolio-show-label">View details</span></span></summary>'+
     '<div class="portfolio-expanded">'+
     (p.confidentiality==='confidential'?'<p class="portfolio-confidential">'+icon('lock',14)+' Confidential · private backup only</p>':'')+
-    detail('Objective',p.objective)+detail('Scope',p.scope)+detail('My Responsibilities',p.personalResponsibility)+
-    detail('Outcome',p.outcome)+detail('Technologies',p.technologies.join(', '))+
+    detail('Context',p.scope)+detail('Technologies',p.technologies.join(', '))+
     '<div class="portfolio-detail"><strong>Associated Roles</strong><p>'+(roles.length?roles.map(r=>esc(r.title)).join(' · '):'None linked yet')+'</p></div>'+
-    '<div class="portfolio-detail"><strong>Linked Achievements ('+achievements.length+')</strong>'+
-    (achievements.length?'<div class="portfolio-achievement-links">'+achievements.map(a=>
-      '<button class="career-inline-add" data-action="portfolio-achievement" data-id="'+esc(a.id)+'">'+esc(a.title)+'</button>').join('')+'</div>':
-      '<p>No linked achievements yet. Capture an achievement from this experience to connect it.</p>')+'</div>'+
+    rollupSection(c,p)+
+    (legacy.length?'<div class="portfolio-detail portfolio-legacy-notes"><strong>Earlier Notes</strong><p class="career-meta">Written before results moved to linked achievements.</p>'+
+      legacy.map(n=>'<span class="portfolio-legacy-label">'+esc(n.label)+'</span><p>'+esc(n.value)+'</p>').join('')+'</div>':'')+
     '<div class="portfolio-actions">'+
     '<button class="button button-primary" data-action="project-capture" data-id="'+esc(p.id)+'">'+icon('plus',16)+' New achievement</button>'+
     '<button class="button button-outline" data-action="edit-project" data-id="'+esc(p.id)+'">'+icon('edit',15)+' Edit</button>'+
@@ -139,9 +155,9 @@ export function portfolioCards(c:CareerCollections,f:PortfolioFilters):string {
 export function portfolioPage(c:CareerCollections,f:PortfolioFilters):string{
   const count=c.projects.length;
   return '<div class="portfolio-page">'+
-    '<section class="panel portfolio-panel"><div class="portfolio-overview"><p class="career-meta">'+(count?'Tap an entry for its details and linked achievements.':'Record projects, initiatives and ongoing responsibilities, then link achievements to them.')+'</p>'+
+    '<section class="panel portfolio-panel"><div class="portfolio-overview"><p class="career-meta">'+(count?'Each experience groups the achievements recorded in it. Tap one to see their outcomes.':'Group related achievements under a project, initiative or ongoing responsibility. Record each result as an achievement.')+'</p>'+
     '<button class="button button-outline" data-action="add-project">'+icon('plus',17)+' Add experience</button></div>'+
-    '<div class="portfolio-filters"><div class="field"><label for="portfolio-search">Search experiences</label><input id="portfolio-search" placeholder="Search title, objective, or responsibilities" value="'+esc(f.query)+'"/></div>'+
+    '<div class="portfolio-filters"><div class="field"><label for="portfolio-search">Search experiences</label><input id="portfolio-search" placeholder="Search name, context or earlier notes" value="'+esc(f.query)+'"/></div>'+
     select('filter-type','Type',[{id:'',name:'All types'},...Object.entries(typeNames).map(([id,name])=>({id,name}))],f.type)+
     select('filter-status','Status',[{id:'',name:'All statuses'},...Object.entries(statuses).map(([id,name])=>({id,name}))],f.status)+'</div>'+
     '<div id="portfolio-results" class="portfolio-list" aria-live="polite">'+portfolioCards(c,f)+'</div></section></div>';

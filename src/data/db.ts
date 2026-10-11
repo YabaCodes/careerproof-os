@@ -1,5 +1,6 @@
 import { type Achievement, type BaseRecord, type AchievementView, type ImpactMetric, type EvidenceReference, type RecordLink, type Profile, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
 import { planRemoval, type RemovableKind, type RemovalMode, type RemovalPlan } from '../domain/removal.js';
+import { inlineExperience, type InlineExperienceDraft } from '../domain/experience.js';
 import { achievementView, migrateLegacyAchievement, migrateLegacyProfile, validateCollections, isPreferences, validTime, ConflictError, ValidationError } from '../domain/validation.js';
 import { precisionDateFromInput } from '../domain/dates.js';
 import { builtInTaxonomy } from '../domain/taxonomy.js';
@@ -213,17 +214,40 @@ export class CareerDatabase {
       return achievementView(achievement);
     });
   }
-  /** All achievement source fields, relationships, metrics and references change atomically. */
+  /**
+   * All achievement source fields, relationships, metrics and references change atomically.
+   * CP-012.4: experiences typed into the achievement form (newExperiences) are
+   * created in the same transaction, linked to this achievement and, when it
+   * has a role, to that role with the role's employer. Nothing is created if
+   * any part fails.
+   */
   async saveAchievementBundle(input:AchievementWrite,projectIds:string[],primaryProjectId:string|null,competencyIds:string[],
     metricDrafts:Omit<ImpactMetric,'achievementId'|'createdAt'|'updatedAt'>[],
-    evidenceDrafts:Omit<EvidenceReference,'achievementId'|'createdAt'|'updatedAt'>[]):Promise<AchievementView>{
+    evidenceDrafts:Omit<EvidenceReference,'achievementId'|'createdAt'|'updatedAt'>[],
+    newExperiences:InlineExperienceDraft[]=[]):Promise<AchievementView>{
     return this.write((tx,data)=>{
       const current=data.collections.achievements.find(r=>r.id===input.id);
       if(current?current.revision!==input.revision:input.revision!==0)throw new ConflictError('This achievement changed. Reload before saving.');
       const unique=(ids:string[],label:string)=>{
         if(new Set(ids).size!==ids.length)throw new ValidationError('Duplicate '+label+' selection.');
       };
-      unique(projectIds,'project');unique(competencyIds,'competency');
+      unique(projectIds,'project');unique(competencyIds,'competency');unique(newExperiences.map(x=>x.id),'new experience');
+      const now=nowIso();
+      const createdProjects:P0RecordMap['projects'][]=[],createdRoleLinks:RecordLink[]=[];
+      if(newExperiences.length){
+        const roleId='roleId' in input?input.roleId??null:current?.roleId??null;
+        const role=roleId?data.collections.roles.find(r=>r.id===roleId)??null:null;
+        for(const draft of newExperiences){
+          if(data.collections.projects.some(p=>p.id===draft.id))throw new ValidationError('This experience already exists. Reload before saving.');
+          if(!projectIds.includes(draft.id))throw new ValidationError('A new experience must be linked to this achievement.');
+          const project={...inlineExperience(draft,role),createdAt:now,updatedAt:now,revision:1};
+          data.collections.projects.push(project);createdProjects.push(project);
+          if(role){
+            const link:RecordLink={id:crypto.randomUUID(),createdAt:now,updatedAt:now,revision:1,linkType:'role-project',sourceId:role.id,targetId:project.id,isPrimary:false,note:''};
+            data.collections.recordLinks.push(link);createdRoleLinks.push(link);
+          }
+        }
+      }
       if(primaryProjectId&&!projectIds.includes(primaryProjectId))throw new ValidationError('Primary project must be selected.');
       if(projectIds.some(id=>!data.collections.projects.some(p=>p.id===id)))throw new ValidationError('A selected project does not exist.');
       if(competencyIds.some(id=>{
@@ -236,7 +260,6 @@ export class CareerDatabase {
       const {occurredOn,...canonical}=input;
       if(occurredOn!==undefined&&canonical.occurredStart!==undefined&&occurredOn!==(canonical.occurredStart?.value??''))throw new ValidationError('Conflicting achievement dates.');
       if(current?.revision===Number.MAX_SAFE_INTEGER)throw new ValidationError('Record revision limit reached.');
-      const now=nowIso();
       const achievement={occurredStart:null,occurredEnd:null,roleId:null,situation:'',actions:'',confidentiality:'confidential' as const,notes:'',
         ...current,...canonical,createdAt:current?.createdAt??now,updatedAt:now,revision:(current?.revision??0)+1} as Achievement;
       if(occurredOn!==undefined)achievement.occurredStart=precisionDateFromInput(occurredOn);
@@ -278,6 +301,8 @@ export class CareerDatabase {
       data.collections.impactMetrics=data.collections.impactMetrics.filter(r=>r.achievementId!==achievement.id).concat(metrics.records);
       data.collections.evidenceReferences=data.collections.evidenceReferences.filter(r=>r.achievementId!==achievement.id).concat(references.records);
       validateCollections(data.collections);
+      for(const project of createdProjects)tx.objectStore('projects').put(project);
+      for(const link of createdRoleLinks)tx.objectStore('recordLinks').put(link);
       tx.objectStore('achievements').put(achievement);
       for(const link of [...addedLinks,...changedLinks])tx.objectStore('recordLinks').put(link);
       for(const link of removedLinks)tx.objectStore('recordLinks').delete(link.id);

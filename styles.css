@@ -769,3 +769,26 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .removal-tip { display: flex; gap: var(--space-2); align-items: flex-start; margin: 0; color: var(--muted); font-size: 13px; }
 .removal-tip .inline-link { min-height: 32px; padding: 0 4px; font-size: 13px; }
 @media (max-width:359px) { .removal-target { margin-left: 0; } }
+
+/* CP-012.4 (DEC-034): Experience as a container. The card rolls up linked
+   achievements' outcomes; earlier narrative text stays visible; achievements
+   can create an experience inline. */
+.portfolio-form-intro { margin-top: calc(var(--space-2) * -1); }
+.rollup-summary { margin: 4px 0 var(--space-2); }
+.experience-rollup { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.rollup-item { border: 1px solid var(--line); border-radius: var(--radius-control); padding: var(--space-2) var(--space-3); min-width: 0; }
+.rollup-head { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; min-width: 0; }
+.rollup-title { background: transparent; border: 0; padding: 0; min-height: 44px; text-align: left; color: var(--teal); font: inherit; font-weight: 600; cursor: pointer; overflow-wrap: anywhere; flex: 1 1 12rem; min-width: 0; }
+.rollup-title:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; border-radius: 4px; }
+.portfolio-detail .rollup-outcome { margin: 0 0 4px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.portfolio-detail .rollup-outcome.is-missing { color: var(--muted); font-style: italic; }
+.portfolio-detail .rollup-metrics { margin: 0; color: var(--muted); font-size: var(--type-meta); }
+.portfolio-legacy-label { display: block; margin-top: var(--space-2); color: var(--muted); font-size: var(--type-meta); font-weight: 600; }
+.portfolio-legacy { display: grid; gap: var(--space-3); }
+.inline-experience { margin-bottom: var(--space-3); }
+.inline-experience-panel { display: grid; gap: var(--space-3); margin-top: var(--space-2); padding: var(--space-3); border: 1px dashed var(--line); border-radius: var(--radius-control); }
+.inline-experience-panel[hidden] { display: none; }
+.inline-experience-panel .button { justify-self: start; min-height: 44px; }
+.inline-experience-status:empty { display: none; }
+.inline-experience-status { margin-top: var(--space-1); }
+.rich-new-tag { margin-left: auto; flex: none; border-radius: 999px; padding: 2px 8px; font-size: var(--type-small); font-weight: 600; background: var(--surface-alt); color: var(--teal); }

@@ -1,5 +1,7 @@
-import type {AchievementView, CareerCollections, ImpactMetric, EvidenceReference, Confidentiality, RecordLink} from '../domain/models.js';
+import type {AchievementView, CareerCollections, ImpactMetric, EvidenceReference, Confidentiality, RecordLink, Project} from '../domain/models.js';
 import {ValidationError} from '../domain/validation.js';
+import {EXPERIENCE_NAME_MAX,matchingExperience,type InlineExperienceDraft} from '../domain/experience.js';
+import {normalizeName} from '../domain/taxonomy.js';
 import {icon} from './icons.js';
 import {escapeHtml} from './html.js';
 
@@ -39,6 +41,55 @@ export function evidenceRow(record?:EvidenceReference):string {
     '<p class="field-hint">References are user-entered, not independently verified. Do not upload confidential company documents.</p>'+
     '<button type="button" class="career-inline-add rich-remove" data-action="remove-rich-row">Remove reference</button></fieldset>';
 }
+const INLINE_TYPES:[Project['experienceType'],string][]=[['project','Project'],['initiative','Initiative'],['ongoing-responsibility','Ongoing responsibility']];
+/**
+ * CP-012.4 (DEC-034): create an experience without leaving the achievement form.
+ * The controls carry no form names, so only the checkbox they add is submitted;
+ * the experience is created with the achievement, in the same transaction.
+ */
+function inlineExperienceControl():string{
+  return '<div class="inline-experience"><button type="button" class="career-inline-add" data-action="toggle-inline-experience" aria-expanded="false" aria-controls="inline-experience-panel">'+icon('plus',15)+' New experience</button>'+
+    '<div id="inline-experience-panel" class="inline-experience-panel" hidden>'+
+    '<div class="field"><label for="inline-experience-name">Experience name</label><input id="inline-experience-name" type="text" maxlength="'+EXPERIENCE_NAME_MAX+'" autocomplete="off" enterkeyhint="done" placeholder="e.g., Line upgrade project"/></div>'+
+    '<div class="field"><label for="inline-experience-type">Type</label><select id="inline-experience-type">'+INLINE_TYPES.map(([v,l])=>'<option value="'+v+'">'+l+'</option>').join('')+'</select></div>'+
+    '<p id="inline-experience-error" class="form-error" role="alert" hidden></p>'+
+    '<p class="field-hint">Saved with this achievement. If you chose a role above, the experience is linked to that role and its employer.</p>'+
+    '<button type="button" class="button button-outline" data-action="add-inline-experience">Add and link</button></div>'+
+    '<p id="inline-experience-status" class="field-hint inline-experience-status" role="status" aria-live="polite"></p></div>';
+}
+/**
+ * Adds a checked "New" experience to the form, or ticks an existing one with the
+ * same name instead of creating a duplicate. Returns true when the form changed.
+ */
+export function addInlineExperience(form:HTMLFormElement,projects:readonly Project[]):boolean{
+  const nameInput=form.querySelector<HTMLInputElement>('#inline-experience-name');
+  const typeSelect=form.querySelector<HTMLSelectElement>('#inline-experience-type');
+  const list=form.querySelector<HTMLElement>('.rich-experience-list');
+  const error=form.querySelector<HTMLElement>('#inline-experience-error');
+  const status=form.querySelector<HTMLElement>('#inline-experience-status');
+  if(!nameInput||!typeSelect||!list||!error||!status)return false;
+  const name=nameInput.value.trim().replace(/\s+/g,' ');
+  const fail=(message:string)=>{error.textContent=message;error.hidden=false;nameInput.focus();return false;};
+  if(!name)return fail('Enter a name for the experience.');
+  if(name.length>EXPERIENCE_NAME_MAX)return fail('Use '+EXPERIENCE_NAME_MAX+' characters or fewer.');
+  const type=INLINE_TYPES.find(([v])=>v===typeSelect.value)?.[0];
+  if(!type)return fail('Choose a valid experience type.');
+  error.hidden=true;error.textContent='';
+  const boxes=[...list.querySelectorAll<HTMLInputElement>('input[name="projectId"]')];
+  const existing=matchingExperience(projects,name);
+  const same=existing?boxes.find(b=>b.value===existing.id):boxes.find(b=>b.dataset.newName&&normalizeName(b.dataset.newName)===normalizeName(name));
+  if(same){
+    same.checked=true;
+    status.textContent='“'+(existing?.name??same.dataset.newName??name)+'” already exists, so it is now linked instead of creating a duplicate.';
+  }else{
+    list.querySelector('.career-empty')?.remove();
+    list.insertAdjacentHTML('beforeend','<label class="rich-check is-new"><input type="checkbox" name="projectId" value="'+html(crypto.randomUUID())+'" data-new-name="'+html(name)+'" data-new-type="'+type+'" checked/>'+
+      '<span>'+html(name)+'</span><small class="rich-new-tag">New</small></label>');
+    status.textContent='Added “'+name+'”. It is saved when you save this achievement.';
+  }
+  nameInput.value='';
+  return true;
+}
 export function richAchievementFields(a:AchievementView|undefined,c:CareerCollections,projectContext:string|null):string{
   const linked=(type:string):Set<string>=>new Set(c.recordLinks.filter(l=>l.sourceId===a?.id&&l.linkType===type).map(l=>l.targetId));
   const linkedProjects=linked('achievement-project');
@@ -77,8 +128,8 @@ export function richAchievementFields(a:AchievementView|undefined,c:CareerCollec
     field('situation','Situation / challenge',a?.situation??'',true)+
     field('actions','Actions taken',a?.actions??'',true)+field('notes','Additional notes',a?.notes??'',true)+
     confidentiality+roleSelect+
-    '<fieldset class="rich-link-fieldset"><legend>Associated Experiences</legend><div class="rich-choice-list">'+
-    (projectOptions||'<p class="career-empty">Create an Experience in Profile to link it here.</p>')+'</div>'+primaryOptions+'</fieldset>'+
+    '<fieldset class="rich-link-fieldset"><legend>Associated Experiences</legend><div class="rich-choice-list rich-experience-list">'+
+    (projectOptions||'<p class="career-empty">No experiences yet. Add one below.</p>')+'</div>'+inlineExperienceControl()+primaryOptions+'</fieldset>'+
     '<fieldset class="rich-link-fieldset"><legend>Competencies Demonstrated</legend><p class="field-hint">Link documented examples to skills. These are not proficiency scores.</p>'+
     '<div class="rich-choice-list rich-competencies">'+(competencyOptions||'<p class="career-empty">No active competencies available.</p>')+
     '</div></fieldset>'+
@@ -125,7 +176,12 @@ export function parseRichFields(form:HTMLFormElement){
       referenceType:referenceType as EvidenceReference['referenceType'],label:str(data,'label'),
       referenceValue:str(data,'referenceValue'),notes:str(data,'notes'),userReviewedAt:row.dataset.reviewedAt||null};
   });
-  return {projectIds,primaryProjectId,competencyIds,metrics,references,roleId:str(fd,'roleId')||null,
+  const newExperiences:InlineExperienceDraft[]=[...form.querySelectorAll<HTMLInputElement>('input[name="projectId"][data-new-name]:checked')].map(box=>{
+    const type=INLINE_TYPES.find(([v])=>v===box.dataset.newType)?.[0];
+    if(!type)throw new ValidationError('Choose a valid experience type.');
+    return {id:box.value,name:box.dataset.newName??'',experienceType:type};
+  });
+  return {projectIds,primaryProjectId,competencyIds,metrics,references,newExperiences,roleId:str(fd,'roleId')||null,
     confidentiality:confidentiality as Confidentiality,
     situation:str(fd,'situation'),actions:str(fd,'actions'),notes:str(fd,'notes')};
 }
