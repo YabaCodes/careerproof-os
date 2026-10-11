@@ -1,5 +1,15 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.7 — CP-012.4 Experience as a container for achievements (review)
+
+Implements the user's choice of option B for OQ-034 (DEC-034): achievements hold results; an experience groups them.
+- **Shorter Experience form.** New experiences ask for name, type, status, employer, dates, a short **Context**, technologies, confidentiality and roles. The Objective, My Responsibilities and Outcome fields are no longer offered for new experiences, because the linked achievements hold that information.
+- **Nothing you wrote is lost.** Experiences that already have objective, responsibility or outcome text show it as **Earlier Notes** on the card and in the editor, where you can keep, edit or clear it. Saving an experience never clears a field it does not show.
+- **The card rolls up results.** Expanded cards list their linked achievements newest first (archived last), each with its stated outcome, a "No outcome stated yet" note when there is none, and its metric count, plus a line such as "2 of 3 have a stated outcome". The collapsed card shows how many achievements it holds. Tapping an achievement opens it.
+- **Create an experience while capturing.** In the achievement form (More details → Associated Experiences), **New experience** adds a name and type without leaving the form. The new experience is created only when the achievement is saved, in the same transaction, linked to it, and (if you chose a role) linked to that role and its employer. Typing a name that already exists links the existing experience instead of creating a duplicate. Discarding the achievement or unticking the new experience creates nothing.
+- Tests: 6 Node (container builder, earlier-notes listing, name matching, roll-up order and counts, atomic creation with and without a role, refusals and rollback on a storage failure) and 3 browser (container form and earlier-notes preservation, inline creation at 320px with duplicates and escaping, discard and untick). Existing Experience tests now use Context instead of Objective/Outcome.
+- No schema or backup-format change. New module `domain/experience.js` is in the offline app shell.
+
 ## 0.1.2-alpha.6 — CP-012.3 Title Case headings and most-recent-first employment (review)
 
 - **Employment History lists the most recent employer first**, however the records were entered. Previously employers were sorted alphabetically by name, so adding an earlier employer after the current one could put it on top (UX-022). Order now follows dates:

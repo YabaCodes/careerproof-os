@@ -96,14 +96,14 @@ test('mobile navigation has five equal positions at 320/375px and direct backdro
 test('cached PWA opens offline with stored records and all foundation modules',async({page,context})=>{
   await start(page);await capture(page,'Synthetic offline entry');await page.locator('[data-action="save-achievement"][data-status="recorded"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));});
-  const keys=await page.evaluate(()=>caches.keys());expect(keys).toContain('careerproof-v0.1.2-alpha.6');
+  const keys=await page.evaluate(()=>caches.keys());expect(keys).toContain('careerproof-v0.1.2-alpha.7');
   await context.setOffline(true);await page.reload();await expect(page.getByText('Synthetic offline entry').first()).toBeVisible();await settings(page);await expect(page.getByRole('dialog')).toContainText('Database schema 2');
   const cachedAssets=await page.evaluate(async()=>{
     const files=['icon.svg','icon-192.png','icon-512.png','icon-maskable-512.png','apple-touch-icon.png','favicon-32.png','favicon-16.png','app/ui/dialog.js'];
     return Promise.all(files.map(async file=>({file,ok:(await fetch('./'+file)).ok})));
   });
   expect(cachedAssets.every(asset=>asset.ok)).toBe(true);
-  await expect(page.getByRole('dialog')).toContainText('0.1.2-alpha.6');
+  await expect(page.getByRole('dialog')).toContainText('0.1.2-alpha.7');
   await page.locator('[data-action=close]').click();
   expect(await page.locator('.mobile-nav').evaluate(el=>el.getBoundingClientRect().height)).toBe(61);
   await page.locator('[data-action=detail]').first().click();await page.locator('[data-action=edit-achievement]').click();
@@ -131,7 +131,7 @@ test('worker activation replaces the previous cache and retains local records of
     if(!navigator.serviceWorker.controller?.scriptURL.endsWith('/sw.js'))await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
   const cachesNow=await page.evaluate(()=>caches.keys());
-  expect(cachesNow).toContain('careerproof-v0.1.2-alpha.6');await expect.poll(()=>page.evaluate(()=>caches.keys())).not.toContain('careerproof-v0.1.1-alpha.2');
+  expect(cachesNow).toContain('careerproof-v0.1.2-alpha.7');await expect.poll(()=>page.evaluate(()=>caches.keys())).not.toContain('careerproof-v0.1.1-alpha.2');
   expect(await rawCollections(page)).toEqual(before);
   await context.setOffline(true);await page.reload();await expect(page.getByText('Resolved synthetic issue').first()).toBeVisible();expect(await rawCollections(page)).toEqual(before);await context.setOffline(false);
 });

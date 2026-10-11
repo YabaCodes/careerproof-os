@@ -22,10 +22,10 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 ## Progress summary (2026-10-10)
 
-- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.4 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health); alpha.5 controlled removal merged and deployed (device checks pending); alpha.6 Title Case + most-recent-first employment in review. Remaining v0.1.2: CP-012C dashboard, CP-012D accessibility/performance, CP-012E recovery certification.
+- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.4 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health); alpha.5 controlled removal merged and deployed (device checks pending); alpha.6 Title Case + most-recent-first employment in review (#23); alpha.7 Experience-as-container in review (#24, stacked on #23). Remaining v0.1.2: CP-012C dashboard, CP-012D accessibility/performance, CP-012E recovery certification.
 - **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
-- **Automated baseline (alpha.6 branch):** 66/66 Node, 115/115 browser locally; main `f249480` CI run 38055825278 ✓ (build, tests, deploy).
-- **Open acceptance items:** v0.1.1 smoke (F101–F102, superseded), E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 H102 (optional), CP-012B RM101–RM105 (alpha.5), CP-012.3 T101–T104 (alpha.6).
+- **Automated baseline (alpha.7 branch):** 72/72 Node, 118/118 browser locally; main `f249480` CI run 38055825278 ✓ (build, tests, deploy).
+- **Open acceptance items:** v0.1.1 smoke (F101–F102, superseded), E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 H102 (optional), CP-012B RM101–RM105 (alpha.5), CP-012.3 T101–T104 (alpha.6), CP-012.4 X101–X105 (alpha.7).
 
 ## Version ledger
 
@@ -33,7 +33,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 |---|---|---|---|---|
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
-| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1–alpha.4 accepted; alpha.5 deployed, device checks pending; alpha.6 in review) | #18–#23 | A101–A106, U103–U104, DH101–DH104 accepted 2026-10-10 |
+| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (alpha.1–alpha.4 accepted; alpha.5 deployed, device checks pending; alpha.6–alpha.7 in review) | #18–#24 | A101–A106, U103–U104, DH101–DH104 accepted 2026-10-10 |
 | v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
@@ -76,6 +76,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | M02 Achievement Vault | Advanced Vault filters | CP-011D | P0 | Accepted | 0.1.1-alpha.9 | #13 | achievement-intelligence | E215, E217 | — | — |
 | M02 Achievement Vault | Controlled unlink / move / delete for employers, roles, experiences, credentials, education, custom skills | CP-012B | P0 | Device Testing | 0.1.2-alpha.5 | #22 | removal (8 Node incl. rollback + stale revision), removal spec (3 browser), career-history/experience-portfolio updated; main CI 38055825278 ✓ | RM101–RM105 pending | Single-target moves only | User runs RM101–RM105 |
 | M03 Experience Portfolio | **UX-021** expanded Experience cards and skill entries collapsed whenever a dialog closed | CP-012B | P0 | Device Testing | 0.1.2-alpha.5 | #22 | experience-portfolio (card stays open); main CI 38055825278 ✓ | RM105 pending | — | User runs RM105 |
+| M03 Experience Portfolio | Experience as a container (DEC-034): short Context, Earlier Notes kept, outcome roll-up from linked achievements, inline creation from the achievement form | CP-012.4, CP-06 amended | P0 | In Review | 0.1.2-alpha.7 | #24 | experience-container (6 Node incl. atomic creation + rollback; 3 browser incl. 320px, discard, duplicates); experience-portfolio updated | X101–X105 pending | Stacked on #23; experience cards still sort by last edited | User merges #23, then #24 |
 | M03 Experience Portfolio | Project / Initiative / Ongoing Responsibility, role links, contextual capture | CP-FR-003, CP-011C | P0 | Accepted | 0.1.1-alpha.8 | #12 | experience-portfolio | User accepted before CP-011D; E214 | — | — |
 | M04 Competency Intelligence | 4 categories / 32 built-in skills, links, custom skill CRUD/archive | CP-FR-006, CP-011A, CP-011D | P0 | Accepted | 0.1.1-alpha.9 | #4, #13 | achievement-intelligence, domain | E215, E217 | — | — |
 | M04 Competency Intelligence | Self-assessed L1–L4 history | CP-FR-009 | P1 | Planned | 0.1.3 | — | — | — | Needs `proficiencyAssessments` store + schema/backup version design | After v0.1.2 |
@@ -101,10 +102,10 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 1. Report post-promotion smoke F101–F102 for `v0.1.1`.
 2. Create a `v0.1.1` Git tag / GitHub Release, or not.
-3. Run RM101–RM105 (alpha.5) with synthetic records; review and merge CP-012.3 (PR #23), then T101–T104.
+3. Run RM101–RM105 (alpha.5) with synthetic records; review and merge CP-012.3 (PR #23), then CP-012.4 (PR #24); then T101–T104 and X101–X105.
 4. v0.1.2 product choices: Data Health issue taxonomy and wording; unlink/reassign UX; dashboard summaries; how to show last-export time without implying a verified backup.
 5. Later: 32-skill rubric authoring, CV templates, job-fit rule dictionary, navigation redesign.
-6. **OQ-034 Achievement vs Experience:** keep as is (A), slim Experience into a container with inline creation and an outcome roll-up (B, recommended), B plus Experience inside the Vault (C), or remove Experience (D, not recommended). See DECISIONS_AND_STATUS.
+6. ~~OQ-034 Achievement vs Experience~~: decided 2026-10-11, option B (DEC-034), implemented in PR #24.
 
 ## Update procedure (every PR)
 

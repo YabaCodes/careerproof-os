@@ -9,6 +9,16 @@ Automated coverage: new staged 700→550→430→360→300px keyboard tests (320
 
 # CareerProof — Acceptance test plan
 
+## CP-012.4 — Experience as a container (0.1.2-alpha.7, device gate)
+
+Export a backup first. Use synthetic test records for anything you create.
+
+- [ ] **X101:** The update banner names alpha.7; after restart all records are intact, including any Experience text you entered before.
+- [ ] **X102:** Experience → Add experience shows the shorter form (Context instead of Objective / My Responsibilities / Outcome). If an existing experience had that text, its card and editor show it under **Earlier Notes**, unchanged.
+- [ ] **X103:** An experience with linked achievements lists them newest first with their outcomes and "N of M have a stated outcome"; tapping one opens it.
+- [ ] **X104:** ＋ → More details → Associated Experiences → **New experience** → type a test name → Add and link. It appears ticked as "New". Save the achievement: the experience appears on the Experience tab, linked to the achievement (and to the role, if you chose one).
+- [ ] **X105:** Discarding an achievement after adding a new experience creates nothing. Typing the name of an existing experience links that one instead of making a copy. Layout fits in light and dark.
+
 ## CP-012.3 — Title Case and employment order (0.1.2-alpha.6, device gate)
 
 - [ ] **T101:** The update banner names alpha.6 and offers Back up first / Restart app; after restart all records are intact.

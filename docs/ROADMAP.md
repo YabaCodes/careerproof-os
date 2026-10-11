@@ -83,7 +83,7 @@ Module-level summary below; per-feature lifecycle status is in [MILESTONE_TRACKE
 |---|---|---|
 | M01 Profile | Core Complete: employer/role history, promotions, education and credentials; compact timeline and iPhone acceptance passed | Additional improvements after v0.1.1 |
 | M02 Vault | Core Complete for v0.1.1: quick/advanced capture, impact metrics, user-provided evidence, atomic project/skill links, advanced filters, full local recovery; candidate UAT passed | Extended reporting and deletion controls v0.1.2 |
-| M03 Experience Portfolio | Core Complete for v0.1.1: projects, initiatives and responsibilities with role/achievement associations; user accepted on iPhone. Own **Experience** tab from 0.1.2-alpha.3 | Overlap with achievement entry under review (OQ-034); no structural change until the user decides |
+| M03 Experience Portfolio | Core Complete for v0.1.1: projects, initiatives and responsibilities with role/achievement associations; user accepted on iPhone. Own **Experience** tab from 0.1.2-alpha.3 | Container model (DEC-034, 0.1.2-alpha.7): short context, outcome roll-up from linked achievements, inline creation from the achievement form |
 | M04 Competency Intelligence | Partial: core v0.1.1 taxonomy and linked examples, custom skill create/edit/archive/restore accepted; own **Skills** tab with a with-examples view from 0.1.2-alpha.3; no user-assessed proficiency or evidence-breadth ratings | Assessments and evidence breadth v0.1.3 |
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |

@@ -7,7 +7,7 @@ CareerProof OS is a privacy-first, local-first professional career and achieveme
 ## Capabilities in v0.1.1
 
 - **Career Profile:** contact information, professional summary, employer history, overlapping job roles and promotions, precision-aware dates, education, credentials and certifications.
-- **Experience Portfolio:** projects, initiatives and ongoing responsibilities with compact expandable cards, employer and employment-role associations, status, scope, contribution, technologies and outcomes.
+- **Experience Portfolio:** projects, initiatives and ongoing responsibilities with compact expandable cards, employer and employment-role associations, status, context and technologies. From `0.1.2-alpha.7` an experience is a container (DEC-034): its card rolls up the outcomes of its linked achievements, and an experience can be created while capturing an achievement.
 - **Achievement Vault:** quick capture, drafts, recorded and archived achievements; advanced situation/actions/outcome notes; multiple Experience and competency links, including a primary Experience.
 - **Evidence and impact:** measurable baseline/result values, units, source/context notes, user-entered evidence references and explicit confidential/private designations. Claims and references are not independently verified.
 - **Competency Library:** four built-in categories and 32 seeded competencies with linked achievement examples, plus custom skill create/edit/archive/restore. No automatic proficiency scoring.

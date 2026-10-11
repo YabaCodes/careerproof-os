@@ -27,7 +27,7 @@ test('project, initiative and responsibility records use compact cards, partial 
   await page.setViewportSize({width:375,height:812});
   await pageStart(page);await portfolio(page);
   await addExperience(page);
-  await page.locator('#portfolio-objective').fill('Deliver a synthetic initiative with carefully recorded technical objectives. '.repeat(8));
+  await page.locator('#portfolio-scope').fill('Deliver a synthetic initiative with carefully recorded technical context. '.repeat(8));
   await page.locator('#portfolio-experienceType').selectOption('initiative');
   await page.locator('#portfolio-startDate-precision').selectOption('year');
   await page.locator('#portfolio-startDate').fill('2022');
@@ -45,7 +45,7 @@ test('project, initiative and responsibility records use compact cards, partial 
   await expect(card.locator('.portfolio-expanded')).toBeHidden();
   await card.locator('summary').click();
   await expect(card.locator('.portfolio-expanded')).toBeVisible();
-  await expect(card.locator('.portfolio-expanded')).toContainText('Objective');
+  await expect(card.locator('.portfolio-expanded')).toContainText('Context');
   await expect(card.locator('.portfolio-expanded')).toContainText('Technologies');
   await card.locator('summary').click();
   await expect(card.locator('.portfolio-expanded')).toBeHidden();
@@ -86,7 +86,7 @@ test('roles are linked through canonical IDs in one validated atomic transaction
   await page.locator('details.portfolio-card summary').click();
   await expect(page.locator('.portfolio-expanded')).toContainText('Development Engineer');
   await page.locator('[data-action=edit-project]').click();
-  await page.locator('#portfolio-outcome').fill('Synthetic outcome reached');
+  await page.locator('#portfolio-scope').fill('Synthetic equipment context');
   await save(page);
   const edited=await snapshot(page);
   expect(edited.recordLinks.find(x=>x.linkType==='role-project')).toEqual(link);
@@ -178,7 +178,7 @@ test('CP-012.0 apostrophes followed by digits survive display, edit and unchange
   await pageStart(page);await portfolio(page);
   const name="Line '24 upgrade",objective="Cut takt from '12 s baseline; FY'25 scope";
   await addExperience(page,name);
-  await page.locator('#portfolio-objective').fill(objective);
+  await page.locator('#portfolio-scope').fill(objective); // CP-012.4: Context (scope) is the experience's own text
   await save(page);
   const card=page.locator('details.portfolio-card').first();
   await expect(card).toContainText(name);
@@ -186,10 +186,10 @@ test('CP-012.0 apostrophes followed by digits survive display, edit and unchange
   await expect(card).toContainText(objective);
   await card.locator('[data-action=edit-project]').click();
   await expect(page.locator('#portfolio-name')).toHaveValue(name);
-  await expect(page.locator('#portfolio-objective')).toHaveValue(objective);
+  await expect(page.locator('#portfolio-scope')).toHaveValue(objective);
   await save(page);
   const stored=(await snapshot(page)).projects[0];
-  expect([stored.name,stored.objective]).toEqual([name,objective]);
+  expect([stored.name,stored.scope]).toEqual([name,objective]);
   // Every shared template decodes back to the original text.
   const decoded=await page.evaluate(async samples=>{
     const {escapeHtml}=await import('/app/ui/html.js');

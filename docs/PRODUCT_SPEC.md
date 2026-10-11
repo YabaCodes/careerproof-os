@@ -52,7 +52,7 @@ All modules operate on **one set of career records**. Do not duplicate a project
 | CP-03 | Vault | Search title/contribution/outcome, filter role/project/competency/status/date, sort date/edited/name, archive/restore/delete | P0, expand |
 | CP-04 | Achievement detail | Situation, actions, contribution, outcome, category, measurable metrics, competency links, evidence and privacy | P0 expanded |
 | CP-05 | Career Profile | Optional contact, professional summary, employers with multiple possibly overlapping roles, education, credentials | P0 |
-| CP-06 | Experience Portfolio | Projects/initiatives/ongoing responsibilities, employer/role context, own scope/outcomes, achievement links | P0 |
+| CP-06 | Experience Portfolio | Projects/initiatives/ongoing responsibilities, employer/role context, short context, achievement links. **Amended by DEC-034 (2026-10-11):** an experience is a container; its results and outcomes come from linked achievements (rolled up on the card) rather than its own outcome/responsibility text, and an experience can be created from the achievement form | P0 |
 | CP-07 | Competency library | Four categories, 32 built-in competencies + custom, linked achievement examples | P0 |
 | CP-08 | Settings/Data | Theme, schema/version, validated full-replacement JSON backup, integrity check, data deletion safeguards | P0 |
 | CP-09 | Proficiency and evidence | 4-level self-assessment, historical assessments, separate evidence breadth, explanation | P1 |

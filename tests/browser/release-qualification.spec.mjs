@@ -137,7 +137,7 @@ test('CP-E204 installed offline shell supports Profile, Portfolio, Vault and Com
     if(!navigator.serviceWorker.controller)
       await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
-  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.2-alpha.6');
+  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.2-alpha.7');
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('.hero-card')).toBeVisible();

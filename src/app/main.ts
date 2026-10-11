@@ -12,7 +12,7 @@ import {icon} from '../ui/icons.js';
 import {escapeHtml} from '../ui/html.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
-import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,achievementEnrichmentDetails} from '../ui/achievementIntelligence.js';
+import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,achievementEnrichmentDetails,addInlineExperience} from '../ui/achievementIntelligence.js';
 import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency,defaultSkillScope,skillExampleSummary,type SkillScope} from '../ui/competencyLibrary.js';
 import {dateBounds} from '../domain/dates.js';
 
@@ -397,7 +397,7 @@ async function saveAchievementForm(status:'draft'|'recorded'){
       outcome:input.outcome,impactCategory:input.impactCategory as Achievement['impactCategory'],
       roleId:rich.roleId,situation:rich.situation,actions:rich.actions,notes:rich.notes,
       confidentiality:rich.confidentiality
-    },rich.projectIds,rich.primaryProjectId,rich.competencyIds,rich.metrics,rich.references);
+    },rich.projectIds,rich.primaryProjectId,rich.competencyIds,rich.metrics,rich.references,rich.newExperiences);
     achievements=await listAchievements();await loadCareerCollections();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
@@ -428,6 +428,17 @@ async function saveCareerForm(){
     }
     await loadCareerCollections();closeModal(true);notify('Career record saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+}
+/** CP-012.4: link a new (or same-named existing) experience from the achievement form. */
+function addInlineExperienceFromForm(){
+  const form=document.getElementById('achievement-form') as HTMLFormElement|null;
+  if(!form||!careerCollections)return;
+  if(!addInlineExperience(form,careerCollections.projects))return;
+  updatePrimaryOptions(form);isDirty=true;
+  // Collapse the mini form; the status line announces what was linked.
+  const panel=document.getElementById('inline-experience-panel'),toggle=form.querySelector<HTMLElement>('[data-action=toggle-inline-experience]');
+  if(panel)panel.hidden=true;
+  if(toggle){toggle.setAttribute('aria-expanded','false');toggle.focus();}
 }
 async function saveProjectForm(){
   if(saving||!careerCollections)return;
@@ -541,6 +552,14 @@ function runAction(node:HTMLElement){
     case 'add-rich-metric':document.getElementById('rich-metrics')?.insertAdjacentHTML('beforeend',metricRow());isDirty=true;break;
     case 'add-rich-evidence':document.getElementById('rich-evidence')?.insertAdjacentHTML('beforeend',evidenceRow());isDirty=true;break;
     case 'remove-rich-row':node.closest('.rich-row')?.remove();isDirty=true;break;
+    case 'toggle-inline-experience':{
+      const panel=document.getElementById('inline-experience-panel');
+      if(!panel)return;
+      panel.hidden=!panel.hidden;node.setAttribute('aria-expanded',String(!panel.hidden));
+      if(!panel.hidden)document.getElementById('inline-experience-name')?.focus();
+      break;
+    }
+    case 'add-inline-experience':addInlineExperienceFromForm();break;
     case 'add-project':openModal('project');break;
     case 'edit-project':openModal('project',node.dataset.id??null,true);break;
     case 'save-project':void saveProjectForm();break;
@@ -639,7 +658,7 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
   }
   if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form,#competency-form'))isDirty=true;});
 document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}});
-document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+document.addEventListener('keydown',e=>{if(!modal)return;if(e.key==='Enter'&&(e.target as HTMLElement|null)?.id==='inline-experience-name'){e.preventDefault();addInlineExperienceFromForm();return;}if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.addEventListener('resize',()=>syncCareerDisclosures(root),{passive:true});
 window.addEventListener('hashchange',()=>{const next=currentNav();if(next===screen)return;screen=next;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof Couldn't Open Your Local Database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
