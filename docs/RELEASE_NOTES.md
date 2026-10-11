@@ -1,5 +1,22 @@
 # CareerProof release notes
 
+## v0.1.2 — Final promotion candidate (awaiting separate PR approval)
+
+**Status:** P0 acceptance passed in `v0.1.2-alpha.11`; the final-version PR is a review candidate only, not yet merged, deployed or accepted on a physical iPhone.
+
+**What v0.1.2 delivers:** Data Health 2.0 (read-only checks and record-completeness guidance), controlled unlink/move/delete, revised mobile navigation and visual system, Experience-as-container workflow, Home role summaries and achievement navigation, accessibility/error-focus/large-dataset refinements, and validated recovery/upgrade certification.
+
+**Qualification evidence (2026-10-11):**
+- CP-012D alpha.9 AD101–AD105 passed on iPhone; alpha.10 AE101–AE104 passed, AE105 Reduce Motion not tested and explicitly waived. Automated reduced-motion coverage exists; this does not represent a formal WCAG certification.
+- CP-012E [PR #29](https://github.com/YabaCodes/careerproof-os/pull/29) merged at `3b9905c`. Corrected PR-head CI [run 38113988112](https://github.com/YabaCodes/careerproof-os/actions/runs/38113988112) completed successfully; original CI failure was a test assertion too narrowly matching a valid stale-restore error message.
+- E219 destructive recovery was executed on disposable synthetic IndexedDB only; it verified backup/restore, persistence after cold reopen, and intact P0 collections/links/preferences. Migration/invalid-import/rollback regressions remained mandatory.
+- User reported RE101–RE105 and E220 **all passed** on physical iPhone / repository privacy confirmation. The actual exported JSON backup is unencrypted and must be stored securely.
+
+**Final promotion change boundary:** Update only application/package version strings, service-worker cache key and exact-version test assertions; update README and release/acceptance documentation. No features, schema migrations, data resets, backup-format changes, automatic restore, background upload, Git tag or release publication.
+
+**Outstanding final-version gate:** User reviews/merges the separate promotion PR **after CI passes**; verify GitHub Pages deployment, then report iPhone F201–F204 on the existing installation with no uninstall or cleared site data. Until then, do not claim v0.1.2 is released.
+
+
 ## 0.1.2-alpha.11 — CP-012E recovery/upgrade certification (PR review)
 
 - Added dedicated, isolated fake-indexeddb certification for E219 destructive synthetic restore: full P0 backup, cold reopen, mutation, restore, another cold reopen, cross-store links, confidentiality, preferences and dataset generation.

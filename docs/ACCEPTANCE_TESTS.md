@@ -1,28 +1,42 @@
 # CareerProof — Acceptance test plan
 
-## CP-012E — Recovery and Upgrade Certification (0.1.2-alpha.11 candidate)
+## v0.1.2 Final Release — post-promotion iPhone smoke gate
+
+**Pending after the separate promotion PR is merged, CI has passed and GitHub Pages deployment has succeeded.** Do not mark the final release shipped until these checks are reported.
+
+- [ ] **F201:** Existing installed Home Screen PWA updates to exactly `v0.1.2` (Settings), without uninstall, reinstall or clearing website data.
+- [ ] **F202:** Previously saved employers, roles, Experience associations, achievements, competencies and preferences are still available after closing and reopening the app. **Do not restore a backup to test this.**
+- [ ] **F203:** Settings → Check data reports no critical integrity errors; the exported alpha.11 backup remains available in secure Files storage. No imported or confirmed restore operation is required.
+- [ ] **F204:** The five primary tabs, Capture and Settings open normally; optionally confirm offline reopening if convenient. Any failed critical check blocks final acceptance.
+
+## CP-012E — Accepted recovery and upgrade certification (v0.1.2-alpha.11)
+
+**Accepted on physical iPhone 2026-10-11:** User explicitly reported RE101–RE105 and E220 all passed. PR #29 was merged (merge SHA `3b9905c`); PR-head build/test run 38113988112 completed successfully after a test-only correction to the stale-restore error assertion. Destructive E219 used **only synthetic disposable IndexedDB**. The existing phone data was never replaced for qualification.
+
+
+### Certification test procedure (completed)
 
 **Do not restore any backup over your real CareerProof data.** Destructive recovery E219 runs exclusively in isolated synthetic fake-indexeddb and Playwright browser contexts. This release gate certifies the existing backup/restore and migration code; it does not authorize any personal-data import or storage reset.
 
 Automated certification: E219 isolated full P0 synthetic format-2 export → close/reopen → mutate disposable dataset → explicitly preview/restore → close/reopen and compare all stores, links, confidential fields, preferences and generation. Also verify corrupt/future backup rejection, stale-preview protection, v1→v2 migration, and the existing quota/constraint rollback and browser restore-preview tests.
 
 Physical iPhone **non-destructive** gate after merge/deploy:
-- [ ] **RE101:** Installed Home Screen app updates to alpha.11 without reinstall, clear-site-data or data loss.
-- [ ] **RE102:** Settings → Check data reports no critical integrity errors. Review any advisory gaps separately; incomplete career entries are not corruption.
-- [ ] **RE103:** Export a JSON backup to Files. Confirm the file is present, readable, and kept securely; it is unencrypted. Do not upload it to GitHub or this chat.
-- [ ] **RE104:** Confirm saved employers, roles, Experience links, achievements, metrics/evidence, skills and dates still display correctly after reopening the app.
-- [ ] **RE105:** In Settings select the valid exported backup only to inspect its restore preview/counts, then **cancel** without confirming restore. Verify the current records are unchanged.
-- [ ] **E220:** Confirm public GitHub repository and test fixtures contain no private employer/project data (repository scanning is separately documented; personal confirmation required).
+- [x] **RE101:** Installed Home Screen app updates to alpha.11 without reinstall, clear-site-data or data loss.
+- [x] **RE102:** Settings → Check data reports no critical integrity errors. Review any advisory gaps separately; incomplete career entries are not corruption.
+- [x] **RE103:** Export a JSON backup to Files. Confirm the file is present, readable, and kept securely; it is unencrypted. Do not upload it to GitHub or this chat.
+- [x] **RE104:** Confirm saved employers, roles, Experience links, achievements, metrics/evidence, skills and dates still display correctly after reopening the app.
+- [x] **RE105:** In Settings select the valid exported backup only to inspect its restore preview/counts, then **cancel** without confirming restore. Verify the current records are unchanged.
+- [x] **E220:** Confirm public GitHub repository and test fixtures contain no private employer/project data (repository scanning is separately documented; personal confirmation required).
 
-**Release decision:** P0 final promotion is blocked until CI passes, E219 synthetic restore is verified, RE101–RE105 pass or exceptions are explicitly reviewed, E220 is confirmed, and a separate final promotion PR is reviewed. No destructive test on a real iPhone.
+**Release decision 2026-10-11:** P0 CP-012E qualification passed and final promotion authorized. Separate final-version PR CI, user merge, deployment and F201–F204 are still pending. No destructive test on a real iPhone.
 
 ## CP-012D.2 — Accessible validation and full-layout regression (0.1.2-alpha.10, device gate)
 
 **User accepted on physical iPhone 2026-10-11:** AE101–AE104 passed. AE105 (Reduce Motion) was marked N/A/not tested and the user explicitly waived it for this milestone. Automated reduced-motion coverage exists; do not rewrite AE105 as passed.
 
-## CP-012D.2 — Accessible validation and full-layout regression (0.1.2-alpha.10, device gate)
+### CP-012D.2 device test details
 
-**Pending physical iPhone verification after review, merge, and deployment.** This is the second/final planned CP-012D slice. It expands 14-viewport/theme sweeps to textarea labeling/touch geometry and adds validation error focus tests; it is not a formal WCAG 2.2 AA certification or a measured iPhone performance benchmark.
+**Previously planned physical iPhone verification, now accepted with AE105 waived.** This is the second/final planned CP-012D slice. It expands 14-viewport/theme sweeps to textarea labeling/touch geometry and adds validation error focus tests; it is not a formal WCAG 2.2 AA certification or a measured iPhone performance benchmark.
 
 - [x] **AE101:** Existing Home Screen app updates to alpha.10 without reinstalling, clearing data or losing any role/Experience/achievement links.
 - [x] **AE102:** In Capture Achievement, leave the required title empty and tap Save achievement. A visible error appears; VoiceOver (if available) announces the error and focus moves to the error message without opening the keyboard.
@@ -34,9 +48,9 @@ Physical iPhone **non-destructive** gate after merge/deploy:
 
 **Accepted on physical iPhone 2026-10-11:** User reported AD101–AD105 all passed after PR #27 merged. AD103 was optional for an external keyboard; the user marked it passed without specifying whether an external keyboard was used, so hardware-keyboard verification is not independently established. Automated Playwright covers arrow/Home/End semantics.
 
-## CP-012D.1 — Keyboard accessibility and role-summary performance (0.1.2-alpha.9, device gate)
+### CP-012D.1 device test details
 
-**Pending physical iPhone verification after PR merge/deployment.** The narrow scope is the Settings theme radio keyboard interaction and unchanged responsive flows; browser tests separately cover keyboard/radio semantics and reduced motion, while Node tests exercise 800 roles and 8,000 synthetic achievements. A complete WCAG 2.2 AA audit and real-device performance benchmark are NOT claimed.
+**Previously planned physical iPhone verification, now accepted.** The narrow scope is the Settings theme radio keyboard interaction and unchanged responsive flows; browser tests separately cover keyboard/radio semantics and reduced motion, while Node tests exercise 800 roles and 8,000 synthetic achievements. A complete WCAG 2.2 AA audit and real-device performance benchmark are NOT claimed.
 
 - [ ] **AD101:** Update to alpha.9 using the existing Home Screen app; confirm roles, achievements, experience links and backups remain available. Do not uninstall or clear website data.
 - [ ] **AD102:** Settings → Appearance shows one selected theme. Tap System, Light and Dark; each updates the theme and selected state, including after leaving and reopening Settings.

@@ -1,22 +1,22 @@
-# CareerProof OS — v0.1.1
+# CareerProof OS — v0.1.2 final-promotion candidate
 
-**Own your experience. Prove your impact.**
+**Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.1 — Professional Experience & Evidence` is released**: the user-accepted `v0.1.1-rc.1` (eight physical iPhone checks passed) was promoted to final `v0.1.1` in [PR #16](https://github.com/YabaCodes/careerproof-os/pull/16), merged 2026-10-10 and deployed to GitHub Pages by the main CI run (build, 42 Node and 102 browser tests, deploy: all successful). A short post-promotion iPhone smoke check of the final version is still to be reported, and no Git release tag has been created. Current milestone status lives in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.2` is a final-promotion candidate, not yet merged or deployed.** Its accepted baseline is `v0.1.2-alpha.11` (CP-012E, [PR #29](https://github.com/YabaCodes/careerproof-os/pull/29)), which passed automated recovery/upgrade certification and the user's non-destructive physical-iPhone RE101–RE105 checks plus E220 repository privacy confirmation on 2026-10-11. The final promotion changes the displayed app/package version and service-worker cache only; it does **not** alter IndexedDB schema 2, JSON backup format 2, or existing career records. After user review/merge, GitHub Pages deployment and final iPhone F201–F204 smoke remain mandatory. Current milestone status is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
 
-## Capabilities in v0.1.1
+## Capabilities in v0.1.2
 
 - **Career Profile:** contact information, professional summary, employer history, overlapping job roles and promotions, precision-aware dates, education, credentials and certifications.
-- **Experience Portfolio:** projects, initiatives and ongoing responsibilities with compact expandable cards, employer and employment-role associations, status, context and technologies. From `0.1.2-alpha.7` an experience is a container (DEC-034): its card rolls up the outcomes of its linked achievements, and an experience can be created while capturing an achievement.
+- **Experience Portfolio:** projects, initiatives and ongoing responsibilities with compact expandable cards, employer and employment-role associations, status, context and technologies. In v0.1.2 an experience is a container (DEC-034): its card rolls up the outcomes of its linked achievements, and an experience can be created while capturing an achievement.
 - **Achievement Vault:** quick capture, drafts, recorded and archived achievements; advanced situation/actions/outcome notes; multiple Experience and competency links, including a primary Experience.
 - **Evidence and impact:** measurable baseline/result values, units, source/context notes, user-entered evidence references and explicit confidential/private designations. Claims and references are not independently verified.
 - **Competency Library:** four built-in categories and 32 seeded competencies with linked achievement examples, plus custom skill create/edit/archive/restore. No automatic proficiency scoring.
 - **Search and filtering:** achievements by text, dates, role, Experience, competency and status.
 - **Local data integrity:** Settings → **Check data** validates all 12 IndexedDB collections and their full version-2 backup-format round-trip without uploading, restoring or changing records.
-- **Recovery:** full version-2 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. From `0.1.2-alpha.4` Settings → Check data adds a read-only **Data Health** report; from `0.1.2-alpha.5` deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
+- **Recovery:** full version-2 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
-From `0.1.2-alpha.3` the iPhone bottom navigation is **Home / Vault / Experience / Skills / Profile**, with **＋ (new achievement)** and **Settings** in each screen's header (DEC-029). The look follows the Wealth OS design language with CareerProof's navy/teal (DEC-030). From `0.1.2-alpha.6` titles and subtitles use Title Case (DEC-032) and Employment History lists the most recent employer first (DEC-033). From `0.1.2-alpha.8` Home shows **Complete Your Record** and **Achievements by Role** (DEC-035): derived counts and links, no scores.
+The v0.1.2 iPhone bottom navigation is **Home / Vault / Experience / Skills / Profile**, with **＋ (new achievement)** and **Settings** in each screen's header (DEC-029). The look follows the Wealth OS design language with CareerProof's navy/teal (DEC-030). Titles and subtitles use Title Case (DEC-032) and Employment History lists the most recent employer first (DEC-033). Home shows **Complete Your Record** and **Achievements by Role** (DEC-035): derived counts and links, no scores.
 
 ## Data ownership and safety
 
@@ -58,4 +58,4 @@ See the [release notes](docs/RELEASE_NOTES.md), [roadmap](docs/ROADMAP.md), [CP-
 
 ## Planned next increments
 
-The next planned `v0.1.2` expands data health, controlled deletion, dashboard insights and reliability hardening. Future increments may add user-assessed proficiency (distinct from documented evidence), performance reviews, editable CV output and job-fit comparison. These features are **not included** in `v0.1.1`. Each increment starts only after explicit user authorization; see the [roadmap](docs/ROADMAP.md) and [milestone tracker](docs/MILESTONE_TRACKER.md).
+Once the `v0.1.2` final-version smoke test passes, the next planned increment is `v0.1.3`: user-assessed proficiency (separate from documented evidence breadth). Later versions may add performance reviews, editable CV output, and deterministic pasted job-description comparison; these are **not included** in `v0.1.2`. The user's near-term priority is privately backfilling existing career history, Experiences and achievements within the current PWA—not expanding product scope. Each new feature increment requires separate approval; see the [roadmap](docs/ROADMAP.md) and [milestone tracker](docs/MILESTONE_TRACKER.md).

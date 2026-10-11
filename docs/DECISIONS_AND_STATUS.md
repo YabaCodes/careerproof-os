@@ -279,3 +279,11 @@ Remaining CP-012D.2 (alpha.10 candidate): ensure validation failures move keyboa
 User reported alpha.10 AE101–AE104 passed on physical iPhone; AE105 Reduce Motion N/A/not tested and explicitly waived. Automated reduced-motion tests exist; physical verification is not claimed. PR #28 merged at `a0d27ec`; CP-012D planned hardening is accepted with this exception, not WCAG-certified.
 
 CP-012E is the remaining v0.1.2 P0 gate. E219 destructive recovery uses only isolated synthetic fake-indexeddb, never real PWA data. Test all P0 stores, preferences, links, confidentiality, stale generations and cold reopen. iPhone RE101–RE105 are non-destructive, exporting a secure backup and canceling restore preview. E220 public-repo hygiene needs confirmation. Final promotion requires separate user-reviewed PR.
+
+
+## 2026-10-11 — CP-012E accepted; v0.1.2 final promotion candidate authorized
+
+User reported six of six alpha.11 CP-012E acceptance outcomes as passed: RE101 installed-update preservation, RE102 read-only data health, RE103 external JSON backup present and securely kept, RE104 linked career records retained, RE105 restore preview inspected then **cancelled**, and E220 public-repository privacy confirmation. These are user-reported manual checks, not fabricated independent device observations. PR #29 merged at `3b9905c`; latest PR-head CI run [38113988112](https://github.com/YabaCodes/careerproof-os/actions/runs/38113988112) succeeded. E219 synthetic-only destructive recovery, cold-reopen data equivalence, format-1/format-2 upgrade, failed-input and stale-preview tests are included. AE105 from CP-012D remains not tested on iPhone and explicitly waived, with automated reduced-motion coverage. No full WCAG certification is claimed.
+
+**Decision:** All v0.1.2 alpha.11 qualification gates met; prepare a separate version-only final promotion PR with no automatic merge, schema change, backup format change or IndexedDB reset. After a successful promotion-PR CI run, require user manual merge, GitHub Pages deployment, and non-destructive installed-iPhone smoke F201–F204. Do not tag/publish a GitHub Release without separate user approval. The immediately following user workflow is privately backfilling four-plus years of professional roles, Experiences, achievements and related evidence, without putting confidential records in the public repo.
+
