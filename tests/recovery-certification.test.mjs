@@ -67,7 +67,7 @@ test('CP-012E: malformed backup and stale restore leave synthetic data and metad
   const edited=fullCollections();edited.roles[0].title='Synthetic post-preview change';
   await repo.replaceAllData(edited,{theme:'light'},baseline.generation);
   const current=await repo.readSnapshot();
-  await assert.rejects(()=>restoreBackup(preview,repo),/changed since you selected/i);
+  await assert.rejects(()=>restoreBackup(preview,repo),/changed since you selected|restored in another tab/i);
   assert.deepEqual(await repo.readSnapshot(),current);
   await repo.close();
 });
