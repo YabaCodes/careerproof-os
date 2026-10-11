@@ -287,3 +287,12 @@ User reported six of six alpha.11 CP-012E acceptance outcomes as passed: RE101 i
 
 **Decision:** All v0.1.2 alpha.11 qualification gates met; prepare a separate version-only final promotion PR with no automatic merge, schema change, backup format change or IndexedDB reset. After a successful promotion-PR CI run, require user manual merge, GitHub Pages deployment, and non-destructive installed-iPhone smoke F201–F204. Do not tag/publish a GitHub Release without separate user approval. The immediately following user workflow is privately backfilling four-plus years of professional roles, Experiences, achievements and related evidence, without putting confidential records in the public repo.
 
+
+## 2026-10-11 — v0.1.2 Final user-accepted release
+
+PR #30 (version-only v0.1.2 promotion) was merged at `5bb03e5` after its [PR-head CI 38122015795](https://github.com/YabaCodes/careerproof-os/actions/runs/38122015795) completed successfully. User explicitly reported **F201, F202, F203 and F204: PASS** on the existing physical-iPhone Home Screen PWA. This establishes user acceptance of the final app version, non-destructive local data/relationship preservation, Check data with no critical integrity errors, secure off-app backup availability and normal navigation/capture/settings. The main-branch Pages deploy job was not independently retrieved; version availability was confirmed operationally by the user's device report.
+
+**Release decision:** `v0.1.2` Final is released/user-accepted as of 2026-10-11. No storage-schema or backup-format change from alpha.11, and no reset or restore of the user's personal database. AE105 (Reduce Motion physical check) remains explicitly waived, not falsely passed; existing automated reduced-motion tests remain. No Git tag/GitHub Release was created without user approval.
+
+**Next work:** Privately backfill the user's 2022–2026 career history within the existing PWA, using the already entered SHL Medical employer/role timeline where present. Model projects/initiatives/ongoing responsibilities as Experience containers; record distinct evidenced contributions as achievements, add metrics/evidence and competency links, avoid duplicates/invented claims. **Never commit personal career or employer-confidential details in this public repository.**
+

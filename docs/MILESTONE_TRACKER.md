@@ -1,6 +1,6 @@
 # CareerProof OS — Milestone Tracker
 
-**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-11 · **Current accepted version:** `v0.1.2-alpha.11` (RE101–RE105/E220 all passed) · **main:** `3b9905c` (PR #29, merged); `v0.1.2` final promotion candidate is NOT deployed
+**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-11 · **Current accepted version:** `v0.1.2` Final (F201–F204 all passed) · **main:** `5bb03e5` (final-promotion PR #30 merged); release accepted 2026-10-11
 
 This is the authoritative per-feature progress record. It is updated in **every** PR. Module-level completion stages remain in [ROADMAP.md §5](ROADMAP.md); scope and acceptance criteria are defined in [ROADMAP.md](ROADMAP.md), [PRODUCT_SPEC.md](PRODUCT_SPEC.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md) and [CAREER_INTELLIGENCE.md](CAREER_INTELLIGENCE.md).
 
@@ -22,10 +22,12 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 ## Progress summary (2026-10-11)
 
-- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.7 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health, controlled removal, Title Case + most-recent-first employment, Experience as a container). alpha.8 Home dashboard (CP-012C, #26) merged and accepted D101–D105 on 2026-10-11. CP-012D.1 accessibility/performance alpha.9 PR #27 merged and user-accepted AD101–AD105; CP-012D.2 alpha.10 accepted with AE105 exception; CP-012E alpha.11 merged and accepted (RE101–RE105/E220 passed); final v0.1.2 promotion PR in review.
+- **First-cycle releases:** v0.1.0, v0.1.1 and v0.1.2 shipped (3 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 delivery history: alpha.1–alpha.7 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health, controlled removal, Title Case + most-recent-first employment, Experience as a container). alpha.8 Home dashboard (CP-012C, #26) merged and accepted D101–D105 on 2026-10-11. CP-012D.1 accessibility/performance alpha.9 PR #27 merged and user-accepted AD101–AD105; CP-012D.2 alpha.10 accepted with AE105 exception; CP-012E alpha.11 merged and accepted (RE101–RE105/E220 passed); v0.1.2 final PR #30 merged, F201–F204 accepted.
 - **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete (container model, DEC-034) · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
 - **Automated baseline:** alpha.8 PR #26 reported 74 Node / 121 browser local passes and a successful PR-head CI run. Alpha.9 PR #27 CI succeeded with 75 Node / 123 browser tests; user passed AD101–AD105. Alpha.10 validation focus and textarea coverage passed device gate AE101–AE104 (AE105 waived). Alpha.11 CP-012E PR-head CI run 38113988112 passed; user reported RE101–RE105/E220 all passed.
-- **Open acceptance items:** v0.1.2 final post-promotion iPhone smoke F201–F204 (not yet due); AE105 waived/not tested on iPhone (automated coverage exists); legacy v0.1.1 final smoke F101–F102 superseded and CP-012.0 H102 optional. E219 synthetic-only destructive restore and E220 public-repo confirmation complete. Other v0.1.2 gates accepted 2026-10-11.
+- **Open acceptance items:** No outstanding required v0.1.2 release acceptance; F201–F204 all passed. AE105 waived/not tested on iPhone (automated coverage exists); legacy v0.1.1 final smoke F101–F102 superseded and CP-012.0 H102 optional. E219 synthetic-only destructive restore and E220 public-repo confirmation complete. Other v0.1.2 gates accepted 2026-10-11.
+
+**v0.1.2 final closeout (2026-10-11):** PR #30 merged at `5bb03e5`; PR-head [CI run 38122015795](https://github.com/YabaCodes/careerproof-os/actions/runs/38122015795) succeeded. User confirmed F201–F204 all passed on the installed iPhone, including final version, preserved local records/links, integrity check, secure backup availability and working navigation. No schema/backup-format changes. Main-branch Pages deploy job not independently retrieved; on-device final build verified by user. Next work is **private** historical career backfill in the installed PWA; do not place real records or proprietary project detail in this public repo.
 
 ## Version ledger
 
@@ -33,7 +35,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 |---|---|---|---|---|
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
-| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | Final promotion In Review (not merged or deployed); all alpha.11 P0/device gates accepted | #18–#29 merged; separate final promotion candidate | A101–A106, U103–U104, DH101–DH104, RM101–RM105, T101–T104, X101–X105, D101–D105, AD101–AD105, AE101–AE104 (AE105 waived), RE101–RE105/E220 accepted; final F201–F204 pending |
+| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | Released / Accepted 2026-10-11 | #18–#30 merged; final merge 5bb03e5 | All required CP-012 acceptance accepted; AE105 waived (not tested); final F201–F204 all passed on physical iPhone |
 | v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
@@ -101,8 +103,8 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 ## Open user decisions
 
-1. Report final v0.1.2 post-promotion smoke F201–F204 after final PR merges and deployment; older v0.1.1 F101–F102 superseded.
-2. Create a `v0.1.1` Git tag / GitHub Release, or not.
+1. ~~Report final v0.1.2 post-promotion smoke F201–F204~~: all passed 2026-10-11 after PR #30 merged. Older v0.1.1 F101–F102 superseded.
+2. Optional: whether to create a Git tag / GitHub Release for v0.1.2 (not created and not assumed authorized).
 3. ~~RM101–RM105, T101–T104, X101–X105, D101–D105~~: all accepted 2026-10-11. PRs #25–26 merged. AD101–AD105 accepted for alpha.9; AE101–AE104 passed and AE105 explicitly waived for alpha.10; RE101–RE105/E220 all passed for alpha.11.
 4. v0.1.2 product choices: Data Health issue taxonomy and wording; unlink/reassign UX (done, DEC per CP-012B); dashboard summaries (proposed in DEC-035, PR #26); last-export wording kept as "generated on this device".
 5. Later: 32-skill rubric authoring, CV templates, job-fit rule dictionary, navigation redesign.

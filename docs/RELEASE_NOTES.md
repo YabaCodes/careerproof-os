@@ -1,8 +1,8 @@
 # CareerProof release notes
 
-## v0.1.2 — Final promotion candidate (awaiting separate PR approval)
+## v0.1.2 — Final release accepted (2026-10-11)
 
-**Status:** P0 acceptance passed in `v0.1.2-alpha.11`; the final-version PR is a review candidate only, not yet merged, deployed or accepted on a physical iPhone.
+**Status:** Released and user-accepted on physical iPhone. Final-promotion PR #30 merged into `main` at `5bb03e5` and PR-head CI run 38122015795 succeeded. The user reported F201–F204 all PASS on the existing installed PWA on 2026-10-11. The installed version, unchanged career data/links, successful read-only integrity check and backup availability, and navigation/forms were verified by the user's device checks.
 
 **What v0.1.2 delivers:** Data Health 2.0 (read-only checks and record-completeness guidance), controlled unlink/move/delete, revised mobile navigation and visual system, Experience-as-container workflow, Home role summaries and achievement navigation, accessibility/error-focus/large-dataset refinements, and validated recovery/upgrade certification.
 
@@ -12,9 +12,9 @@
 - E219 destructive recovery was executed on disposable synthetic IndexedDB only; it verified backup/restore, persistence after cold reopen, and intact P0 collections/links/preferences. Migration/invalid-import/rollback regressions remained mandatory.
 - User reported RE101–RE105 and E220 **all passed** on physical iPhone / repository privacy confirmation. The actual exported JSON backup is unencrypted and must be stored securely.
 
-**Final promotion change boundary:** Update only application/package version strings, service-worker cache key and exact-version test assertions; update README and release/acceptance documentation. No features, schema migrations, data resets, backup-format changes, automatic restore, background upload, Git tag or release publication.
+**Final promotion change boundary:** Updated only application/package version strings, service-worker cache key and exact-version test assertions; README and release/acceptance documentation updated. No features, schema migrations, data resets, backup-format changes, automatic restore, background upload, Git tag or release publication.
 
-**Outstanding final-version gate:** User reviews/merges the separate promotion PR **after CI passes**; verify GitHub Pages deployment, then report iPhone F201–F204 on the existing installation with no uninstall or cleared site data. Until then, do not claim v0.1.2 is released.
+**Release gate closeout:** User merged promotion PR #30 after CI success and confirmed all F201–F204 on the existing Home Screen installation, without uninstall, data reset or destructive restore. No Git tag/GitHub Release was created; those require separate authorization. A separate post-merge Pages workflow report was not independently retrieved; the successful on-device final-version check establishes that the final build was operationally available.
 
 
 ## 0.1.2-alpha.11 — CP-012E recovery/upgrade certification (PR review)
