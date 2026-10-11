@@ -273,3 +273,9 @@ PR #27 merged (`d8ee1be`), user reported all AD101–AD105 physical iPhone check
 
 Remaining CP-012D.2 (alpha.10 candidate): ensure validation failures move keyboard/screen-reader focus to a visible role=alert summary without opening an iOS keyboard; respect Reduce Motion; include textarea accessible names/touch geometry in existing full responsive layout audit; add focused browser regression. No schema, privacy, data or backup changes. AE101–AE105 required on iPhone after PR CI, merge and deploy. Completion of this planned hardening milestone does not certify WCAG 2.2 AA or device performance across all hardware. CP-012E recovery/migration certification remains the last separate P0 qualification gate.
 
+
+## 2026-10-11 — CP-012D accepted with AE105 exception; CP-012E authorized
+
+User reported alpha.10 AE101–AE104 passed on physical iPhone; AE105 Reduce Motion N/A/not tested and explicitly waived. Automated reduced-motion tests exist; physical verification is not claimed. PR #28 merged at `a0d27ec`; CP-012D planned hardening is accepted with this exception, not WCAG-certified.
+
+CP-012E is the remaining v0.1.2 P0 gate. E219 destructive recovery uses only isolated synthetic fake-indexeddb, never real PWA data. Test all P0 stores, preferences, links, confidentiality, stale generations and cold reopen. iPhone RE101–RE105 are non-destructive, exporting a secure backup and canceling restore preview. E220 public-repo hygiene needs confirmation. Final promotion requires separate user-reviewed PR.

@@ -1,6 +1,6 @@
 # CareerProof OS — Milestone Tracker
 
-**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-11 · **Current accepted version:** `v0.1.2-alpha.9` (user-confirmed iPhone AD101–AD105) · **main:** `d8ee1be` (PR #27); alpha.10 CP-012D.2 on review branch, NOT deployed
+**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-11 · **Current accepted version:** `v0.1.2-alpha.10` (AE101–AE104 passed, AE105 waived) · **main:** `a0d27ec` (PR #28); alpha.11 CP-012E certification candidate NOT deployed
 
 This is the authoritative per-feature progress record. It is updated in **every** PR. Module-level completion stages remain in [ROADMAP.md §5](ROADMAP.md); scope and acceptance criteria are defined in [ROADMAP.md](ROADMAP.md), [PRODUCT_SPEC.md](PRODUCT_SPEC.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md) and [CAREER_INTELLIGENCE.md](CAREER_INTELLIGENCE.md).
 
@@ -22,7 +22,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 ## Progress summary (2026-10-11)
 
-- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.7 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health, controlled removal, Title Case + most-recent-first employment, Experience as a container). alpha.8 Home dashboard (CP-012C, #26) merged and accepted D101–D105 on 2026-10-11. CP-012D.1 accessibility/performance alpha.9 PR #27 merged and user-accepted AD101–AD105; CP-012D.2 alpha.10 candidate in review; CP-012E recovery certification pending.
+- **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.7 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health, controlled removal, Title Case + most-recent-first employment, Experience as a container). alpha.8 Home dashboard (CP-012C, #26) merged and accepted D101–D105 on 2026-10-11. CP-012D.1 accessibility/performance alpha.9 PR #27 merged and user-accepted AD101–AD105; CP-012D.2 alpha.10 accepted with AE105 exception; CP-012E alpha.11 synthetic recovery certification in development.
 - **Modules:** M01 Core Complete · M02 Core Complete · M03 Core Complete (container model, DEC-034) · M04 Partial · M05 Deferred · M06 Not started · M07 Not started · M08 Foundation.
 - **Automated baseline:** alpha.8 PR #26 reported 74 Node / 121 browser local passes and a successful PR-head CI run. Alpha.9 PR #27 CI succeeded with 75 Node / 123 browser tests; user passed AD101–AD105. Alpha.10 adds validation focus and textarea coverage; CI/device acceptance pending.
 - **Open acceptance items:** v0.1.1 smoke (F101–F102, superseded), E219 synthetic destructive restore, E220 user hygiene confirmation, CP-012.0 H102 (optional). RM101–RM105, T101–T104, X101–X105, D101–D105 and AD101–AD105 accepted 2026-10-11.
@@ -33,7 +33,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 |---|---|---|---|---|
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
-| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (through alpha.8 accepted; CP-012D.1 alpha.9 accepted, CP-012D.2 alpha.10 candidate in review; CP-012E pending) | #18–#27 (alpha.10 candidate PR pending) | A101–A106, U103–U104, DH101–DH104 accepted 2026-10-10; RM101–RM105, T101–T104, X101–X105, D101–D105, AD101–AD105 accepted 2026-10-11 |
+| v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | In Development (through alpha.8 accepted; CP-012D.1 alpha.9 accepted, CP-012D.2 alpha.10 accepted (AE105 waived); CP-012E alpha.11 candidate in development) | #18–#27 (alpha.10 candidate PR pending) | A101–A106, U103–U104, DH101–DH104 accepted 2026-10-10; RM101–RM105, T101–T104, X101–X105, D101–D105, AD101–AD105 accepted 2026-10-11 |
 | v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
@@ -94,7 +94,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | M08 Career Analytics | Advanced longitudinal analytics | — | Later | Not Started | — | — | — | — | — | Scope later |
 | Platform | Data Health 2.0 (critical vs advisory, read-only, links to records) | CP-FR-008, CP-012A | P0 | Accepted | 0.1.2-alpha.4 | #21 | data-health (9 Node), data-health spec (3 browser); main CI 38039174416 ✓ | DH101–DH104 accepted 2026-10-10 | Problems that stop the app opening still show on the startup error screen | Emergency export in CP-012E |
 | Platform | Accessibility / large-dataset performance hardening | CP-012D | P0 | In Development | 0.1.2 | #27 alpha.9 accepted; alpha.10 CP-012D.2 review candidate | Alpha.9: 75 Node/123 browser PR CI passed, 800-role/8000-achievement benchmark; alpha.10: validation-error focus and textarea layout/label audit tests, CI pending | AD101–AD105 accepted; AE101–AE105 pending | No formal WCAG certification or measured real-device benchmark; verify iOS validation/error feedback | Complete alpha.10 PR/device gate then move to CP-012E |
-| Platform | P0 recovery / upgrade certification | CP-012E | P0 | Planned | 0.1.2 | — | — | — | Includes E219-style synthetic restore | Within v0.1.2 |
+| Platform | P0 recovery / upgrade certification | CP-012E | P0 | In Development | 0.1.2 | alpha.11 candidate | Synthetic E219 cold-reopen full P0 restore, legacy migration, invalid/stale backup checks plus existing rollback suite; CI pending | RE101–RE105 and E220 pending | No destructive restore on personal iPhone | Qualify alpha.11, then separate final promotion |
 | Platform | First-cycle integration qualification | v0.1.7 | P1 | Planned | 0.1.7 | — | — | — | — | After v0.1.6 |
 | Platform | Mobile navigation redesign (Growth/Studio) | DEC-015 | — | Not Started | — | — | — | — | Spec target differs from shipped 5-slot bar | Decide when Studio/Growth ship |
 | Platform | Optional cloud sync / accounts / AI / commercial | — | Later | Not Started | — | — | — | — | Separate threat model and approval | None until requested |
@@ -103,7 +103,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 1. Report post-promotion smoke F101–F102 for `v0.1.1`.
 2. Create a `v0.1.1` Git tag / GitHub Release, or not.
-3. ~~RM101–RM105, T101–T104, X101–X105, D101–D105~~: all accepted 2026-10-11. PRs #25–26 merged. AD101–AD105 accepted for alpha.9; AE101–AE105 pending for alpha.10.
+3. ~~RM101–RM105, T101–T104, X101–X105, D101–D105~~: all accepted 2026-10-11. PRs #25–26 merged. AD101–AD105 accepted for alpha.9; AE101–AE104 passed and AE105 explicitly waived for alpha.10; RE101–RE105/E220 pending.
 4. v0.1.2 product choices: Data Health issue taxonomy and wording; unlink/reassign UX (done, DEC per CP-012B); dashboard summaries (proposed in DEC-035, PR #26); last-export wording kept as "generated on this device".
 5. Later: 32-skill rubric authoring, CV templates, job-fit rule dictionary, navigation redesign.
 6. ~~OQ-034 Achievement vs Experience~~: decided 2026-10-11, option B (DEC-034), implemented in PR #24.

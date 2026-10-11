@@ -1,5 +1,14 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.11 — CP-012E recovery/upgrade certification (PR review)
+
+- Added dedicated, isolated fake-indexeddb certification for E219 destructive synthetic restore: full P0 backup, cold reopen, mutation, restore, another cold reopen, cross-store links, confidentiality, preferences and dataset generation.
+- Added certification for invalid/future backup rejection, stale restore preview, and legacy v1→v2 migration plus format-2 round trip.
+- Existing rollback, quota, constraint and browser restore-preview regressions remain mandatory. No storage schema, backup format or runtime recovery behavior change.
+- Alpha.10 physical iPhone AE101–AE104 passed; AE105 Reduce Motion not tested, user waived. Reduced-motion automated coverage remains.
+- iPhone RE101–RE105 are deliberately non-destructive; E220 repository data hygiene confirmation remains open. No final release promotion without certification and user approval.
+
+
 ## 0.1.2-alpha.10 — CP-012D.2 accessible validation and layout audit (PR review)
 
 - On a failed form save, focus moves to the visible `role=alert` error summary, allowing keyboard and assistive-technology users to locate and correct the error without auto-focusing a field or opening the iOS keyboard.
