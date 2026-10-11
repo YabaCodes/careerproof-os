@@ -1,12 +1,25 @@
 # CareerProof — Acceptance test plan
 
+## CP-012D.1 — Keyboard accessibility and role-summary performance (0.1.2-alpha.9, device gate)
+
+**Pending physical iPhone verification after PR merge/deployment.** The narrow scope is the Settings theme radio keyboard interaction and unchanged responsive flows; browser tests separately cover keyboard/radio semantics and reduced motion, while Node tests exercise 800 roles and 8,000 synthetic achievements. A complete WCAG 2.2 AA audit and real-device performance benchmark are NOT claimed.
+
+- [ ] **AD101:** Update to alpha.9 using the existing Home Screen app; confirm roles, achievements, experience links and backups remain available. Do not uninstall or clear website data.
+- [ ] **AD102:** Settings → Appearance shows one selected theme. Tap System, Light and Dark; each updates the theme and selected state, including after leaving and reopening Settings.
+- [ ] **AD103:** If an external keyboard is available: Tab into the theme selector (one stop), arrow keys cycle System/Light/Dark, Home/End choose endpoints, Tab advances to Export Career Backup without visiting all three radios.
+- [ ] **AD104:** Home, Vault, Experience, Skills, Profile and capture remain usable and unclipped in both themes; Outcome stays above the keyboard when focused.
+- [ ] **AD105:** With larger record lists if available, Home and Achievements by Role load smoothly; do not import a synthetic 8,000-record fixture into your personal app.
+
 ## CP-012C — Home dashboard (0.1.2-alpha.8, device gate)
 
-- [ ] **D101:** The update banner names alpha.8; after restart all records are intact.
-- [ ] **D102:** Home → **Complete Your Record** lists gaps that match your records, for example achievements without an outcome. Expand one and tap a record to open it. Add the missing detail and save: the line updates on Home. A line you expanded stays open after closing the record.
-- [ ] **D103:** **Achievements by Role** shows your roles with the current one first and sensible counts. Tapping a role opens the Vault filtered to that role with the same number of achievements. A role with nothing recorded says "No achievements recorded yet".
-- [ ] **D104:** **Data Health →** opens Settings and runs the full check.
-- [ ] **D105:** Home fits the screen in light and dark mode, with no sideways scrolling.
+**Accepted on physical iPhone 2026-10-11:** The user reported D101–D105 all passed after PR #26 was merged. This covers actual installed-app update/preservation, gap updates, role filtering, Data Health navigation and both theme layouts.
+
+
+- [x] **D101:** The update banner names alpha.8; after restart all records are intact.
+- [x] **D102:** Home → **Complete Your Record** lists gaps that match your records, for example achievements without an outcome. Expand one and tap a record to open it. Add the missing detail and save: the line updates on Home. A line you expanded stays open after closing the record.
+- [x] **D103:** **Achievements by Role** shows your roles with the current one first and sensible counts. Tapping a role opens the Vault filtered to that role with the same number of achievements. A role with nothing recorded says "No achievements recorded yet".
+- [x] **D104:** **Data Health →** opens Settings and runs the full check.
+- [x] **D105:** Home fits the screen in light and dark mode, with no sideways scrolling.
 
 ha.4 (iPhone UAT required)
 
