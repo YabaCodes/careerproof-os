@@ -266,3 +266,10 @@ User confirmed all five installed-iPhone tests D101–D105 passed for v0.1.2-alp
 
 The next authorized milestone is CP-012D accessibility/performance. Initial code audit found existing modal focus, touch-target, light/dark contrast and reduced-motion test coverage; the Settings appearance radiogroup nevertheless lacked arrow-key navigation and single roving Tab stop. The Home role-coverage algorithm also re-filtered achievement and relationship arrays for each role. The bounded alpha.9 candidate CP-012D.1 remedies both through targeted code/tests and an 800-role / 8,000-achievement synthetic fixture, without schema or backup changes. Physical iPhone checks AD101–AD105 are still required. Remaining CP-012D audit scope and CP-012E recovery certification stay open. No full WCAG certification claimed.
 
+
+## 2026-10-11 — CP-012D.1 accepted; CP-012D.2 accessibility closeout candidate
+
+PR #27 merged (`d8ee1be`), user reported all AD101–AD105 physical iPhone checks passed. No claim of separate external-keyboard hardware test: AD103 was conditional; keyboard semantics were covered in Playwright. Alpha.9 accessibility/performance slice accepted.
+
+Remaining CP-012D.2 (alpha.10 candidate): ensure validation failures move keyboard/screen-reader focus to a visible role=alert summary without opening an iOS keyboard; respect Reduce Motion; include textarea accessible names/touch geometry in existing full responsive layout audit; add focused browser regression. No schema, privacy, data or backup changes. AE101–AE105 required on iPhone after PR CI, merge and deploy. Completion of this planned hardening milestone does not certify WCAG 2.2 AA or device performance across all hardware. CP-012E recovery/migration certification remains the last separate P0 qualification gate.
+

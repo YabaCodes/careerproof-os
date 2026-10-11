@@ -1,5 +1,19 @@
 # CareerProof release notes
 
+## 0.1.2-alpha.10 — CP-012D.2 accessible validation and layout audit (PR review)
+
+- On a failed form save, focus moves to the visible `role=alert` error summary, allowing keyboard and assistive-technology users to locate and correct the error without auto-focusing a field or opening the iOS keyboard.
+- The error scroll respects Reduce Motion; existing iOS modal/viewport handling remains unchanged.
+- Existing responsive/touch/accessible-name sweeps across 320–1440px, light/dark, all screens and dialogs now include textarea controls, not only buttons/inputs/selects.
+- Two browser regressions check focus and recovery from a failed achievement save and reduced-motion error behavior. Full suite remains mandatory.
+- No career data model, IndexedDB schema, backup format, privacy setting, or navigation change. Version/cache bumped to alpha.10.
+- AE101–AE105 physical-iPhone acceptance pending; this slice does not constitute third-party WCAG certification.
+
+## 2026-10-11 — v0.1.2-alpha.9 accepted on iPhone
+
+- PR #27 merged at `d8ee1be`; user reported AD101–AD105 all passed. AD103 was external-keyboard optional; automated Playwright tested keyboard behavior, but the user's hardware keyboard setup was not independently confirmed.
+
+
 ## 0.1.2-alpha.9 — CP-012D.1 Keyboard accessibility and Home performance (PR review)
 
 - **Keyboard accessibility:** Settings' three appearance options now behave as a single ARIA radio group. Only the selected theme is in the Tab order; arrow keys wrap between System / Light / Dark, and Home / End choose endpoints. The selected state, focus order, and saved theme stay in sync.

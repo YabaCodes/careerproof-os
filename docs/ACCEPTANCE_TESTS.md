@@ -1,5 +1,19 @@
 # CareerProof — Acceptance test plan
 
+## CP-012D.2 — Accessible validation and full-layout regression (0.1.2-alpha.10, device gate)
+
+**Pending physical iPhone verification after review, merge, and deployment.** This is the second/final planned CP-012D slice. It expands 14-viewport/theme sweeps to textarea labeling/touch geometry and adds validation error focus tests; it is not a formal WCAG 2.2 AA certification or a measured iPhone performance benchmark.
+
+- [ ] **AE101:** Existing Home Screen app updates to alpha.10 without reinstalling, clearing data or losing any role/Experience/achievement links.
+- [ ] **AE102:** In Capture Achievement, leave the required title empty and tap Save achievement. A visible error appears; VoiceOver (if available) announces the error and focus moves to the error message without opening the keyboard.
+- [ ] **AE103:** Correct the title, enter a contribution, save and reopen the achievement. No data loss, blocked form, clipped error or stuck focus.
+- [ ] **AE104:** Recheck all five tabs, Settings, Experience editor and Capture in light/dark themes; no clipped fields or inaccessible buttons when the iOS keyboard is open.
+- [ ] **AE105:** With Reduce Motion enabled in iOS accessibility settings (if available), error feedback and dialogs remain usable and do not require animation.
+
+## CP-012D.1 — Keyboard accessibility and role-summary performance (0.1.2-alpha.9, device gate)
+
+**Accepted on physical iPhone 2026-10-11:** User reported AD101–AD105 all passed after PR #27 merged. AD103 was optional for an external keyboard; the user marked it passed without specifying whether an external keyboard was used, so hardware-keyboard verification is not independently established. Automated Playwright covers arrow/Home/End semantics.
+
 ## CP-012D.1 — Keyboard accessibility and role-summary performance (0.1.2-alpha.9, device gate)
 
 **Pending physical iPhone verification after PR merge/deployment.** The narrow scope is the Settings theme radio keyboard interaction and unchanged responsive flows; browser tests separately cover keyboard/radio semantics and reduced motion, while Node tests exercise 800 roles and 8,000 synthetic achievements. A complete WCAG 2.2 AA audit and real-device performance benchmark are NOT claimed.
