@@ -259,3 +259,10 @@ QA-023 mitigation (PR #25, CI configuration only, no app change): Playwright ret
 
 Authorized by the user ("Yes proceed"). Implemented as DEC-035 on a branch stacked on PR #25. The completeness rules were split out of `assessDataHealth` into `completenessIssues`, so Home and Data Health share one implementation and stay consistent (a Node test checks parity). Expanded cards on any screen now persist through re-renders through one `data-keep-open` mechanism, which replaces the separate Experience and Skills handling. Known limitation: no trends or period views yet (later M08).
 
+
+## 2026-10-11 — alpha.8 accepted; CP-012D.1 keyboard and large-history performance
+
+User confirmed all five installed-iPhone tests D101–D105 passed for v0.1.2-alpha.8. PR #26 is merged (main SHA `d19e9a2`). This is CP-012C acceptance, not v0.1.2 final qualification.
+
+The next authorized milestone is CP-012D accessibility/performance. Initial code audit found existing modal focus, touch-target, light/dark contrast and reduced-motion test coverage; the Settings appearance radiogroup nevertheless lacked arrow-key navigation and single roving Tab stop. The Home role-coverage algorithm also re-filtered achievement and relationship arrays for each role. The bounded alpha.9 candidate CP-012D.1 remedies both through targeted code/tests and an 800-role / 8,000-achievement synthetic fixture, without schema or backup changes. Physical iPhone checks AD101–AD105 are still required. Remaining CP-012D audit scope and CP-012E recovery certification stay open. No full WCAG certification claimed.
+
