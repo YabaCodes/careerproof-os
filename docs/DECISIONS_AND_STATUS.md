@@ -6,9 +6,9 @@
 
 ### Verified current state (2026-10-10, updated at CP-012.3)
 
-- `main` = `f2494804e58cd7cbd336bcb5d616d426016256a1` (merge of PR #22). App **`0.1.2-alpha.5`** deployed: main CI run 38055825278 built, tested and deployed to GitHub Pages; the live service worker cache is `careerproof-v0.1.2-alpha.5`. DB schema **2**, backup format **2** (legacy format 1 importable), taxonomy **1.0**, 12 P0 stores plus `meta`.
-- Physical iPhone: alpha.1–alpha.4 accepted by the user; CP-012B RM101–RM105 (alpha.5) not yet reported. The v0.1.1 post-promotion smoke (F101–F102) is still unreported. No Git tag/GitHub Release exists.
-- In review: CP-012.3 (`0.1.2-alpha.6`, PR #23, Title Case and most-recent-first employment) and CP-012.4 (`0.1.2-alpha.7`, PR #24 stacked on #23, Experience as a container, DEC-034). Remaining v0.1.2: CP-012C dashboard, CP-012D accessibility/performance, CP-012E recovery certification.
+- `main` = `f14628bf9d68c9fd5d1dfc69ac0e4ce98af7e177` (merge of PR #24). App **`0.1.2-alpha.7`** deployed: main CI run 38098062177 (attempt 2) built, tested and deployed to GitHub Pages; the live service worker cache is `careerproof-v0.1.2-alpha.7`. DB schema **2**, backup format **2** (legacy format 1 importable), taxonomy **1.0**, 12 P0 stores plus `meta`.
+- Physical iPhone: alpha.1–alpha.7 accepted by the user (RM101–RM105, T101–T104, X101–X105 on 2026-10-11). The v0.1.1 post-promotion smoke (F101–F102) is still unreported. No Git tag/GitHub Release exists.
+- Merged and accepted: CP-012.3 (`0.1.2-alpha.6`, PR #23) and CP-012.4 (`0.1.2-alpha.7`, PR #24, DEC-034). Remaining v0.1.2: CP-012C dashboard, CP-012D accessibility/performance, CP-012E recovery certification.
 - Per-feature status, PRs, tests and device evidence: [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md).
 
 ### Historical status entries (superseded by the block above; kept for traceability)
@@ -243,4 +243,13 @@ CP-012.3 implements DEC-032 (Title Case) and DEC-033 (most-recent-first employme
 The user chose option B ("Let's go with B"). Recorded as DEC-034 and implemented as CP-012.4 on a branch stacked on PR #23, which was still open; #23 should be merged first.
 
 Implementation choices beyond the option text, open to change: Technologies and Confidentiality stay on the experience form (technologies is not duplicated by achievements; confidentiality is a privacy control); an inline experience starts Active and Confidential with no dates; it takes its employer and a role link from the achievement's role at save time; the roll-up counts every linked achievement including archived ones (listed last and tagged). Experience cards still sort by last edited.
+
+
+## 2026-10-11 — alpha.5–alpha.7 accepted on iPhone; QA-023 CI diagnostics
+
+PR #23 merged (main CI run 38097710416 ✓, deployed alpha.6). PR #24 merged; its main CI run 38098062177 failed once in Build and test, so the deploy was skipped and alpha.6 stayed live. The merged tree was identical to the PR head that had passed, three full local runs and a stress run of the new specs passed, and the job log could not be downloaded from the agent environment (blocked host), so the failing test is unidentified (QA-023). The user re-ran the job; attempt 2 passed and deployed alpha.7 (verified live `sw.js`).
+
+The user then reported all 14 combined device checks passing: RM101–RM105 (alpha.5), T101–T104 (alpha.6) and X101–X105 (alpha.7). Those rows are Accepted.
+
+QA-023 mitigation (PR #25, CI configuration only, no app change): Playwright retries a failed test once in CI and adds the GitHub reporter, so failures and flaky tests appear as check annotations that can be read through the API. Local runs never retry. Trade-off: a retry can hide a truly intermittent defect, so flaky annotations are reviewed on every run and a repeating test is fixed rather than tolerated.
 
