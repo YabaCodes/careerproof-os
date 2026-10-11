@@ -46,3 +46,26 @@ test('CP-012C achievements by role: most recent role first, active achievements 
   assert.equal(withoutRole,1);
   assert.deepEqual(roleCoverage({...fullCollections(),roles:[]}).roles,[]);
 });
+
+
+test('CP-012D role coverage scales to a large synthetic history without changing definitions',()=>{
+  const c=fullCollections();
+  const template=c.roles[0];
+  c.roles=Array.from({length:800},(_,i)=>({...template,id:'synthetic-role-'+i,title:'Synthetic role '+i}));
+  c.achievements=Array.from({length:8000},(_,i)=>achievement(c,'synthetic-achievement-'+i,{
+    roleId:i%11===0?null:'synthetic-role-'+(i%800),
+    status:i%13===0?'archived':i%7===0?'draft':'recorded',
+    preArchiveStatus:i%13===0?'recorded':null
+  }));
+  c.recordLinks=c.recordLinks.filter(l=>l.linkType!=='role-project');
+  const start=performance.now();
+  const summary=roleCoverage(c);
+  const elapsed=performance.now()-start;
+  assert.equal(summary.roles.length,800);
+  assert.deepEqual(summary.roles.map(r=>r.achievements).reduce((a,b)=>a+b,0)+summary.withoutRole,
+    c.achievements.filter(a=>a.status!=='archived').length);
+  assert.equal(summary.withoutRole,c.achievements.filter(a=>a.status!=='archived'&&!a.roleId).length);
+  assert.equal(summary.roles.reduce((n,r)=>n+r.drafts,0),
+    c.achievements.filter(a=>a.status==='draft'&&a.roleId).length);
+  assert.ok(elapsed<1500,'role coverage should complete within 1.5 seconds in a Node benchmark: '+elapsed.toFixed(1)+'ms');
+});
