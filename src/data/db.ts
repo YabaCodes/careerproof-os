@@ -152,6 +152,7 @@ export class CareerDatabase {
     validateCollections(data.collections);tx.objectStore(store).put(record);return record;
   }
   async saveRecord<K extends P0Store>(store:K,input:Omit<P0RecordMap[K],'createdAt'|'updatedAt'>):Promise<P0RecordMap[K]> {
+    if(store==='proficiencyAssessments')throw new ValidationError('Proficiency history is append-only. Create a new assessment instead of editing one.');
     return this.write((tx,data)=>this.upsert(tx,data,store,input as P0RecordMap[K],input.revision));
   }
   /** Append a new explicit self-assessment; existing history is immutable. */
@@ -347,6 +348,7 @@ export class CareerDatabase {
   }
   async removeRecord(store:P0Store,id:string,revision:number):Promise<void> {
     if(store==='profiles')throw new ValidationError('The local profile cannot be deleted.');
+    if(store==='proficiencyAssessments')throw new ValidationError('Proficiency history is append-only and cannot be deleted individually.');
     return this.write((tx,data)=>{
       const current=data.collections[store].find(r=>r.id===id);
       if(!current||current.revision!==revision)throw new ConflictError('This record changed. Reload before deleting.');

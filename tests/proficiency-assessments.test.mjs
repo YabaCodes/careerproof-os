@@ -56,6 +56,11 @@ test('CP-013B append-only history chooses latest assessment DATE, not latest wri
   assert.equal(currentAssessment(after.collections,'custom-competency').selfAssessedLevel,3);
   assert.deepEqual(assessmentHistory(after.collections,'custom-competency').map(a=>a.selfAssessedLevel),[3,4,2]);
   assert.equal(after.collections.proficiencyAssessments.length,3);
+  const history=after.collections.proficiencyAssessments[0];
+  const immutable=await repo.readSnapshot();
+  await assert.rejects(()=>repo.saveRecord('proficiencyAssessments',{...history,selfAssessedLevel:1}),/append-only/);
+  await assert.rejects(()=>repo.removeRecord('proficiencyAssessments',history.id,history.revision),/append-only/);
+  assert.deepEqual(await repo.readSnapshot(),immutable);
   const versioned=await createBackup(repo);
   assert.equal(JSON.parse(versioned.json).manifest.formatVersion,3);
   assert.equal(JSON.parse(versioned.json).collections.proficiencyAssessments.length,3);
