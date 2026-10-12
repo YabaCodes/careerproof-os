@@ -37,6 +37,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **Release boundary:** v0.1.1 provides the original professional-record foundation. v0.1.2's P0 Data Health, controlled removal, dashboard, accessibility and recovery scope has been implemented and qualified at alpha.11; only final promotion/installed-iPhone smoke remain. Career proficiency, CV, performance review and job-fit functionality is excluded until separately authorized. The later career studios, evidence/proficiency assessment and job-fit tools are not part of this release.
 
+**2026-10-12 CP-013A checkpoint:** Read-only evidence breadth implementation proposed as v0.1.3-alpha.1. Full 0.1.3 remains incomplete until separate L1–L4 proficiency persistence, history, migration and restoration gates are implemented and accepted.
+
 ## 3. Requirements traceability
 
 | Functional ID | Capability | Main UI | Stores / services | Acceptance |

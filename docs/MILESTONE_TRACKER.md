@@ -20,6 +20,8 @@ This is the authoritative per-feature progress record. It is updated in **every*
 
 Rules: never mark a row Accepted without the user's device confirmation; never mark partial work complete; CI, merge, deploy and device acceptance are recorded separately.
 
+**2026-10-12 CP-013A development candidate:** Read-only evidence breadth on Skills is prepared as \`v0.1.3-alpha.1\` for PR review. Deterministic CIF-02–07 labeling, synthetic tests and privacy-preserving local evaluation are included. No schema or backup-format change; no assessment history or user proficiency levels yet. **Not accepted until PR CI, user merge, deployment, and physical-iPhone checks.** This does not certify the full \`v0.1.3\` milestone.
+
 ## Progress summary (2026-10-11)
 
 - **First-cycle releases:** v0.1.0 and v0.1.1 shipped (2 of the 8 numbered first-cycle versions v0.1.0–v0.1.7). v0.1.2 in progress: alpha.1–alpha.7 merged and accepted on iPhone (integrity hotfix, update detection, navigation/design, Data Health, controlled removal, Title Case + most-recent-first employment, Experience as a container). alpha.8 Home dashboard (CP-012C, #26) merged and accepted D101–D105 on 2026-10-11. CP-012D.1 accessibility/performance alpha.9 PR #27 merged and user-accepted AD101–AD105; CP-012D.2 alpha.10 accepted with AE105 exception; CP-012E alpha.11 merged and accepted (RE101–RE105/E220 passed); final v0.1.2 promotion PR in review.
@@ -34,7 +36,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
 | v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | Final promotion In Review (not merged or deployed); all alpha.11 P0/device gates accepted | #18–#29 merged; separate final promotion candidate | A101–A106, U103–U104, DH101–DH104, RM101–RM105, T101–T104, X101–X105, D101–D105, AD101–AD105, AE101–AE104 (AE105 waived), RE101–RE105/E220 accepted; final F201–F204 pending |
-| v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | Planned | — | — |
+| v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth | CP-013A evidence breadth in review; CP-013B proficiency planned | CP-013A PR pending | iPhone checks pending |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
 | v0.1.6 | Pasted job-description requirement matrix (deterministic) | Planned | — | — |

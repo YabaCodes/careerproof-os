@@ -1,3 +1,12 @@
+## 0.1.3-alpha.1 — CP-013A Evidence Breadth (review candidate)
+
+- Adds read-only **Evidence Breadth** for every skill using the approved CIF-02–07 deterministic thresholds: Not documented, Emerging, Moderate, Broad.
+- Counts unique **Recorded** linked achievements only; ignores Draft and Archived. Work context is a primary Experience, otherwise employment role, otherwise one shared unspecified context. Labels show number of eligible examples, distinct contexts and stated outcomes.
+- No proficiency rating is inferred, no claim is independently verified, and confidential records remain local. Skill detail lists retain their original examples; the separate breadth calculation labels eligibility explicitly.
+- Adds synthetic Node tests for all four thresholds, duplicate links, contextual diversity, confidential examples, missing outcomes and draft/archive exclusion; browser smoke verifies Skills displays the explanation without modifying data.
+- Preserves **schema 2 / backup format 2**, all existing records, IDs and preferences. No persistent assessment storage and no data migration in this first increment.
+- Pending: PR CI, user merge, Pages deployment and non-destructive physical-iPhone checks. Proficiency assessments and assessment-history schema/backup upgrades will be separately scoped in CP-013B.
+
 # CareerProof release notes
 
 ## v0.1.2 — Final promotion candidate (awaiting separate PR approval)
