@@ -1,6 +1,6 @@
-export const APP_VERSION = '0.1.3-alpha.1';
-export const SCHEMA_VERSION = 2;
-export const BACKUP_FORMAT_VERSION = 2;
+export const APP_VERSION = '0.1.3-alpha.2';
+export const SCHEMA_VERSION = 3;
+export const BACKUP_FORMAT_VERSION = 3;
 export const TAXONOMY_VERSION = '1.0';
 export const PROFILE_ID = 'local-profile';
 export const MAX_BACKUP_BYTES = 12 * 1024 * 1024;
@@ -49,6 +49,10 @@ export interface Competency extends BaseRecord {
   categoryId: string; name: string; normalizedName: string; isBuiltIn: boolean; status: 'active' | 'archived';
   taxonomyKey: string | null; aliases: string[]; description: string; rubricId: string | null;
 }
+export interface ProficiencyAssessment extends BaseRecord {
+  competencyId:string; selfAssessedLevel:1|2|3|4; assessmentDate:PrecisionDate; rubricVersion:string;
+  rationale:string; developmentNote:string; assessmentContext:string;
+}
 export interface EvidenceReference extends BaseRecord {
   achievementId: string; referenceType: 'description' | 'url' | 'document-reference'; label: string;
   referenceValue: string; userReviewedAt: string | null; notes: string;
@@ -60,14 +64,14 @@ export interface Meta { key: string; value: unknown }
 export interface P0RecordMap {
   profiles: Profile; employers: Employer; roles: Role; education: Education; credentials: Credential; projects: Project;
   achievements: Achievement; impactMetrics: ImpactMetric; competencyCategories: CompetencyCategory; competencies: Competency;
-  evidenceReferences: EvidenceReference; recordLinks: RecordLink;
+  evidenceReferences: EvidenceReference; recordLinks: RecordLink; proficiencyAssessments: ProficiencyAssessment;
 }
-export const P0_STORES = ['profiles','employers','roles','education','credentials','projects','achievements','impactMetrics','competencyCategories','competencies','evidenceReferences','recordLinks'] as const;
+export const P0_STORES = ['profiles','employers','roles','education','credentials','projects','achievements','impactMetrics','competencyCategories','competencies','evidenceReferences','recordLinks','proficiencyAssessments'] as const;
 export type P0Store = typeof P0_STORES[number];
 export type CareerCollections = { [K in P0Store]: P0RecordMap[K][] };
 export interface Preferences { theme: 'system' | 'light' | 'dark' }
 export interface CareerBackup {
-  manifest: { format: 'careerproof-backup'; formatVersion: 2; schemaVersion: 2; appVersion: string; exportedAt: string; taxonomyVersion: string; counts: { [K in P0Store]: number } };
+  manifest: { format: 'careerproof-backup'; formatVersion: 3; schemaVersion: 3; appVersion: string; exportedAt: string; taxonomyVersion: string; counts: { [K in P0Store]: number } };
   collections: CareerCollections;
   preferences: Preferences;
 }

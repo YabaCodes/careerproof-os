@@ -1,4 +1,4 @@
-import { type Achievement, type BaseRecord, type AchievementView, type ImpactMetric, type EvidenceReference, type RecordLink, type Profile, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
+import { type Achievement, type BaseRecord, type AchievementView, type ImpactMetric, type EvidenceReference, type RecordLink, type ProficiencyAssessment, type Profile, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
 import { planRemoval, type RemovableKind, type RemovalMode, type RemovalPlan } from '../domain/removal.js';
 import { inlineExperience, type InlineExperienceDraft } from '../domain/experience.js';
 import { achievementView, migrateLegacyAchievement, migrateLegacyProfile, validateCollections, isPreferences, validTime, ConflictError, ValidationError } from '../domain/validation.js';
@@ -34,9 +34,13 @@ function configureSchema(db: IDBDatabase, tx: IDBTransaction): void {
   index('impactMetrics','byAchievement','achievementId');index('evidenceReferences','byAchievement','achievementId');
   index('competencies','byCategory','categoryId');index('competencies','byCategoryName',['categoryId','normalizedName'],true);
   index('recordLinks','byTypeEndpoints',['linkType','sourceId','targetId'],true);index('recordLinks','bySource','sourceId');index('recordLinks','byTarget','targetId');
+  index('proficiencyAssessments','byCompetencyDate',['competencyId','assessmentDate.value']);
 }
 function upgrade(db: IDBDatabase, tx: IDBTransaction, oldVersion: number): void {
   configureSchema(db,tx);
+  // Schema 2→3 only adds a store. Never reset an existing device's
+  // generation, revision, theme, last export or canonical career records.
+  if(oldVersion>=2){metaValue(tx,'schemaVersion',SCHEMA_VERSION);return;}
   // All callbacks remain inside the versionchange transaction. No unrelated await.
   const c=emptyCollections();let remaining=P0_STORES.length;
   for(const store of P0_STORES){
@@ -149,6 +153,18 @@ export class CareerDatabase {
   }
   async saveRecord<K extends P0Store>(store:K,input:Omit<P0RecordMap[K],'createdAt'|'updatedAt'>):Promise<P0RecordMap[K]> {
     return this.write((tx,data)=>this.upsert(tx,data,store,input as P0RecordMap[K],input.revision));
+  }
+  /** Append a new explicit self-assessment; existing history is immutable. */
+  async saveProficiencyAssessment(input:Pick<ProficiencyAssessment,'competencyId'|'selfAssessedLevel'|'assessmentDate'|'rubricVersion'|'rationale'|'developmentNote'|'assessmentContext'>):Promise<ProficiencyAssessment>{
+    return this.write((tx,data)=>{
+      if(!data.collections.competencies.some(s=>s.id===input.competencyId&&s.status==='active'))
+        throw new ValidationError('This competency is unavailable for assessment.');
+      const record:ProficiencyAssessment={...input,id:crypto.randomUUID(),createdAt:nowIso(),updatedAt:nowIso(),revision:1};
+      data.collections.proficiencyAssessments.push(record);
+      validateCollections(data.collections);
+      tx.objectStore('proficiencyAssessments').put(record);
+      return record;
+    });
   }
   async saveProfile(input:ProfileWrite):Promise<Profile> {
     return this.write((tx,data)=>this.upsert(tx,data,'profiles',{...data.collections.profiles[0]!,...input},input.revision));

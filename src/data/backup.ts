@@ -2,7 +2,7 @@ import { generateBackup, validateBackup, validateCollections, ValidationError, o
 import { database, type CareerDatabase } from './db.js';
 import { type CareerBackup, MAX_BACKUP_BYTES } from '../domain/models.js';
 import { assessDataHealth, criticalIssue, type HealthIssue } from '../domain/dataHealth.js';
-export interface PreparedBackup { backup: CareerBackup; legacy: boolean; expectedGeneration: number; expectedRevision: number }
+export interface PreparedBackup { backup: CareerBackup; legacy: boolean; sourceFormat: 1|2|3; expectedGeneration: number; expectedRevision: number }
 export function checkBackupSize(json:string):void {
   if(new TextEncoder().encode(json).byteLength>MAX_BACKUP_BYTES)throw new ValidationError('Backup exceeds the supported 12 MiB limit. No export or restore was performed.');
 }
@@ -13,7 +13,7 @@ export async function createBackup(repo:CareerDatabase=database):Promise<{name:s
   return {name:`CareerProof_Backup_${backup.manifest.exportedAt.slice(0,10)}.json`,json,count:data.collections.achievements.length,exportedAt:backup.manifest.exportedAt};
 }
 /**
- * Read-only release/data integrity check. A complete version-2 backup is
+ * Read-only release/data integrity check. A complete version-3 backup is
  * serialized and revalidated in memory, without importing, writing metadata,
  * invoking the file picker or changing the active browsing context.
  *
@@ -93,9 +93,10 @@ export async function parseBackupJson(json:string,repo:CareerDatabase=database):
   let raw:unknown;
   try{raw=JSON.parse(json);}catch{throw new ValidationError('The file is not valid JSON.');}
   const backup=validateBackup(raw);
-  const legacy=obj(raw)&&obj(raw.manifest)&&raw.manifest.formatVersion===1;
+  const sourceFormat=obj(raw)&&obj(raw.manifest)?raw.manifest.formatVersion as 1|2|3:3;
+  const legacy=sourceFormat===1;
   const snapshot=await repo.readSnapshot();
-  return {backup,legacy,expectedGeneration:snapshot.generation,expectedRevision:snapshot.revision};
+  return {backup,legacy,sourceFormat,expectedGeneration:snapshot.generation,expectedRevision:snapshot.revision};
 }
 export async function parseBackupFile(file:File):Promise<PreparedBackup>{
   if(file.size>MAX_BACKUP_BYTES)throw new ValidationError('Backup exceeds the supported 12 MiB import limit.');
