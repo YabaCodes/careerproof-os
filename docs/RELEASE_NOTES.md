@@ -1,3 +1,17 @@
+## v0.1.3-alpha.2 — CP-013B Self-Assessed Proficiency (review candidate)
+
+**Status:** Development PR pending CI and user review; **not merged, deployed, or accepted**. CP-013A Evidence Breadth alpha.1 was accepted on iPhone with EB103 not manually tested (automated coverage).
+
+- Skills now offers an explicit **L1–L4 self-assessed proficiency** editor, optional rationale, assessment context and development note, and full dated assessment history. No rating is inferred from skills, career history, achievements, years of experience or evidence breadth.
+- The common rubric uses the original CareerProof Foundational / Developing / Proficient / Advanced descriptions. **This does not claim 32 distinct skill-specific rubrics.** Generic rubric version `1.0` is retained with each history entry.
+- Appending a self-assessment never overwrites past ratings. Current display uses the latest assessment **date**, not the most recently entered record. Unassessed skills display *Not assessed*.
+- **Forward-only physical IndexedDB schema 2→3:** add `proficiencyAssessments` store and competency/date index; preserve all prior career records, IDs, revisions, generation counters, local theme, and prior export metadata. New v1 installations also migrate directly to schema 3.
+- Full private **backup format 3** now includes assessment history. Format-1 and format-2 backups remain importable after strict validation and in-memory conversion. Restoring an old format-2 backup is still **destructive full replacement**; the UI explicitly warns that newer assessment history would be removed.
+- A custom skill with assessment history **cannot be deleted** (archive remains available); no reassignment or automatic deletion of historical assessments.
+- Separate automated migration/recovery/negative tests and browser UI tests use **synthetic records only**. No account sync, external proof validation, unverifiable proficiency scoring, or personal test fixtures.
+- Scope: M04 Competency Intelligence. Database and recovery platform affected. No change to core Profile/Vault/Experience features. CP-013A's EB103 remains a manual regression opportunity.
+- Pending before release: CI tests, user review and merge, deployment and physical-iPhone checks **PA101–PA106**. No PR may merge automatically.
+
 ## 0.1.3-alpha.1 — CP-013A Evidence Breadth (review candidate)
 
 - Adds read-only **Evidence Breadth** for every skill using the approved CIF-02–07 deterministic thresholds: Not documented, Emerging, Moderate, Broad.

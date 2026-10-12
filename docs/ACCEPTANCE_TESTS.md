@@ -1,3 +1,17 @@
+## CP-013B — v0.1.3-alpha.2 proficiency assessment physical-iPhone gate (pending)
+
+**Only after PR automated CI passes, the user reviews/merges, and GitHub Pages deploys.** Export the existing private career backup to a secure location **before** updating. Do not reinstall, clear Safari data, or restore over the real personal dataset for testing.
+
+- [ ] **PA101 — Update / data retention:** Settings shows `v0.1.3-alpha.2` and schema 3 after safe Home Screen PWA update. Existing career/achievement counts, Experience and Skill links, contacts/preferences are unchanged.
+- [ ] **PA102 — Unassessed vs L1:** Skills with no history read *Not assessed*, never automatically L1. Use a non-sensitive competency to create a user-chosen L1–L4 assessment with date and optional rationale.
+- [ ] **PA103 — History persistence:** Add a second assessment on the same competency. Both remain visible after close/reopen; current label follows **assessment date**, not entry order. Historical self-ratings are not rewritten by Evidence Breadth changes.
+- [ ] **PA104 — Evidence distinction:** Skills displays self-assessed level and separately the Evidence Breadth label/counts. It does not claim verification, readiness, or ability based on evidence gaps.
+- [ ] **PA105 — Data integrity / recovery:** Settings → Check data passes, export a fresh format-3 private JSON backup, confirm it was saved, and verify it contains the new history. **Do not perform destructive restore on the user's real data.** Format-1/2 import and atomic rollback are covered by synthetic automated tests.
+- [ ] **PA106 — Offline / mobile UI:** Reopen offline; Skills and all five tabs load normally with usable assessment form, correct keyboard/focus/scrolling and no clipped or overlapping controls. Check device light and dark themes if convenient.
+- [ ] **EB103 carry-forward:** Draft/Archived-only linked achievements are not counted in Evidence Breadth. May remain *Not tested* when no suitable real record exists; never alter real records just to test.
+
+**Automated qualification:** schema-2→3 forward upgrade preserves generation, source revision, theme, previous export and all 12 original record collections; v1→3, format-2→3 import, append-only history, deleted/archived skill protection, invalid rating/foreign reference rollback, format-3 export/restore, and cross-screen browser regressions. CI success ≠ physical-iPhone acceptance.
+
 ## CP-013A — v0.1.3-alpha.1 evidence-breadth physical iPhone checks (pending)
 
 **Non-destructive** checks, only after PR CI passes, the user merges, and GitHub Pages deploys. Export the current private backup securely first; never clear data or restore real data for these tests.
