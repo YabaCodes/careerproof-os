@@ -1,8 +1,8 @@
-# CareerProof OS — v0.1.3-alpha.1 review candidate
+# CareerProof OS — v0.1.3-alpha.2 review candidate
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **v0.1.2 has been merged to `main`; v0.1.3-alpha.1 is a review candidate, not merged or deployed.** This CP-013A increment adds a read-only evidence-breadth explanation in Skills using recorded achievement links; it does not add self-assessed proficiency yet or change the existing IndexedDB schema, backup format or career records. Physical-device acceptance remains required after user merge. Current progress is tracked in [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **v0.1.3-alpha.1 Evidence Breadth was accepted on iPhone (EB101/102/104/105 passed; EB103 not tested). v0.1.3-alpha.2 self-assessment history is a review candidate, not yet merged or deployed.** This CP-013A increment adds a read-only evidence-breadth explanation in Skills using recorded achievement links; it does not add self-assessed proficiency yet or change the existing IndexedDB schema, backup format or career records. Physical-device acceptance remains required after user merge. Current progress is tracked in [milestone tracker](docs/MILESTONE_TRACKER.md).
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 

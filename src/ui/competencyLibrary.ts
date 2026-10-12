@@ -4,6 +4,7 @@ import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
 import {escapeHtml} from './html.js';
 import {evidenceBreadthByCompetency} from '../domain/evidenceBreadth.js';
+import {assessmentHistory,currentAssessment,proficiencyLabel} from '../domain/proficiency.js';
 const esc=escapeHtml;
 export type SkillScope='linked'|'all';
 /** Number of achievement links per competency; counts links, not proficiency. */
@@ -34,11 +35,15 @@ export function competencyGroups(c:CareerCollections,query:string,category:strin
         const links=c.recordLinks.filter(l=>l.linkType==='achievement-competency'&&l.targetId===skill.id);
         const examples=links.map(l=>c.achievements.find(a=>a.id===l.sourceId)).filter((a):a is NonNullable<typeof a>=>Boolean(a));
         const report=breadth.get(skill.id)!;
+        const current=currentAssessment(c,skill.id),history=assessmentHistory(c,skill.id);
         return '<details class="skill-entry" data-skill="'+esc(skill.id)+'" data-keep-open="skill:'+esc(skill.id)+'"><summary><span><strong>'+esc(skill.name)+'</strong>'+
           (skill.isBuiltIn?'':' <span class="career-primary">Custom</span>')+(skill.status==='archived'?' <span class="career-meta">Archived</span>':'')+
           '<small>'+examples.length+' linked example'+(examples.length===1?'':'s')+'</small></span>'+
           icon('chevron',17)+'</summary><div class="skill-entry-details">'+
           (skill.description?'<p>'+esc(skill.description)+'</p>':'<p class="career-meta">No skill definition provided.</p>')+
+          '<p class="career-meta skill-self-proficiency">Self-assessed proficiency: <strong>'+(current?esc(proficiencyLabel(current.selfAssessedLevel)):'Not assessed')+'</strong>'+(current?' · '+esc(current.assessmentDate.value)+' · Rubric '+esc(current.rubricVersion):'')+'. This is your own assessment, not independently verified.</p>'+
+          (skill.status==='active'?'<button type="button" class="button button-outline" data-action="assess-competency" data-id="'+esc(skill.id)+'">'+(current?'Add another assessment':'Assess proficiency')+'</button>':'')+
+          (history.length?'<details class="skill-assessment-history"><summary>Assessment history · '+history.length+'</summary>'+history.map(a=>'<div class="skill-assessment-entry"><strong>'+esc(proficiencyLabel(a.selfAssessedLevel))+'</strong> · '+esc(a.assessmentDate.value)+' · Rubric '+esc(a.rubricVersion)+(a.rationale?'<p>'+esc(a.rationale)+'</p>':'')+(a.assessmentContext?'<p>Context: '+esc(a.assessmentContext)+'</p>':'')+(a.developmentNote?'<p>Development: '+esc(a.developmentNote)+'</p>':'')+'</div>').join('')+'</details>':'')+
           '<p class="career-meta skill-evidence-breadth">Evidence breadth: <strong>'+esc(report.label)+'</strong> · '+report.eligibleCount+' recorded example'+(report.eligibleCount===1?'':'s')+' · '+report.contextCount+' work context'+(report.contextCount===1?'':'s')+' · '+report.statedOutcomeCount+' stated outcome'+(report.statedOutcomeCount===1?'':'s')+'. Draft and archived achievements do not count. This is not a proficiency rating or independent verification.</p>'+
           (examples.length?'<div class="portfolio-achievement-links">'+examples.map(a=>
             '<button class="career-inline-add" data-action="competency-achievement" data-id="'+esc(a.id)+'">'+esc(a.title)+'</button>').join('')+'</div>':
