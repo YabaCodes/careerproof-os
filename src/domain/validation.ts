@@ -178,10 +178,12 @@ export function validateBackup(raw: unknown): CareerBackup {
     if(Object.keys(raw).length!==3||Object.keys(m).length!==7||m.taxonomyVersion!==TAXONOMY_VERSION||!isPreferences(raw.preferences))
       throw new ValidationError('Unsupported taxonomy or invalid backup preferences.');
     const older=P0_STORES.filter(s=>s!=='proficiencyAssessments');
-    if(Object.keys(c).length!==older.length||Object.keys(m.counts).length!==older.length||
-       older.some(s=>!Array.isArray(c[s])||m.counts[s]!==c[s].length))
+    const olderCounts=m.counts as Record<string,unknown>;
+    if(Object.keys(c).length!==older.length||Object.keys(olderCounts).length!==older.length||
+       older.some(s=>!Array.isArray(c[s])||olderCounts[s]!==c[s].length))
       throw new ValidationError('Invalid format-2 backup collections or counts.');
-    const adapted={...c,proficiencyAssessments:[]};validateCollections(adapted);
+    const adapted:CareerCollections={...(c as unknown as Omit<CareerCollections,'proficiencyAssessments'>),proficiencyAssessments:[]};
+    validateCollections(adapted);
     return generateBackup(adapted,raw.preferences as Preferences,m.exportedAt as string);
   }
   if(m.formatVersion!==3||m.schemaVersion!==3)throw new ValidationError('The backup format or schema is unsupported.');

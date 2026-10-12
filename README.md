@@ -2,7 +2,7 @@
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **v0.1.3-alpha.1 Evidence Breadth was accepted on iPhone (EB101/102/104/105 passed; EB103 not tested). v0.1.3-alpha.2 self-assessment history is a review candidate, not yet merged or deployed.** This CP-013A increment adds a read-only evidence-breadth explanation in Skills using recorded achievement links; it does not add self-assessed proficiency yet or change the existing IndexedDB schema, backup format or career records. Physical-device acceptance remains required after user merge. Current progress is tracked in [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **v0.1.3-alpha.1 Evidence Breadth was accepted on iPhone (EB101/102/104/105 passed; EB103 not tested). v0.1.3-alpha.2 self-assessment history is a review candidate, not yet merged or deployed.** CP-013B adds explicit proficiency assessments and dated history alongside the already accepted, read-only Evidence Breadth calculation. It includes an additive IndexedDB schema upgrade and an updated full private backup format, without rewriting the existing career records. Physical-device acceptance remains required after user merge. Current progress is tracked in [milestone tracker](docs/MILESTONE_TRACKER.md).
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 
@@ -12,8 +12,8 @@ CareerProof OS is a privacy-first, local-first professional career and achieveme
 - **Evidence and impact:** measurable baseline/result values, units, source/context notes, user-entered evidence references and explicit confidential/private designations. Claims and references are not independently verified.
 - **Competency Library:** four built-in categories and 32 seeded competencies with linked achievement examples, plus custom skill create/edit/archive/restore. No automatic proficiency scoring.
 - **Search and filtering:** achievements by text, dates, role, Experience, competency and status.
-- **Local data integrity:** Settings → **Check data** validates all 12 IndexedDB collections and their full version-3 backup-format round-trip without uploading, restoring or changing records.
-- **Recovery:** full version-2 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
+- **Local data integrity:** Settings → **Check data** validates all 13 IndexedDB collections and their full version-3 backup-format round-trip without uploading, restoring or changing records.
+- **Recovery:** full version-3 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
 The v0.1.2 iPhone bottom navigation is **Home / Vault / Experience / Skills / Profile**, with **＋ (new achievement)** and **Settings** in each screen's header (DEC-029). The look follows the Wealth OS design language with CareerProof's navy/teal (DEC-030). Titles and subtitles use Title Case (DEC-032) and Employment History lists the most recent employer first (DEC-033). Home shows **Complete Your Record** and **Achievements by Role** (DEC-035): derived counts and links, no scores.
@@ -28,7 +28,7 @@ The v0.1.2 iPhone bottom navigation is **Home / Vault / Experience / Skills / Pr
 - **Never uninstall the Home Screen PWA, clear Safari website data or reset browser storage to force an update.** Doing so may permanently remove unexported local records.
 - Do not put real employer documents, confidential career details, or private backups in this public GitHub repository.
 
-Database schema **3**, backup format **3** (also reads legacy format **1**), taxonomy version **1.0**. Backup limit: **12 MiB UTF-8 JSON**, at most **100,000 records per collection**. Oversized backups fail rather than silently dropping records.
+Database schema **3**, backup format **3** (also reads earlier formats **1** and **2**), taxonomy version **1.0**. Backup limit: **12 MiB UTF-8 JSON**, at most **100,000 records per collection**. Oversized backups fail rather than silently dropping records.
 
 ## Development and testing
 
