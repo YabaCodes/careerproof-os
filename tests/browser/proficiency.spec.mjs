@@ -31,7 +31,7 @@ test('CP-013B user saves repeat assessments, sees dated history, exports them, r
   await expect(skill.locator('.skill-assessment-entry').first()).toContainText('L3');
   await page.reload();await page.locator('.mobile-nav [data-screen=competencies]').click();
   const again=page.locator('details.skill-entry[data-skill=custom-competency]');
-  await again.locator('summary').click();
+  await again.locator(':scope > summary').click();
   await expect(again.locator('.skill-self-proficiency')).toContainText('L3 — Proficient');
   await page.locator('.header-settings').click();
   await page.locator('[data-action=check-integrity]').click();
