@@ -117,7 +117,7 @@ test('CP-012A inspectDataHealth reads only: snapshot, revision, generation and e
 });
 test('CP-012A a corrupted store is reported as one critical issue, not thrown, and nothing is repaired',async()=>{
   const {factory,repo}=await setup('health-corrupt');await repo.close();
-  const raw=await request(factory.open('health-corrupt',2)),tx=raw.transaction('impactMetrics','readwrite'),done=completed(tx);
+  const raw=await request(factory.open('health-corrupt',3)),tx=raw.transaction('impactMetrics','readwrite'),done=completed(tx);
   tx.objectStore('impactMetrics').put({...base('orphan-metric'),achievementId:'missing-achievement',metricName:'Synthetic',unit:'',baselineValue:1,resultValue:null,reportedValue:null,direction:null,sourceNote:''});
   await done;raw.close();
   const broken=new CareerDatabase(factory,'health-corrupt');
@@ -126,7 +126,7 @@ test('CP-012A a corrupted store is reported as one critical issue, not thrown, a
   assert.deepEqual(report.issues.map(i=>[i.code,i.severity]),[['integrity-failed','critical']]);
   assert.match(report.issues[0].detail,/Nothing was changed/);
   await broken.close();
-  const check=await request(factory.open('health-corrupt',2)),read=check.transaction('impactMetrics','readonly');
+  const check=await request(factory.open('health-corrupt',3)),read=check.transaction('impactMetrics','readonly');
   assert.ok(await request(read.objectStore('impactMetrics').get('orphan-metric')),'the invalid record is left for the user, not auto-deleted');
   check.close();
 });

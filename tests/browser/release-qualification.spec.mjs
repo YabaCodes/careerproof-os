@@ -43,7 +43,7 @@ test('CP-E201 user can verify all current career data without writing, exporting
   await expect(button).toBeVisible();
   await button.click();
   await expect(page.locator('#integrity-check-result')).toContainText('Check passed.');
-  await expect(page.locator('#integrity-check-result')).toContainText('Backup format 2 and schema 2');
+  await expect(page.locator('#integrity-check-result')).toContainText('Backup format 3 and schema 3');
   await expect(page.locator('#integrity-check-result')).toContainText('nothing was restored or uploaded');
   await expect(button).toBeEnabled();
   expect(await snapshot(page)).toEqual(before);
@@ -109,7 +109,7 @@ test('CP-E203 cross-module navigation, complete backup and restoration preserve 
   const download=await downloadReady,parts=[];
   for await(const chunk of await download.createReadStream())parts.push(chunk);
   const backup=JSON.parse(Buffer.concat(parts).toString('utf8'));
-  expect(backup.manifest.formatVersion).toBe(2);
+  expect(backup.manifest.formatVersion).toBe(3);
   expect(backup.manifest.counts.recordLinks).toBe(3);
   expect(backup.manifest.counts.impactMetrics).toBe(1);
   expect(backup.manifest.counts.evidenceReferences).toBe(1);
@@ -137,7 +137,7 @@ test('CP-E204 installed offline shell supports Profile, Portfolio, Vault and Com
     if(!navigator.serviceWorker.controller)
       await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
-  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.3-alpha.1');
+  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.3-alpha.2');
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('.hero-card')).toBeVisible();

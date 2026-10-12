@@ -171,7 +171,7 @@ test('project links round-trip through private backup; no schema changes',async(
     return {schema:p.backup.manifest.schemaVersion,format:p.backup.manifest.formatVersion,
       projectCount:after.collections.projects.length,same:JSON.stringify(before.collections.projects)===JSON.stringify(after.collections.projects)};
   });
-  expect(result).toEqual({schema:2,format:2,projectCount:1,same:true});
+  expect(result).toEqual({schema:3,format:3,projectCount:1,same:true});
 });
 test('CP-012.0 apostrophes followed by digits survive display, edit and unchanged save',async({page})=>{
   await page.setViewportSize({width:390,height:844});

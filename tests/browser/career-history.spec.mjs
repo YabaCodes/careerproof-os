@@ -164,7 +164,7 @@ test('P0 career collections round-trip through backup and leave achievements int
       roles:after.collections.roles.length,education:after.collections.education.length,
       equal:shape(before.collections)===shape(after.collections),competencies:after.collections.competencies.length};
   });
-  expect(result).toMatchObject({format:2,employers:1,roles:1,education:1,equal:true,competencies:32});
+  expect(result).toMatchObject({format:3,employers:1,roles:1,education:1,equal:true,competencies:32});
 });
 
 test('career forms stay contained on mobile and preserve unsaved edits',async({page})=>{
