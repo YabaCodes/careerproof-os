@@ -1,10 +1,10 @@
-# CareerProof OS — v0.1.2 final-promotion candidate
+# CareerProof OS — v0.1.3-alpha.1 review candidate
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.2` is a final-promotion candidate, not yet merged or deployed.** Its accepted baseline is `v0.1.2-alpha.11` (CP-012E, [PR #29](https://github.com/YabaCodes/careerproof-os/pull/29)), which passed automated recovery/upgrade certification and the user's non-destructive physical-iPhone RE101–RE105 checks plus E220 repository privacy confirmation on 2026-10-11. The final promotion changes the displayed app/package version and service-worker cache only; it does **not** alter IndexedDB schema 2, JSON backup format 2, or existing career records. After user review/merge, GitHub Pages deployment and final iPhone F201–F204 smoke remain mandatory. Current milestone status is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **v0.1.2 has been merged to `main`; v0.1.3-alpha.1 is a review candidate, not merged or deployed.** This CP-013A increment adds a read-only evidence-breadth explanation in Skills using recorded achievement links; it does not add self-assessed proficiency yet or change the existing IndexedDB schema, backup format or career records. Physical-device acceptance remains required after user merge. Current progress is tracked in [milestone tracker](docs/MILESTONE_TRACKER.md).
 
-## Capabilities in v0.1.2
+## Capabilities in v0.1.2 (P0 shipped baseline)
 
 - **Career Profile:** contact information, professional summary, employer history, overlapping job roles and promotions, precision-aware dates, education, credentials and certifications.
 - **Experience Portfolio:** projects, initiatives and ongoing responsibilities with compact expandable cards, employer and employment-role associations, status, context and technologies. In v0.1.2 an experience is a container (DEC-034): its card rolls up the outcomes of its linked achievements, and an experience can be created while capturing an achievement.
@@ -58,4 +58,4 @@ See the [release notes](docs/RELEASE_NOTES.md), [roadmap](docs/ROADMAP.md), [CP-
 
 ## Planned next increments
 
-Once the `v0.1.2` final-version smoke test passes, the next planned increment is `v0.1.3`: user-assessed proficiency (separate from documented evidence breadth). Later versions may add performance reviews, editable CV output, and deterministic pasted job-description comparison; these are **not included** in `v0.1.2`. The user's near-term priority is privately backfilling existing career history, Experiences and achievements within the current PWA—not expanding product scope. Each new feature increment requires separate approval; see the [roadmap](docs/ROADMAP.md) and [milestone tracker](docs/MILESTONE_TRACKER.md).
+The next active increment is `v0.1.3`, beginning with CP-013A read-only evidence breadth and later persistent L1–L4 proficiency history with separately reviewed migration and restore compatibility. Later versions may add performance reviews, editable CV output, and deterministic pasted job-description comparison; these are **not included** in `v0.1.2`. The user's near-term priority is privately backfilling existing career history, Experiences and achievements within the current PWA—not expanding product scope. Each new feature increment requires separate approval; see the [roadmap](docs/ROADMAP.md) and [milestone tracker](docs/MILESTONE_TRACKER.md).

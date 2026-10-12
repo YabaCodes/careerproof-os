@@ -1,3 +1,13 @@
+## CP-013A — v0.1.3-alpha.1 evidence-breadth physical iPhone checks (pending)
+
+**Non-destructive** checks, only after PR CI passes, the user merges, and GitHub Pages deploys. Export the current private backup securely first; never clear data or restore real data for these tests.
+
+- [ ] **EB101:** Installed PWA updates to v0.1.3-alpha.1 without uninstall, clearing site data or losing the current 16 Experiences / 29 Achievements.
+- [ ] **EB102:** Skills → With examples → open a skill with recorded linked achievements. It shows Evidence breadth and its eligible recorded example, work context and stated outcome counts. The label is **not** described as proficiency or verified expertise.
+- [ ] **EB103:** Check a skill linked to Draft-only or Archived-only achievements: breadth stays Not documented even if older linked examples appear. If no suitable skill exists, mark not tested rather than changing real data.
+- [ ] **EB104:** Settings → Check data passes; export a fresh backup. No assessment values, extra stores, automatic edits, or data loss.
+- [ ] **EB105:** Reopen offline. Skills breadth and other four tabs still work; no UI overlap around expanded skills on the device.
+
 # CareerProof — Acceptance test plan
 
 ## v0.1.2 Final Release — post-promotion iPhone smoke gate
