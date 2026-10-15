@@ -38,7 +38,7 @@ test('UX301–UX304: achievement → experience → linked skill → supporting 
   const skill=page.locator('.skill-entry[data-skill=custom-competency]');
   await expect(skill).toHaveAttribute('open','');
   await expect(skill.locator('summary')).toBeFocused();
-  await expect(skill).toContainText('Linked');
+  await expect(skill).toContainText('1 linked example');
   await skill.locator('[data-action=competency-achievement][data-id=achievement-1]').click();
   await expect(page.getByRole('dialog',{name:'Resolved synthetic issue'})).toBeVisible();
   expect(await snapshot(page)).toEqual(before);
@@ -93,7 +93,8 @@ test('UX306–UX307: an unlinked achievement has no invented navigation, mobile 
   for(const width of [320,390]){
     await page.setViewportSize({width,height:750});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
-    const rects=await page.locator('.story-related-link, .story-section .chip-action').evaluateAll(els=>els.map(el=>el.getBoundingClientRect()));
+    const rects=await page.locator('.story-related-link, .story-section .chip-action').evaluateAll(els=>els.map(el=>({height:el.getBoundingClientRect().height})));
+    expect(rects.length).toBeGreaterThan(0);
     expect(rects.every(r=>r.height>=44)).toBe(true);
   }
 });
