@@ -1,4 +1,7 @@
 import {test,expect} from '@playwright/test';
+// Keep UI and service worker assertions in sync with compiled app version.
+import {APP_VERSION} from '../../dist/app/domain/models.js';
+const CURRENT_CACHE = `careerproof-v${APP_VERSION}`;
 
 async function start(page){
   await page.goto('/');
@@ -11,7 +14,7 @@ async function controlled(page){
 test('Settings provides a safe manual update check without altering saved data',async({page})=>{
   await start(page);
   await page.locator('.header-settings').click();
-  await expect(page.getByRole('dialog')).toContainText('0.1.3-alpha.4');
+  await expect(page.getByRole('dialog')).toContainText(APP_VERSION);
   await expect(page.locator('#pwa-update-status')).toContainText('Checks automatically each time you open CareerProof');
   await page.locator('[data-action=check-updates]').click();
   await expect(page.locator('#pwa-update-status')).toContainText(/latest version available|downloading|Update ready|Checks automatically/);
@@ -49,7 +52,7 @@ test('CP-012.1 a newly deployed version offers Back up first and a user-controll
     const notice=page.locator('#pwa-update-notice');
     await expect(notice).toBeVisible({timeout:20000});
     await expect(notice).toContainText('New Version Ready');
-    await expect(page.locator('#pwa-update-version')).toContainText('version 0.1.3-alpha.4');
+    await expect(page.locator('#pwa-update-version')).toContainText(`version ${APP_VERSION}`);
     const backup=notice.locator('[data-action=export]'),restart=notice.locator('[data-action=reload-update]');
     for(const width of [320,375,430]){
       await page.setViewportSize({width,height:780});
