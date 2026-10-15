@@ -2,18 +2,20 @@ import { type AchievementView as Achievement, type Profile, type AchievementStat
 import { validateAchievementInput, validateProfileInput, summarizeAchievements, ValidationError } from '../domain/validation.js';
 import { initialize, getProfile, saveProfile, listAchievements, getAchievement, saveAchievement, removeAchievement, getMeta, setMeta, database } from '../data/db.js';
 import { careerSections, careerForm, readCareerForm, syncCareerDisclosures, toggleCareerDisclosure, type CareerKind, type CareerRecord } from '../ui/careerHistory.js';
-import { portfolioPage,portfolioCards,portfolioForm,readPortfolioForm,updatePortfolioRoleChoices,type PortfolioFilters } from '../ui/experiencePortfolio.js';
+import { portfolioForm,readPortfolioForm,updatePortfolioRoleChoices } from '../ui/experiencePortfolio.js';
+import { timelinePage,timelineGroups,experiencePageView } from '../ui/experienceTimeline.js';
+import { achievementRow,achievementStory } from '../ui/achievementStory.js';
+import { achievementContexts,achievementYear } from '../domain/timeline.js';
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup, inspectDataHealth, type PreparedBackup } from '../data/backup.js';
 import { dataHealthReport } from '../ui/dataHealth.js';
 import { homeGapsSection, roleCoverageSection } from '../ui/homeDashboard.js';
 import { removalImpact, type RemovableKind } from '../domain/removal.js';
 import { removalContent, defaultRemovalChoice, removalReady, type RemovalChoice } from '../ui/removal.js';
-import { formatPrecisionDate } from '../domain/dates.js';
 import {icon} from '../ui/icons.js';
 import {escapeHtml} from '../ui/html.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
-import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,achievementEnrichmentDetails,addInlineExperience} from '../ui/achievementIntelligence.js';
+import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,addInlineExperience} from '../ui/achievementIntelligence.js';
 import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency,defaultSkillScope,skillExampleSummary,type SkillScope} from '../ui/competencyLibrary.js';
 import {proficiencyAssessmentForm,readProficiencyForm} from '../ui/proficiencyAssessment.js';
 import {dateBounds} from '../domain/dates.js';
@@ -27,7 +29,10 @@ let careerCollections:CareerCollections|null=null;
 let careerKind:CareerKind='employers';
 let careerEmployerId:string|undefined;
 let captureProjectId:string|null=null;
-let portfolioFilters:PortfolioFilters={query:'',type:'',status:''};
+// CP-UX1: the Experience tab shows a role-grouped timeline, or one experience's page.
+let experienceId:string|null=null;
+let experienceQuery='';
+let timelineOpen:Set<string>|null=null;
 let screen:Screen='home';
 let modal:Modal=null;
 let selectedId:string|null=null;
@@ -37,7 +42,7 @@ const dialogs=new DialogController();
 let pendingBackup:PreparedBackup|null=null;
 let saving=false;
 let searchText='';
-let filterStatus='active';
+let filterStatus='recorded';
 let filterRole='';
 let filterProject='';
 let filterCompetency='';
@@ -64,12 +69,12 @@ let toastKind:'success'|'error'='success';
 const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships',proficiencyAssessments:'Proficiency assessments'};
 
 const escape=escapeHtml;
-const formatDate=formatPrecisionDate;
 function relativeDate(v:string):string {if(!v)return 'Never';return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(new Date(v));}
 function capitalize(v:string):string {return v.charAt(0).toUpperCase()+v.slice(1);}
-function statusBadge(status:AchievementStatus):string {return `<span class="status-tag status-${status}">${status==='recorded'?'Recorded':capitalize(status)}</span>`;}
 function initials():string {return profile.displayName.trim().split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()??'').join('') || 'CP';}
-function currentNav():Screen {const name=location.hash.replace('#/','');return name==='vault'||name==='profile'||name==='portfolio'||name==='competencies'?name:'home';}
+function currentNav():Screen {const name=location.hash.replace('#/','').split('/')[0];return name==='vault'||name==='profile'||name==='portfolio'||name==='competencies'?name:'home';}
+/** CP-UX1: #/portfolio/<id> opens that experience's page. */
+function hashExperience():string|null {const [name,id]=location.hash.replace('#/','').split('/');return name==='portfolio'&&id?decodeURIComponent(id):null;}
 function applyTheme(){document.documentElement.dataset.theme=theme;}
 async function setTheme(value:string){if(!['system','light','dark'].includes(value))return;try{await setMeta('preferences',{theme:value});theme=value;localStorage.setItem('careerproof-theme',theme);applyTheme();}catch(err){notify(errorMessage(err),'error');}}
 function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${screen===id?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
@@ -80,8 +85,8 @@ function plural(n:number,word:string):string{return `${n} ${word}${n===1?'':'s'}
 function screenMeta():{title:string;subtitle:string}{
   const stats=summarizeAchievements(achievements);
   switch(screen){
-    case 'vault':return {title:'Achievement Vault',subtitle:achievements.length?[plural(stats.total,'Achievement'),plural(stats.drafts,'Draft'),...(stats.archived?[`${stats.archived} Archived`]:[])].join(' · '):'Your Record of Contributions and Results'};
-    case 'portfolio':{const n=careerCollections?.projects.length??0;return {title:'Experience Portfolio',subtitle:n?plural(n,'Experience'):'Projects, Initiatives and Ongoing Responsibilities'};}
+    case 'vault':return {title:'Achievement Vault',subtitle:achievements.length?[plural(stats.recorded,'Achievement'),plural(stats.drafts,'Draft'),...(stats.archived?[`${stats.archived} Archived`]:[])].join(' · '):'Your Record of Contributions and Results'};
+    case 'portfolio':{const n=careerCollections?.projects.length??0,r=careerCollections?.roles.length??0;return {title:'Experience',subtitle:n||r?`${plural(r,'Role')} · ${plural(n,'Experience')}`:'Your Work, Grouped by Role'};}
     case 'competencies':{const s=careerCollections?skillExampleSummary(careerCollections):{withExamples:0,total:0};return {title:'Skills',subtitle:`${s.withExamples} of ${s.total} Skills with Examples`};}
     case 'profile':return {title:'Career Profile',subtitle:'Identity, Work History and Qualifications'};
     default:{const first=profile.displayName.trim().split(/\s+/)[0];return {title:'CareerProof',subtitle:first?`Welcome Back, ${first}`:'Record the Work. Prove the Impact.'};}
@@ -190,13 +195,15 @@ function shell():string {
       <div class="sidebar-bottom"><button class="sidebar-settings" data-action="settings">${icon('settings',24)} Settings ${icon('chevron',16)}</button><div class="sidebar-version">CareerProof OS <span>v${APP_VERSION}</span></div></div>
     </aside>
     <div class="content-wrap">
-      <main class="page" id="main-content">${pageHeader()}${screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?portfolioPage(careerCollections,portfolioFilters):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope()):profileView()}</main>
+      <main class="page" id="main-content">${screen==='portfolio'&&experienceId&&careerCollections?experiencePageView(careerCollections,experienceId):pageHeader()+(screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?timelinePage(careerCollections,experienceQuery,timelineOpen):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope()):profileView())}</main>
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">${NAV.map(([id,label,glyph])=>navButton(id,label,glyph,true)).join('')}</nav>
     <div id="modal-layer">${modalView()}</div>${modal?'':toastView()}
   </div>`;
 }
-function smallAchievement(a:Achievement):string{return `<button class="achievement-row" data-action="detail" data-id="${escape(a.id)}"><span class="achievement-icon">${icon('trophy',17)}</span><span class="achievement-text"><strong>${escape(a.title)}</strong><small>${escape(a.contribution||'Draft — add a contribution when ready')}</small><span class="achieve-meta">${formatDate(a.occurredOn)} <span aria-hidden="true">·</span> ${a.impactCategory?IMPACT_CATEGORIES[a.impactCategory]:'General impact'}</span></span>${statusBadge(a.status)}<span class="row-arrow">${icon('chevron',17)}</span></button>`;}
+/** CP-UX1: one compact row per achievement — full title, then date and where it happened. */
+function contexts():Map<string,string>{return careerCollections?achievementContexts(careerCollections):new Map();}
+function smallAchievement(a:Achievement,ctx:Map<string,string>=contexts()):string{return achievementRow(a,ctx.get(a.id));}
 function metricCard(label:string,value:string,sub:string,tone=''):string{return `<div class="metric-card ${tone}"><div class="metric-label">${label}</div><div class="metric-value">${value}</div><div class="metric-sub">${sub}</div></div>`;}
 function exportAge():{days:number|null;stale:boolean}{
   if(!lastExportAt)return {days:null,stale:true};
@@ -227,43 +234,71 @@ function homeView():string {
     ${metricCard('Skills',String(skills.withExamples),`of ${skills.total} have examples`)}
     ${metricCard('Last export',age.days===null?'Never':age.days===0?'Today':`${plural(age.days,'day')} ago`,age.days===null?'no export from this device yet':'generated on this device',age.stale?'metric-warn':'')}
   </section>
-  ${recent.length?`<div class="section-title"><h2>Recent</h2><button class="text-action" data-action="nav" data-screen="vault">View all ${icon('arrow',16)}</button></div><section class="panel list-card"><div class="achievement-list">${recent.map(smallAchievement).join('')}</div></section>`:''}
+  ${recent.length?`<div class="section-title"><h2>Recent</h2><button class="text-action" data-action="nav" data-screen="vault">View all ${icon('arrow',16)}</button></div><section class="panel list-card"><div class="achievement-list">${(ctx=>recent.map(a=>smallAchievement(a,ctx)).join(''))(contexts())}</div></section>`:''}
   ${careerCollections?homeGapsSection(careerCollections,localDate())+roleCoverageSection(careerCollections):''}
   <div class="section-title"><h2>Quick Capture</h2></div>
   <div class="quick-grid">${quick('Achievement','trophy','data-action="capture"')}${quick('Experience','layers','data-action="add-project"')}${quick('Employer','briefcase','data-action="add-career" data-kind="employers"')}${quick('Credential','badge','data-action="add-career" data-kind="credentials"')}</div>
   <p class="footer-note">${icon('lock',14)} Local-first: your records stay on this device. There is no account or sync, so export backups regularly.</p>`;
 }
 function emptyState(heading:string,body:string,button:string,action:string):string {return `<div class="empty-state"><div class="empty-illustration">${icon('vault',27)}</div><h3>${heading}</h3><p>${body}</p><button class="button button-primary" data-action="${action}">${icon('plus',17)} ${button}</button></div>`;}
-function filtered():Achievement[]{
+/** Every filter except status, so the Recorded / Drafts / Archived counts reflect the same search. */
+function matchesFilters(a:Achievement):boolean{
   const q=searchText.trim().toLocaleLowerCase();
-  return achievements.filter(a=>{
-    if(filterStatus==='active'&&a.status==='archived')return false;
-    if(filterStatus!=='active'&&filterStatus!=='all'&&a.status!==filterStatus)return false;
-    if(filterRole&&a.roleId!==filterRole)return false;
-    const linked=careerCollections?.recordLinks??[];
-    if(filterProject&&!linked.some(l=>l.linkType==='achievement-project'&&l.sourceId===a.id&&l.targetId===filterProject))return false;
-    if(filterCompetency&&!linked.some(l=>l.linkType==='achievement-competency'&&l.sourceId===a.id&&l.targetId===filterCompetency))return false;
-    if(filterDateStart&&(!a.occurredStart||dateBounds(a.occurredStart).latest<filterDateStart))return false;
-    if(filterDateEnd&&(!a.occurredStart||dateBounds(a.occurredStart).earliest>filterDateEnd))return false;
-    return !q||[a.title,a.contribution,a.situation,a.actions,a.outcome,a.notes,IMPACT_CATEGORIES[a.impactCategory]].join(' ').toLocaleLowerCase().includes(q);
-  }).sort((a,b)=>sortOrder==='oldest'?a.occurredOn.localeCompare(b.occurredOn):sortOrder==='updated'?b.updatedAt.localeCompare(a.updatedAt):b.occurredOn.localeCompare(a.occurredOn));
+  if(filterRole&&a.roleId!==filterRole)return false;
+  const linked=careerCollections?.recordLinks??[];
+  if(filterProject&&!linked.some(l=>l.linkType==='achievement-project'&&l.sourceId===a.id&&l.targetId===filterProject))return false;
+  if(filterCompetency&&!linked.some(l=>l.linkType==='achievement-competency'&&l.sourceId===a.id&&l.targetId===filterCompetency))return false;
+  if(filterDateStart&&(!a.occurredStart||dateBounds(a.occurredStart).latest<filterDateStart))return false;
+  if(filterDateEnd&&(!a.occurredStart||dateBounds(a.occurredStart).earliest>filterDateEnd))return false;
+  return !q||[a.title,a.contribution,a.situation,a.actions,a.outcome,a.notes,IMPACT_CATEGORIES[a.impactCategory]].join(' ').toLocaleLowerCase().includes(q);
 }
-function vaultRows():string {const entries=filtered();return entries.length?entries.map(smallAchievement).join(''):`<div class="no-results">${icon('search',24)}<strong>No matching achievements</strong><p>Try a different search or status filter.</p><button class="text-action" data-action="clear-filters">Clear filters ${icon('arrow',15)}</button></div>`;}
-function advancedFilterCount():number{return [filterRole,filterProject,filterCompetency,filterDateStart,filterDateEnd].filter(Boolean).length;}
+function statusMatches(a:Achievement):boolean{return filterStatus==='all'||(filterStatus==='active'?a.status!=='archived':a.status===filterStatus);}
+const dateKey=(a:Achievement)=>a.occurredStart?dateBounds(a.occurredStart).latest:'';
+function filtered():Achievement[]{
+  return achievements.filter(a=>statusMatches(a)&&matchesFilters(a))
+    .sort((a,b)=>sortOrder==='oldest'?(dateKey(a)||'9999').localeCompare(dateKey(b)||'9999'):sortOrder==='updated'?b.updatedAt.localeCompare(a.updatedAt):dateKey(b).localeCompare(dateKey(a))||b.updatedAt.localeCompare(a.updatedAt));
+}
+/** CP-UX1: rows grouped under year headings when sorted by date. */
+function vaultRows():string {
+  const entries=filtered(),ctx=contexts();
+  const narrowed=Boolean(searchText.trim()||filterRole||filterProject||filterCompetency||filterDateStart||filterDateEnd);
+  if(!entries.length&&!narrowed){
+    // An empty segment is not a failed search: say what is (not) there.
+    const [title,text]=filterStatus==='draft'?['No Drafts','Anything saved as a draft appears here until it has what you did and a date.']
+      :filterStatus==='archived'?['Nothing Archived','Archived achievements are kept here, out of your lists and counts.']
+      :['Nothing Recorded Yet','Drafts move here once they have what you did and a date.'];
+    return `<div class="no-results">${icon('vault',24)}<strong>${title}</strong><p>${text}</p></div>`;
+  }
+  if(!entries.length)return `<div class="no-results">${icon('search',24)}<strong>No matching achievements</strong><p>Try a different search or filter.</p><button class="text-action" data-action="clear-filters">Clear filters ${icon('arrow',15)}</button></div>`;
+  if(sortOrder==='updated')return `<div class="panel list-card">${entries.map(a=>smallAchievement(a,ctx)).join('')}</div>`;
+  const years:[string,Achievement[]][]=[];
+  for(const a of entries){const y=achievementYear(a.occurredStart);const last=years[years.length-1];if(last&&last[0]===y)last[1].push(a);else years.push([y,[a]]);}
+  return years.map(([y,list])=>`<h2 class="vault-year">${escape(y)}</h2><div class="panel list-card">${list.map(a=>smallAchievement(a,ctx)).join('')}</div>`).join('');
+}
+function vaultStatusSegments():string{
+  const pool=achievements.filter(matchesFilters);
+  const count=(s:AchievementStatus)=>pool.filter(a=>a.status===s).length;
+  const segs:[string,string,number][]=[['recorded','Recorded',count('recorded')],['draft','Drafts',count('draft')]];
+  const archived=count('archived');if(archived||filterStatus==='archived')segs.push(['archived','Archived',archived]);
+  return segs.map(([value,label,n])=>`<button type="button" class="segment" data-action="vault-status" data-status="${value}" aria-pressed="${filterStatus===value}">${label} · ${n}</button>`).join('');
+}
+function advancedFilterCount():number{return [filterRole,filterProject,filterCompetency,filterDateStart,filterDateEnd,sortOrder!=='recent'?'sort':''].filter(Boolean).length;}
 function filterToggleLabel():string{const n=advancedFilterCount();return `${icon('filter',17)}<span>Filters${n?` · ${n}`:''}</span>`;}
-function refreshVaultResults(){const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();const toggle=document.getElementById('vault-filter-toggle');if(toggle)toggle.innerHTML=filterToggleLabel();}
+function refreshVaultResults(){const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();const seg=document.getElementById('vault-status');if(seg)seg.innerHTML=vaultStatusSegments();const toggle=document.getElementById('vault-filter-toggle');if(toggle)toggle.innerHTML=filterToggleLabel();}
 function filterField(id:string,label:string,control:string):string{return `<div class="field"><label for="${id}">${label}</label>${control}</div>`;}
 function vaultView():string {
   if(achievements.length===0)return `<section class="panel">${emptyState('Start Documenting Your Impact','Your vault is empty. Even one meaningful achievement is worth recording.','Add your first achievement','capture')}</section>`;
   const open=vaultFiltersOpen;
-  return `<section class="panel vault-panel"><div class="vault-toolbar"><label class="search-field">${icon('search',19)}<input id="vault-search" type="search" placeholder="Search achievements" value="${escape(searchText)}" autocomplete="off" aria-label="Search achievements"/></label><div class="filter-controls"><label class="sr-only" for="status-filter">Filter by status</label><select id="status-filter"><option value="active" ${filterStatus==='active'?'selected':''}>Active</option><option value="all" ${filterStatus==='all'?'selected':''}>All statuses</option><option value="recorded" ${filterStatus==='recorded'?'selected':''}>Recorded</option><option value="draft" ${filterStatus==='draft'?'selected':''}>Drafts</option><option value="archived" ${filterStatus==='archived'?'selected':''}>Archived</option></select><label class="sr-only" for="sort-order">Sort achievements</label><select id="sort-order"><option value="recent" ${sortOrder==='recent'?'selected':''}>Newest</option><option value="oldest" ${sortOrder==='oldest'?'selected':''}>Oldest</option><option value="updated" ${sortOrder==='updated'?'selected':''}>Last edited</option></select><button id="vault-filter-toggle" class="button button-outline filter-toggle" data-action="toggle-vault-filters" aria-expanded="${open}" aria-controls="vault-filters">${filterToggleLabel()}</button></div></div>
-    <div id="vault-filters" class="vault-advanced-filters" ${open?'':'hidden'}>
+  return `<div id="vault-status" class="segmented vault-status" role="group" aria-label="Which achievements to show">${vaultStatusSegments()}</div>
+  <div class="vault-toolbar"><label class="search-field">${icon('search',19)}<input id="vault-search" type="search" placeholder="Search achievements" value="${escape(searchText)}" autocomplete="off" aria-label="Search achievements"/></label><button id="vault-filter-toggle" class="button button-outline filter-toggle" data-action="toggle-vault-filters" aria-expanded="${open}" aria-controls="vault-filters">${filterToggleLabel()}</button></div>
+    <div id="vault-filters" class="panel vault-advanced-filters" ${open?'':'hidden'}>
+      ${filterField('sort-order','Sort',`<select id="sort-order"><option value="recent" ${sortOrder==='recent'?'selected':''}>Newest first</option><option value="oldest" ${sortOrder==='oldest'?'selected':''}>Oldest first</option><option value="updated" ${sortOrder==='updated'?'selected':''}>Last edited</option></select>`)}
       ${filterField('role-filter','Employment role',`<select id="role-filter"><option value="">All roles</option>${(careerCollections?.roles??[]).map(r=>`<option value="${escape(r.id)}" ${filterRole===r.id?'selected':''}>${escape(r.title)}</option>`).join('')}</select>`)}
       ${filterField('project-filter','Experience',`<select id="project-filter"><option value="">All experiences</option>${(careerCollections?.projects??[]).map(p=>`<option value="${escape(p.id)}" ${filterProject===p.id?'selected':''}>${escape(p.name)}</option>`).join('')}</select>`)}
       ${filterField('competency-filter','Skill',`<select id="competency-filter"><option value="">All skills</option>${(careerCollections?.competencies??[]).filter(c=>c.status==='active').map(c=>`<option value="${escape(c.id)}" ${filterCompetency===c.id?'selected':''}>${escape(c.name)}</option>`).join('')}</select>`)}
       ${filterField('date-start-filter','From date',`<input type="date" id="date-start-filter" value="${escape(filterDateStart)}"/>`)}
       ${filterField('date-end-filter','Through date',`<input type="date" id="date-end-filter" value="${escape(filterDateEnd)}"/>`)}
-    </div><div id="vault-results" class="achievement-list">${vaultRows()}</div></section>
+    </div><div id="vault-results" class="vault-results">${vaultRows()}</div>
   <p class="footer-note">${icon('info',14)} Outcomes, metrics and evidence are self-reported; nothing here is independently verified.</p>`;
 }
 function profileView():string {
@@ -293,32 +328,45 @@ function modalView():string {
   return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1" class="modal ${modal==='capture'?'capture-modal':''}">${content}</section></div>`;
 }
 function dialogHeader(title:string,subtitle:string):string {return `<div class="modal-header"><div><h2 id="dialog-title">${title}</h2><p id="dialog-description">${subtitle}</p></div><button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">${icon('close',24)}</button></div>${toastView(true)}`;}
+const PRECISIONS:[('month'|'year'|'day'),string][]=[['month','Month'],['year','Year'],['day','Exact day']];
+/** Browsers without a month picker show a text box, so the month field carries a YYYY-MM placeholder. */
+function dateInputAttrs(p:'year'|'month'|'day'):string{return p==='year'?'type="text" inputmode="numeric" maxlength="4" placeholder="YYYY" pattern="[0-9]{4}"':p==='month'?'type="month" placeholder="YYYY-MM"':'type="date"';}
+function occurrenceDateField(precision:'year'|'month'|'day',value:string):string{
+  return `<fieldset class="field date-field"><legend class="field-legend">When did it happen?</legend><div class="precision-switch">${PRECISIONS.map(([v,l])=>`<label class="precision-option"><input type="radio" name="occurredPrecision" id="occurredPrecision-${v}" value="${v}" ${precision===v?'checked':''}/><span>${l}</span></label>`).join('')}</div><label class="sr-only" for="occurredOn">Occurrence date</label><input id="occurredOn" name="occurredOn" ${dateInputAttrs(precision)} value="${escape(value)}"/><p class="field-hint">Use the month or year when you don't know the exact day.</p></fieldset>`;
+}
+/** Switching precision keeps what still fits (a day's month, a month's year) and never invents the rest. */
+function switchOccurrencePrecision(p:'year'|'month'|'day'){
+  const input=document.getElementById('occurredOn') as HTMLInputElement|null;if(!input)return;
+  const v=input.value.trim();const next=p==='year'?v.slice(0,4):p==='month'?(v.length>=7?v.slice(0,7):''):(v.length===10?v:'');
+  input.removeAttribute('pattern');input.removeAttribute('placeholder');input.removeAttribute('inputmode');input.removeAttribute('maxlength');
+  if(p==='year'){input.type='text';input.inputMode='numeric';input.maxLength=4;input.placeholder='YYYY';input.pattern='[0-9]{4}';}
+  else{input.type=p==='month'?'month':'date';if(p==='month')input.placeholder='YYYY-MM';}
+  input.value=/^\d{4}$/.test(next)||p!=='year'?next:'';
+}
 function achievementForm():string {
   const existing=editing&&selectedId?achievements.find(a=>a.id===selectedId):undefined;
   const status=existing?.status==='archived'?existing.preArchiveStatus:existing?.status;
-  const dateType=existing?.occurredStart?.precision==='year'?'text':existing?.occurredStart?.precision==='month'?'month':'date';
+  // CP-UX1: month by default; year or exact day when that is what you know. Never invent a day.
+  const precision=existing?(existing.occurredStart?.precision??'month'):'month';
+  const dateValue=existing?existing.occurredOn:localDate().slice(0,7);
   return `${dialogHeader(existing?'Edit Achievement':'Capture an Achievement',existing?'Update the details of your contribution.':'Start with what you accomplished. Refine the details later.')}
   <form id="achievement-form" class="modal-body form-grid" novalidate>
     <div id="form-error" class="form-error" role="alert" hidden></div>
     ${captureProjectId&&careerCollections?.projects.some(p=>p.id===captureProjectId)?`<p class="portfolio-capture-context">${icon('layers',16)} Linked experience: <strong>${escape(careerCollections.projects.find(p=>p.id===captureProjectId)?.name)}</strong></p>`:''}
     <div class="field"><label for="title">Achievement title <span class="required">*</span></label><input id="title" name="title" maxlength="160" placeholder="e.g., Resolved a critical technical issue" value="${escape(existing?.title??'')}" required/><p class="field-hint">Write a short, action-focused title.</p></div>
     <div class="field"><label for="contribution">What did you do? <span class="required">*</span></label><textarea id="contribution" name="contribution" rows="5" maxlength="6000" placeholder="Describe your personal contribution, decisions, or actions...">${escape(existing?.contribution??'')}</textarea><p class="field-hint">Required for a recorded achievement. Optional for a draft.</p></div>
-    <div class="field-row"><div class="field"><label for="occurredOn">Occurrence date${dateType==='text'?' (year)':''}</label><input id="occurredOn" type="${dateType}" ${dateType==='text'?'inputmode="numeric" maxlength="4"':''} name="occurredOn" value="${escape(existing?.occurredOn??localDate())}"/></div><div class="field"><label for="impactCategory">Impact category</label><select name="impactCategory" id="impactCategory">${Object.entries(IMPACT_CATEGORIES).map(([key,value])=>`<option value="${key}" ${existing?.impactCategory===key?'selected':''}>${value}</option>`).join('')}</select></div></div>
+    ${occurrenceDateField(precision,dateValue)}
+    <div class="field-row"><div class="field"><label for="impactCategory">Impact category</label><select name="impactCategory" id="impactCategory">${Object.entries(IMPACT_CATEGORIES).map(([key,value])=>`<option value="${key}" ${existing?.impactCategory===key?'selected':''}>${value}</option>`).join('')}</select></div></div>
     <div class="field"><label for="outcome">Outcome <span class="optional">optional</span></label><textarea id="outcome" name="outcome" rows="3" maxlength="6000" placeholder="What changed as a result? Add measurable results if known.">${escape(existing?.outcome??'')}</textarea></div>
     ${careerCollections?richAchievementFields(existing,careerCollections,captureProjectId):''}
     <div class="form-guidance">${icon('info',18)} <p>Capture the facts as you know them. Don't invent metrics or outcomes; you can complete your record later.</p></div>
   </form><div class="modal-footer"><button class="button button-outline" data-action="save-achievement" data-status="draft">Save draft</button><button class="button button-primary" data-action="save-achievement" data-status="recorded">${icon('check',17)} ${existing?'Save changes':'Save achievement'}</button></div>`;
 }
 function achievementDetail():string {
-  const a=achievements.find(x=>x.id===selectedId);if(!a)return `${dialogHeader('Achievement Unavailable','This entry might have been deleted.')}<div class="modal-body">Please reload your vault.</div>`;
-  return `${dialogHeader('Achievement Details','Your contribution, preserved.')}
-  <div class="modal-body"><div class="detail-title-row">${statusBadge(a.status)}<span class="detail-date">${icon('calendar',15)} ${formatDate(a.occurredOn)}</span></div><h3 class="detail-title">${escape(a.title)}</h3>
-  <div class="detail-section"><p class="section-kicker">YOUR CONTRIBUTION</p><p class="readable-text">${escape(a.contribution||'Not added yet. Edit this draft to describe what you contributed.')}</p></div>
-  <div class="detail-section"><p class="section-kicker">OUTCOME</p><p class="readable-text ${!a.outcome?'muted':''}">${escape(a.outcome||'Not recorded yet')}</p></div>
-  <div class="detail-section"><p class="section-kicker">IMPACT CATEGORY</p><span class="pill">${escape(IMPACT_CATEGORIES[a.impactCategory])}</span></div>
-  ${careerCollections?achievementEnrichmentDetails(a,careerCollections):''}
-  <div class="detail-section"><p class="section-kicker">RECORD INFORMATION</p><p class="fine-text">Created ${relativeDate(a.createdAt)} · Last updated ${relativeDate(a.updatedAt)}</p></div>
-  <div class="detail-actions"><button class="button button-outline" data-action="edit-achievement">${icon('edit',16)} Edit</button><button class="button button-outline" data-action="toggle-archive">${icon(a.status==='archived'?'refresh':'archive',16)} ${a.status==='archived'?'Restore':'Archive'}</button><button class="button button-danger-soft" data-action="delete-achievement">${icon('trash',16)} Delete</button></div></div>`;
+  const a=achievements.find(x=>x.id===selectedId);if(!a||!careerCollections)return `${dialogHeader('Achievement Unavailable','This entry might have been deleted.')}<div class="modal-body">Please reload your vault.</div>`;
+  // CP-UX1: read as a story — Result, What I did, Context; the rest folds under More Details.
+  const story=achievementStory(a,careerCollections);
+  return dialogHeader(escape(story.title),escape(story.subtitle))+story.body+story.footer;
 }
 function profileForm():string {
   return `${dialogHeader('Edit Career Profile','Your professional introduction and contact details.')}
@@ -360,6 +408,8 @@ async function confirmRemoval(){
   try{
     const plan=await database.removeWithPlan(removal.kind,removal.id,record.revision,impact.hasDependents?removal.mode!:'delete',removal.mode==='move'?removal.targetId:null);
     achievements=await listAchievements();await loadCareerCollections();
+    // CP-UX1: deleting the experience whose page is open returns to the timeline.
+    if(removal.kind==='projects'&&experienceId===removal.id){experienceId=null;history.replaceState(null,'','#/portfolio');}
     closeModal(true);notify(plan.summary);
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
@@ -467,7 +517,9 @@ async function saveProjectForm(){
     const input=readPortfolioForm(form,prior);
     await database.savePortfolioProject(input.record,input.roleIds);
     await loadCareerCollections();
-    closeModal(true);notify('Experience saved.');
+    // CP-UX1: a new experience added from the Experience tab opens its page, ready for its first achievement.
+    if(!prior&&screen==='portfolio')openExperience(input.record.id);else closeModal(true);
+    notify('Experience saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
 async function saveProficiencyForm(){
@@ -487,9 +539,15 @@ function refreshCompetencies(){
   const target=document.querySelector<HTMLElement>('.skill-groups');
   if(target&&careerCollections)target.innerHTML=competencyGroups(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope());
 }
-function refreshPortfolioCards(){
-  const target=document.getElementById('portfolio-results');
-  if(target&&careerCollections)target.innerHTML=portfolioCards(careerCollections,portfolioFilters);
+function refreshTimeline(){
+  const target=document.getElementById('timeline-groups');
+  if(target&&careerCollections)target.innerHTML=timelineGroups(careerCollections,experienceQuery,timelineOpen);
+}
+/** CP-UX1: open one experience as its own page (#/portfolio/<id>), or go back to the timeline. */
+function openExperience(id:string|null){
+  if(modal)closeModal(true);
+  screen='portfolio';experienceId=id;location.hash=id?`/portfolio/${encodeURIComponent(id)}`:'/portfolio';render();window.scrollTo(0,0);
+  const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
 }
 async function saveCustomSkill(){
   if(saving||!careerCollections)return;
@@ -559,7 +617,7 @@ async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);i
 async function deleteCurrent(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;if(!window.confirm(`Permanently delete "${a.title}"? This cannot be undone.`))return;
   try{await removeAchievement(a.id,a.revision);achievements=await listAchievements();closeModal(true);notify('Achievement deleted.');}catch(err){notify(errorMessage(err),'error');}
 }
-function navigate(to:Screen){if(modal)closeModal(true);screen=to;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
+function navigate(to:Screen){if(modal)closeModal(true);screen=to;experienceId=null;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
 function focusables():HTMLElement[]{return Array.from(document.querySelectorAll<HTMLElement>('.modal button:not([disabled]),.modal input:not([disabled]):not([type="hidden"]),.modal textarea:not([disabled]),.modal select:not([disabled])')).filter(x=>x.offsetParent!==null);}
 function runAction(node:HTMLElement){
   const action=node.dataset.action;switch(action){
@@ -598,6 +656,9 @@ function runAction(node:HTMLElement){
     case 'delete-competency':openRemoval('competencies',node.dataset.id??'');break;
     case 'confirm-removal':void confirmRemoval();break;
     case 'portfolio-achievement':openModal('detail',node.dataset.id??null);break;
+    case 'open-experience':openExperience(node.dataset.id??null);break;
+    case 'close-experience':openExperience(null);break;
+    case 'vault-status':filterStatus=node.dataset.status??'recorded';refreshVaultResults();break;
     case 'project-capture':captureProjectId=node.dataset.id??null;openModal('capture');break;
     case 'edit-profile':openModal('profile');break;
     case 'add-career':openCareer(node.dataset.kind as CareerKind,null,node.dataset.employer);break;
@@ -625,8 +686,10 @@ function runAction(node:HTMLElement){
     case 'check-integrity':void doIntegrityCheck();break;
     case 'open-data-health':openModal('settings');document.getElementById('check-integrity')?.scrollIntoView({block:'center'});void doIntegrityCheck();break;
     case 'role-achievements':{
-      // CP-012C: a role row on Home opens exactly that role's active achievements.
-      searchText='';filterStatus='active';sortOrder='recent';filterRole=node.dataset.id??'';filterProject='';filterCompetency='';filterDateStart='';filterDateEnd='';
+      // CP-012C: a role row on Home opens exactly that role's achievements.
+      // CP-UX1: on the Recorded segment, or on Drafts when the role has only drafts.
+      const roleId=node.dataset.id??'';
+      searchText='';filterStatus=achievements.some(a=>a.roleId===roleId&&a.status==='recorded')?'recorded':'draft';sortOrder='recent';filterRole=roleId;filterProject='';filterCompetency='';filterDateStart='';filterDateEnd='';
       vaultFiltersOpen=true;navigate('vault');break;
     }
     case 'health-open':{
@@ -640,7 +703,7 @@ function runAction(node:HTMLElement){
     }
     case 'choose-restore':(document.getElementById('restore-file') as HTMLInputElement|null)?.click();break;
     case 'confirm-restore':void doConfirmRestore();break;
-    case 'clear-filters':searchText='';filterStatus='active';sortOrder='recent';filterRole='';filterProject='';filterCompetency='';filterDateStart='';filterDateEnd='';render();break;
+    case 'clear-filters':searchText='';filterStatus='recorded';sortOrder='recent';filterRole='';filterProject='';filterCompetency='';filterDateStart='';filterDateEnd='';render();break;
     case 'toggle-vault-filters':{
       vaultFiltersOpen=!vaultFiltersOpen;
       const panel=document.getElementById('vault-filters');if(panel)panel.hidden=!vaultFiltersOpen;
@@ -673,7 +736,7 @@ document.addEventListener('click',e=>{
   const actionTarget=resolveActionTarget(e.target);
   if(actionTarget)runAction(actionTarget);
 });
-document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
+document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;if(t.id==='experience-search'){experienceQuery=(t as HTMLInputElement).value;refreshTimeline();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;refreshVaultResults();}});
 document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;refreshCompetencies();}
   if(removal&&t.closest('#removal-form')){
     if(t.name==='removal-mode')removal.mode=t.value==='move'?'move':'unlink';
@@ -689,7 +752,8 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
   if(t.id==='competency-filter'){filterCompetency=t.value;refreshVaultResults();}
   if(t.id==='date-start-filter'){filterDateStart=t.value;refreshVaultResults();}
   if(t.id==='date-end-filter'){filterDateEnd=t.value;refreshVaultResults();}
-  if(t.id==='portfolio-filter-type'){portfolioFilters.type=t.value;refreshPortfolioCards();}if(t.id==='portfolio-filter-status'){portfolioFilters.status=t.value;refreshPortfolioCards();}if(t.id==='portfolio-employerId'){const form=t.closest('form');if(form)updatePortfolioRoleChoices(form);}if(t.dataset.action==='portfolio-date-precision'){const target=t.dataset.target??'';const input=document.getElementById('portfolio-'+target) as HTMLInputElement|null;if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}}if(t.id==='status-filter'){filterStatus=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='sort-order'){sortOrder=t.value;const el=document.getElementById('vault-results');if(el)el.innerHTML=vaultRows();}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.dataset.action==='career-date-precision'){
+  if(t.name==='occurredPrecision'){switchOccurrencePrecision(t.value as 'year'|'month'|'day');isDirty=true;}
+  if(t.id==='portfolio-employerId'){const form=t.closest('form');if(form)updatePortfolioRoleChoices(form);}if(t.dataset.action==='portfolio-date-precision'){const target=t.dataset.target??'';const input=document.getElementById('portfolio-'+target) as HTMLInputElement|null;if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}}if(t.id==='sort-order'){sortOrder=t.value;refreshVaultResults();}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.dataset.action==='career-date-precision'){
     const target=t.dataset.target??'';
     const input=document.getElementById('career-'+target) as HTMLInputElement|null;
     if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}
@@ -712,12 +776,18 @@ document.addEventListener('keydown',e=>{
     if(next>=0){e.preventDefault();buttons[next]?.focus();buttons[next]?.click();return;}
   }
   if(e.key==='Enter'&&(e.target as HTMLElement|null)?.id==='inline-experience-name'){e.preventDefault();addInlineExperienceFromForm();return;}if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+document.addEventListener('toggle',e=>{
+  const d=e.target;if(!(d instanceof HTMLDetailsElement)||!d.classList.contains('role-group'))return;
+  // CP-UX1: the timeline keeps the groups you opened or closed while you move between pages.
+  if(!timelineOpen)timelineOpen=new Set([...document.querySelectorAll<HTMLDetailsElement>('details.role-group')].filter(x=>x.open).map(x=>x.dataset.keepOpen??''));
+  const key=d.dataset.keepOpen??'';if(d.open)timelineOpen.add(key);else timelineOpen.delete(key);
+},true);
 window.addEventListener('resize',()=>syncCareerDisclosures(root),{passive:true});
-window.addEventListener('hashchange',()=>{const next=currentNav();if(next===screen)return;screen=next;if(!modal)render();});
+window.addEventListener('hashchange',()=>{const next=currentNav(),exp=hashExperience();if(next===screen&&exp===experienceId)return;screen=next;experienceId=exp;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof Couldn't Open Your Local Database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{
   dialogs.trackViewport();
-  applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);await loadCareerCollections();screen=currentNav();render();
+  applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);await loadCareerCollections();screen=currentNav();experienceId=hashExperience();render();
   configurePwaUpdates();
 }catch(err){renderStartupError(err);}}
 void start();

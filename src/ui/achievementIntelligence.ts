@@ -6,7 +6,6 @@ import {icon} from './icons.js';
 import {escapeHtml} from './html.js';
 
 const html=escapeHtml;
-const optional=(items:string[])=>items.filter(Boolean).join('');
 const field=(name:string,label:string,value:string,area=false)=>{
   const attrs='id="rich-'+name+'" name="'+name+'" maxlength="6000"';
   return '<div class="field"><label for="rich-'+name+'">'+html(label)+'</label>'+
@@ -205,28 +204,4 @@ export function updatePrimaryOptions(form:HTMLFormElement):void{
     const o=document.createElement('option');o.value=field.value;o.textContent=field.parentElement?.querySelector('span')?.textContent??field.value;select.append(o);
   }
   select.value=selected.has(current)?current:'';
-}
-export function achievementEnrichmentDetails(a:AchievementView,c:CareerCollections):string {
-  const role=c.roles.find(r=>r.id===a.roleId);
-  const links=(type:'achievement-project'|'achievement-competency')=>c.recordLinks.filter(x=>x.linkType===type&&x.sourceId===a.id);
-  const projects=links('achievement-project').map(l=>c.projects.find(p=>p.id===l.targetId)?.name).filter(Boolean);
-  const competencies=links('achievement-competency').map(l=>c.competencies.find(p=>p.id===l.targetId)?.name).filter(Boolean);
-  const metrics=c.impactMetrics.filter(m=>m.achievementId===a.id);
-  const evidence=c.evidenceReferences.filter(e=>e.achievementId===a.id);
-  const detail=(label:string,value:string)=>value?'<div class="detail-section"><p class="section-kicker">'+html(label)+'</p><p class="readable-text">'+html(value)+'</p></div>':'';
-  return optional([
-    detail('SITUATION',a.situation),detail('ACTIONS',a.actions),detail('NOTES',a.notes),
-    detail('ROLE',role?.title??''),detail('EXPERIENCES',projects.join(' · ')),
-    detail('COMPETENCIES',competencies.join(' · ')),
-    metrics.length?'<div class="detail-section"><p class="section-kicker">IMPACT METRICS</p>'+metrics.map(m=>
-      '<p class="readable-text">'+html(m.metricName)+': '+html([
-        m.baselineValue!==null?'baseline '+m.baselineValue:'',m.resultValue!==null?'result '+m.resultValue:'',
-        m.reportedValue!==null?'reported '+m.reportedValue:''
-      ].filter(Boolean).join(' → '))+' '+html(m.unit)+(m.sourceNote?' · '+html(m.sourceNote):'')+'</p>').join('')+'</div>':'',
-    evidence.length?'<div class="detail-section"><p class="section-kicker">EVIDENCE REFERENCES (USER PROVIDED)</p>'+
-      evidence.map(e=>'<p class="readable-text">'+html(e.label)+': '+(e.referenceType==='url'?
-        '<a href="'+html(e.referenceValue)+'" target="_blank" rel="noopener noreferrer">'+html(e.referenceValue)+'</a>':
-        html(e.referenceValue))+'</p>').join('')+'</div>':'',
-    detail('PRIVACY',a.confidentiality==='confidential'?'Confidential — excluded from future external sharing by default':'Standard private')
-  ]);
 }

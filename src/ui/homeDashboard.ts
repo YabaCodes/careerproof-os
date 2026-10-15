@@ -33,8 +33,10 @@ export function roleCoverageSection(c: CareerCollections): string {
   const { roles, withoutRole } = roleCoverage(c);
   if (!roles.length) return '';
   const rows = roles.map(r => {
+    // CP-UX1: "achievements" means recorded ones everywhere; drafts are counted on their own.
+    const recorded = r.achievements - r.drafts;
     const counts = r.achievements
-      ? plural(r.achievements, 'achievement') + (r.drafts ? ' · ' + plural(r.drafts, 'draft') : '')
+      ? [recorded ? plural(recorded, 'achievement') : '', r.drafts ? plural(r.drafts, 'draft') : ''].filter(Boolean).join(' · ')
       : 'No achievements recorded yet';
     const extra = r.experiences ? ' · ' + plural(r.experiences, 'experience') : '';
     const text = '<span class="role-row-text"><strong>' + esc(r.title) + '</strong>' +

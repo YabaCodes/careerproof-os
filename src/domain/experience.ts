@@ -55,7 +55,7 @@ export function matchingExperience(projects: readonly Project[], name: string): 
   return wanted ? projects.find(p => normalizeName(p.name) === wanted) ?? null : null;
 }
 
-export interface RollupItem { id: string; title: string; status: 'draft' | 'recorded' | 'archived'; outcome: string; metrics: number }
+export interface RollupItem { id: string; title: string; status: 'draft' | 'recorded' | 'archived'; outcome: string; metrics: number; occurredStart: { value: string; precision: 'year' | 'month' | 'day' } | null }
 export interface ExperienceRollup { items: RollupItem[]; withOutcome: number }
 /**
  * Linked achievements with their stated outcomes, most recent first and
@@ -70,6 +70,6 @@ export function experienceRollup(c: CareerCollections, projectId: string): Exper
     || b.updatedAt.localeCompare(a.updatedAt)
     || a.id.localeCompare(b.id));
   const items = linked.map(a => ({ id: a.id, title: a.title, status: a.status, outcome: a.outcome.trim(),
-    metrics: c.impactMetrics.filter(m => m.achievementId === a.id).length }));
+    metrics: c.impactMetrics.filter(m => m.achievementId === a.id).length, occurredStart: a.occurredStart }));
   return { items, withOutcome: items.filter(i => i.outcome).length };
 }

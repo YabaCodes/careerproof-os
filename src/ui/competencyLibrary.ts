@@ -4,6 +4,7 @@ import {ValidationError} from '../domain/validation.js';
 import {icon} from './icons.js';
 import {escapeHtml} from './html.js';
 import {evidenceBreadthByCompetency} from '../domain/evidenceBreadth.js';
+import {formatPrecisionDate} from '../domain/dates.js';
 import {assessmentHistory,currentAssessment,proficiencyLabel} from '../domain/proficiency.js';
 const esc=escapeHtml;
 export type SkillScope='linked'|'all';
@@ -41,9 +42,9 @@ export function competencyGroups(c:CareerCollections,query:string,category:strin
           '<small>'+examples.length+' linked example'+(examples.length===1?'':'s')+'</small></span>'+
           icon('chevron',17)+'</summary><div class="skill-entry-details">'+
           (skill.description?'<p>'+esc(skill.description)+'</p>':'<p class="career-meta">No skill definition provided.</p>')+
-          '<p class="career-meta skill-self-proficiency">Self-assessed proficiency: <strong>'+(current?esc(proficiencyLabel(current.selfAssessedLevel)):'Not assessed')+'</strong>'+(current?' · '+esc(current.assessmentDate.value)+' · Rubric '+esc(current.rubricVersion):'')+'. This is your own assessment, not independently verified.</p>'+
+          '<p class="career-meta skill-self-proficiency">Self-assessed proficiency: <strong>'+(current?esc(proficiencyLabel(current.selfAssessedLevel)):'Not assessed')+'</strong>'+(current?' · '+esc(formatPrecisionDate(current.assessmentDate.value))+' · Rubric '+esc(current.rubricVersion):'')+'. This is your own assessment, not independently verified.</p>'+
           (skill.status==='active'?'<button type="button" class="button button-outline" data-action="assess-competency" data-id="'+esc(skill.id)+'">'+(current?'Add another assessment':'Assess proficiency')+'</button>':'')+
-          (history.length?'<details class="skill-assessment-history"><summary>Assessment history · '+history.length+'</summary>'+history.map(a=>'<div class="skill-assessment-entry"><strong>'+esc(proficiencyLabel(a.selfAssessedLevel))+'</strong> · '+esc(a.assessmentDate.value)+' · Rubric '+esc(a.rubricVersion)+(a.rationale?'<p>'+esc(a.rationale)+'</p>':'')+(a.assessmentContext?'<p>Context: '+esc(a.assessmentContext)+'</p>':'')+(a.developmentNote?'<p>Development: '+esc(a.developmentNote)+'</p>':'')+'</div>').join('')+'</details>':'')+
+          (history.length?'<details class="skill-assessment-history"><summary>Assessment history · '+history.length+'</summary>'+history.map(a=>'<div class="skill-assessment-entry"><strong>'+esc(proficiencyLabel(a.selfAssessedLevel))+'</strong> · '+esc(formatPrecisionDate(a.assessmentDate.value))+' · Rubric '+esc(a.rubricVersion)+(a.rationale?'<p>'+esc(a.rationale)+'</p>':'')+(a.assessmentContext?'<p>Context: '+esc(a.assessmentContext)+'</p>':'')+(a.developmentNote?'<p>Development: '+esc(a.developmentNote)+'</p>':'')+'</div>').join('')+'</details>':'')+
           '<p class="career-meta skill-evidence-breadth">Evidence breadth: <strong>'+esc(report.label)+'</strong> · '+report.eligibleCount+' recorded example'+(report.eligibleCount===1?'':'s')+' · '+report.contextCount+' work context'+(report.contextCount===1?'':'s')+' · '+report.statedOutcomeCount+' stated outcome'+(report.statedOutcomeCount===1?'':'s')+'. Draft and archived achievements do not count. This is not a proficiency rating or independent verification.</p>'+
           (examples.length?'<div class="portfolio-achievement-links">'+examples.map(a=>
             '<button class="career-inline-add" data-action="competency-achievement" data-id="'+esc(a.id)+'">'+esc(a.title)+'</button>').join('')+'</div>':
@@ -52,7 +53,8 @@ export function competencyGroups(c:CareerCollections,query:string,category:strin
             '<button class="button button-outline" data-action="edit-competency" data-id="'+esc(skill.id)+'">Edit custom skill</button>'+
             '<button class="button button-outline" data-action="archive-competency" data-id="'+esc(skill.id)+'">Archive</button>':
             '<button class="button button-outline" data-action="restore-competency" data-id="'+esc(skill.id)+'">Restore skill</button>')+
-            '<button class="button button-danger-soft" data-action="delete-competency" data-id="'+esc(skill.id)+'">Delete…</button></div>':'')+
+            // CP-UX1 (#33 follow-up): history is append-only, so a skill with assessments is archived, not deleted.
+            (history.length?'<p class="career-meta skill-delete-note">Has self-assessment history, so it can be archived but not deleted.</p>':'<button class="button button-danger-soft" data-action="delete-competency" data-id="'+esc(skill.id)+'">Delete…</button>')+'</div>':'')+
           '</div></details>';
       }).join('')+'</section>';
   }).join('');

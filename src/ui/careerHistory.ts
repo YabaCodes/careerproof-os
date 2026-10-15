@@ -15,8 +15,13 @@ export type CareerWrite =
 
 const html=escapeHtml;
 const dateLabel=(value:PrecisionDate|null):string=>value?formatPrecisionDate(value.value):'Not specified';
-const action=(kind:CareerKind,id:string,verb:'edit'|'delete'):string=>
-  '<button class="career-action" type="button" data-action="'+verb+'-career" data-kind="'+kind+'" data-id="'+html(id)+'" aria-label="'+(verb==='edit'?'Edit':'Delete')+' '+kind.slice(0,-1)+'">'+icon(verb==='edit'?'edit':'trash',15)+'<span>'+(verb==='edit'?'Edit':'Delete')+'</span></button>';
+/**
+ * CP-UX1: the record's name opens its editor; Delete lives inside the editor.
+ * The button keeps the record's name as its accessible name (so the heading
+ * reads the same) and is described as opening the editor.
+ */
+const openTitle=(kind:CareerKind,id:string,label:string):string=>
+  '<h3 class="career-open-heading"><button class="career-open" type="button" data-action="edit-career" data-kind="'+kind+'" data-id="'+html(id)+'" aria-describedby="career-open-hint">'+html(label)+'<span class="career-open-icon" aria-hidden="true">'+icon('chevron',16)+'</span></button></h3>';
 const dateRange=(start:PrecisionDate|null,end:PrecisionDate|null,current=false):string=>
   dateLabel(start)+' – '+(current?'Present':dateLabel(end));
 /**
@@ -63,13 +68,13 @@ const heading=(label:string,kind:CareerKind):string=>
 const meta=(value:string):string=>'<p class="career-meta">'+html(value)+'</p>';
 
 function roleCard(role:Role,primaryRoleId:string|null):string {
-  return '<article class="career-entry career-role"><div class="career-entry-main"><div class="career-title-row"><h3>'+html(role.title)+'</h3>'+
+  return '<article class="career-entry career-role"><div class="career-entry-main"><div class="career-title-row">'+openTitle('roles',role.id,role.title)+
     (role.id===primaryRoleId?'<span class="career-primary">Primary role</span>':'')+'</div>'+
     meta(dateRange(role.startDate,role.endDate,role.isCurrent)+(role.employmentType?' · '+role.employmentType:''))+
     disclosure('roles',role.id,role.title,role.responsibilities,
       (role.leadershipScope?'<p class="career-note"><strong>Leadership:</strong> '+html(role.leadershipScope)+'</p>':'')+
       (role.technologies.length?'<p class="career-note"><strong>Technologies:</strong> '+html(role.technologies.join(', '))+'</p>':''))+
-    '</div><div class="career-entry-actions">'+action('roles',role.id,'edit')+action('roles',role.id,'delete')+'</div></article>';
+    '</div></article>';
 }
 
 export function careerSections(profile:Profile,collections:CareerCollections):string {
@@ -77,29 +82,29 @@ export function careerSections(profile:Profile,collections:CareerCollections):st
   const employers=employersByRecency(collections.employers,collections.roles);
   const employerContent=employers.map(e=>{
     const roles=collections.roles.filter(r=>r.employerId===e.id).sort(compareRolesByRecency);
-    return '<article class="career-employer"><div class="career-employer-head"><div><h3>'+html(e.name)+'</h3>'+
+    return '<article class="career-employer"><div class="career-employer-head"><div>'+openTitle('employers',e.id,e.name)+
       meta([e.industry,e.location].filter(Boolean).join(' · '))+
       disclosure('employers',e.id,e.name,e.description,
         e.website?'<a class="career-link" href="'+html(e.website)+'" target="_blank" rel="noopener noreferrer">Employer website</a>':'')+
-      '</div><div class="career-entry-actions">'+action('employers',e.id,'edit')+action('employers',e.id,'delete')+'</div></div>'+
+      '</div></div>'+
       (roles.length?'<div class="career-role-list">'+roles.map(r=>roleCard(r,profile.primaryRoleId)).join('')+'</div>':empty('No roles recorded yet.'))+
       '<button class="career-inline-add" data-action="add-career" data-kind="roles" data-employer="'+html(e.id)+'">'+icon('plus',15)+' Add role</button></article>';
   }).join('');
   const education=[...collections.education].sort((a,b)=>(b.completionDate?.value??b.startDate?.value??'').localeCompare(a.completionDate?.value??a.startDate?.value??''));
-  const qualifications=education.map(r=>'<article class="career-entry"><div class="career-entry-main"><h3>'+html(r.qualification)+'</h3>'+
+  const qualifications=education.map(r=>'<article class="career-entry"><div class="career-entry-main">'+openTitle('education',r.id,r.qualification)+
     meta(r.institution+(r.discipline?' · '+r.discipline:''))+
     meta(dateRange(r.startDate,r.completionDate))+
     disclosure('education',r.id,r.qualification,r.description,
       r.honors?'<p class="career-note"><strong>Honors:</strong> '+html(r.honors)+'</p>':'')+
-    '</div><div class="career-entry-actions">'+action('education',r.id,'edit')+action('education',r.id,'delete')+'</div></article>').join('');
+    '</div></article>').join('');
   const credentials=[...collections.credentials].sort((a,b)=>(b.issuedDate?.value??'').localeCompare(a.issuedDate?.value??''));
-  const credentialContent=credentials.map(r=>'<article class="career-entry"><div class="career-entry-main"><h3>'+html(r.name)+'</h3>'+
+  const credentialContent=credentials.map(r=>'<article class="career-entry"><div class="career-entry-main">'+openTitle('credentials',r.id,r.name)+
     meta(r.issuer)+meta('Issued: '+dateLabel(r.issuedDate)+' · Expires: '+(r.expirationDate?dateLabel(r.expirationDate):'No expiry recorded'))+
     disclosure('credentials',r.id,r.name,r.notes,
       (r.credentialId?'<p class="career-note"><strong>Credential ID:</strong> '+html(r.credentialId)+'</p>':'')+
       (r.verificationUrl?'<a class="career-link" target="_blank" rel="noopener noreferrer" href="'+html(r.verificationUrl)+'">Verification link (user provided)</a>':''))+
-    '</div><div class="career-entry-actions">'+action('credentials',r.id,'edit')+action('credentials',r.id,'delete')+'</div></article>').join('');
-  return '<div class="career-sections" aria-label="Career history and qualifications">'+
+    '</div></article>').join('');
+  return '<div class="career-sections" aria-label="Career history and qualifications"><span id="career-open-hint" hidden>Opens the editor</span>'+
     '<section class="panel career-panel">'+heading('Employment History','employers')+
     (employerContent||empty('Record an employer to begin your career timeline.'))+
     (employers.length?'<button class="career-inline-add" data-action="add-career" data-kind="roles">'+icon('plus',15)+' Add another role</button>':'')+
@@ -172,7 +177,7 @@ export function careerForm(kind:CareerKind,record:CareerRecord|undefined,collect
     '<p id="dialog-description">Your career history stays in this browser. Enter only information you wish to keep locally.</p></div>'+
     '<button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">'+icon('close',24)+'</button></div>'+
     '<form id="career-form" class="modal-body form-grid" novalidate><div id="form-error" class="form-error" role="alert" hidden></div>'+
-    fields+'</form><div class="modal-footer"><button class="button button-outline" data-action="close">Cancel</button>'+
+    fields+'</form><div class="modal-footer">'+(record?'<button type="button" class="button button-danger-soft footer-delete" data-action="delete-career" data-kind="'+kind+'" data-id="'+html(record.id)+'">'+icon('trash',16)+' Delete</button>':'')+'<button class="button button-outline" data-action="close">Cancel</button>'+
     '<button class="button button-primary" data-action="save-career">'+icon('check',17)+' Save '+formTitle[kind].toLowerCase()+'</button></div>';
 }
 
