@@ -1,7 +1,6 @@
 import {test,expect} from '@playwright/test';
 // Keep UI and service worker assertions in sync with compiled app version.
 import {APP_VERSION} from '../../dist/app/domain/models.js';
-const CURRENT_CACHE = `careerproof-v${APP_VERSION}`;
 
 async function start(page){
   await page.goto('/');
