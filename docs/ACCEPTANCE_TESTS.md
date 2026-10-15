@@ -1,3 +1,43 @@
+## CP-UX1 — v0.1.3-alpha.3 reading and scanning: physical-iPhone checks (pending)
+
+**Only after PR CI passes, the user merges, and GitHub Pages deploys.** Use the existing Home Screen app, with no reinstall and no cleared website data. Export a private backup first and keep it somewhere safe. These checks are **non-destructive**: cancel any Delete you open, and change a real record only if you actually want the change.
+
+- [ ] **UX101 — Update and data retention:** Settings shows `v0.1.3-alpha.3` and schema 3. The Vault's *Recorded · n* plus *Drafts · m* match your totals before the update. Experiences, roles and skills are all still there.
+- [ ] **UX102 — Experience timeline:**
+  - Roles are listed most recent first, and the two most recent are open.
+  - Each experience appears once. "Also: …" names the earlier role where an experience spans two.
+  - Collapse one group, open an experience, then go Back. The group stays collapsed.
+- [ ] **UX103 — Experience page:**
+  - Context, Goal or Expected Result, achievements with their result lines, and skills read clearly.
+  - Edit opens the editor, with Delete at the bottom left. Cancel it.
+  - The iPhone back gesture and the Back link both return to the timeline.
+- [ ] **UX104 — Achievement story:** Result comes first, then What I Did and Context. More Details opens the rest, including Archive and Delete. Don't delete anything.
+- [ ] **UX105 — Vault:**
+  - It opens on Recorded, with your drafts under Drafts and year headings in order.
+  - Search and Filters sit on one line, and Sort is inside Filters.
+  - Tapping a row opens the story.
+- [ ] **UX106 — Date control:**
+  - New achievement starts on Month with this month filled in. Year and Exact day switch the field, and the hint reads clearly.
+  - Cancel without saving. Optionally, give one of your undated drafts the month or year it happened and record it.
+- [ ] **UX107 — Profile tap-to-edit:** Tapping an employer, role, qualification or credential name opens its editor with Delete at the bottom. Cancel. Cards no longer show Edit/Delete buttons, and Add role is still under each employer.
+- [ ] **UX108 — #33 follow-ups:**
+  - Skills assessment rejects a date after today.
+  - Assessment dates read like "Oct 12, 2026".
+  - A skill with history says it can be archived but not deleted.
+- [ ] **UX109 — Offline and themes:** Reopen offline. All five tabs, an experience page and an achievement story load, with nothing clipped or overlapping in light and dark.
+
+**Automated qualification:**
+- Domain tests cover role grouping, the most recent role, "Also", ordering, recorded-versus-draft counts, loose achievements, contexts, years and no mutation.
+- Browser tests cover:
+  - the timeline, page, deep link, history Back/Forward, remembered groups and 320px layout
+  - story order and folding, and draft notices
+  - Vault segments, years, counts under search, sort and the one-line toolbar
+  - date precision switching and saving at month/year/day
+  - Profile tap-to-edit with an accessible name and description
+  - the #33 fixes and keyboard use
+
+CI success is not physical-iPhone acceptance.
+
 ## CP-013B — v0.1.3-alpha.2 proficiency assessment physical-iPhone gate (pending)
 
 **Only after PR automated CI passes, the user reviews/merges, and GitHub Pages deploys.** Export the existing private career backup to a secure location **before** updating. Do not reinstall, clear Safari data, or restore over the real personal dataset for testing.

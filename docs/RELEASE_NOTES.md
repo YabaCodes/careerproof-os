@@ -1,3 +1,32 @@
+## v0.1.3-alpha.3 — CP-UX1 reading and scanning (review candidate)
+
+**Status:** PR open, CI result stated in the PR; **not merged, deployed or accepted**. Step 1 of the user-approved redesign (DEC-036), plus follow-ups to #33.
+
+- **Experience is a timeline of roles.** Roles appear most recent first, and the two most recent start open. Each experience is one row with its type, dates and how many achievements and drafts it has. A dot marks experiences that are still running. An experience linked to several roles appears once, under the most recent, with "Also: …". Achievements on a role but in no experience get one row that opens the Vault. Search covers names, context and goals.
+- **Each experience has its own page:** what it was, employer, roles and dates, context, the goal, its achievements with their results, the skills they show, technologies and any Earlier Notes. Edit is at the top and Delete is inside the editor. Back, the browser Back button and a direct link all work.
+- **Goal / Expected result (amends DEC-034).** The experience's existing `objective` field is offered again as an optional goal. While the experience is running it reads *Expected Result* and links straight to recording it as an achievement. Once completed it reads *Goal*.
+- **An achievement reads as a short story:** Result (with metrics), What I Did, Context, Skills Shown. Everything else, including Archive and Delete, is folded under **More Details**. A draft's notice names only what it still needs (what you did and/or a date).
+- **The Vault opens on Recorded**, with Drafts and (when used) Archived one tap away. Rows sit under year headings and show the date and the experience or role. Search and Filters share one line, and Sort is inside Filters. An empty segment says so plainly rather than suggesting a failed search.
+- **Counting is consistent:** an "achievement" count means a recorded achievement and drafts are counted on their own. This applies to the Vault, the Experience timeline and Achievements by Role on Home.
+- **Dates you actually know.** An achievement date is **Month** by default, or **Year** or **Exact day**. Switching keeps what still fits and never invents a day or month.
+- **Profile:** tap a record's name to edit it. Delete is in the editor footer, so the cards no longer carry Edit/Delete buttons.
+- **#33 follow-ups:**
+  - A self-assessment cannot be dated in the future.
+  - Assessment dates are formatted like other dates.
+  - A skill with assessment history explains that it can be archived but not deleted, instead of offering a Delete that is refused.
+- **Data:** unchanged. Schema 3, backup format 3, no migration. No stored record is rewritten, and every field stays visible somewhere.
+- **Tests (local):** 100 Node and 136 browser tests pass.
+  - New: a timeline domain suite (9 Node tests) and `ux-reading.spec` (7 browser tests: timeline, page, story, Vault, dates, Profile, #33, keyboard).
+  - 13 existing test files (12 browser specs and 1 Node suite) were updated for the new screens.
+  - The timeline suite found and fixed an ordering bug ("Independent Experiences" must come after named employers).
+- **Not in this step:**
+  - The guided capture flow, and removing the impact category from the form (step 2).
+  - Moving planned "candidate" drafts into an experience's Expected Result, and a slimmer Home (step 3).
+- **Known limitations:**
+  - Archive and Delete on an achievement now take one extra tap (More Details).
+  - Browsers without a month picker (some desktop browsers) show a text box with a YYYY-MM hint.
+- Pending: CI, user review and merge, Pages deployment and physical-iPhone checks UX101–UX109. Nothing merges automatically.
+
 ## v0.1.3-alpha.2 — CP-013B Self-Assessed Proficiency (review candidate)
 
 **Status:** Development PR pending CI and user review; **not merged, deployed, or accepted**. CP-013A Evidence Breadth alpha.1 was accepted on iPhone with EB103 not manually tested (automated coverage).
