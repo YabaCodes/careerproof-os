@@ -88,10 +88,11 @@ test('CP-E203 cross-module navigation, complete backup and restoration preserve 
   await page.locator('.mobile-nav [data-screen=profile]').click();
   await expect(page.getByText('Synthetic Company').first()).toBeVisible();
   await page.locator('.mobile-nav [data-screen=portfolio]').click();
-  await expect(page.locator('details.portfolio-card')).toHaveCount(1);
-  await page.locator('details.portfolio-card summary').click();
-  await expect(page.locator('[data-action=portfolio-achievement]')).toContainText('Resolved synthetic issue');
-  await page.locator('[data-action=portfolio-achievement]').click();
+  await expect(page.locator('.experience-row')).toHaveCount(1);
+  await page.locator('.experience-row').click();
+  await expect(page.locator('.story-row')).toContainText('Resolved synthetic issue');
+  await page.locator('.story-row').click();
+  await page.locator('.story-more > summary').click();
   await expect(page.getByRole('dialog')).toContainText('Synthetic reduction');
   await expect(page.getByRole('dialog')).toContainText('SYNTHETIC-001');
   await page.locator('.close-dialog').click();
@@ -137,14 +138,16 @@ test('CP-E204 installed offline shell supports Profile, Portfolio, Vault and Com
     if(!navigator.serviceWorker.controller)
       await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
-  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.3-alpha.2');
+  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.3-alpha.3');
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('.hero-card')).toBeVisible();
   await page.locator('.mobile-nav [data-screen=profile]').click();
   await expect(page.getByText('Synthetic Company').first()).toBeVisible();
   await page.locator('.mobile-nav [data-screen=portfolio]').click();
-  await expect(page.locator('details.portfolio-card')).toHaveCount(1);
+  await expect(page.locator('.experience-row')).toHaveCount(1);
+  await page.locator('.experience-row').click();
+  await expect(page.locator('.experience-page h1')).toHaveText('Synthetic Initiative');
   await page.locator('.mobile-nav [data-screen=profile]').click();
   await page.locator('.mobile-nav [data-screen=competencies]').click();
   await page.locator('[data-action=skill-scope][data-scope=all]').click();
@@ -152,6 +155,7 @@ test('CP-E204 installed offline shell supports Profile, Portfolio, Vault and Com
   await page.locator('.mobile-nav [data-screen=vault]').click();
   await expect(page.locator('.achievement-row')).toHaveCount(1);
   await page.locator('[data-action=detail]').first().click();
+  await page.locator('.story-more > summary').click();
   await expect(page.getByRole('dialog')).toContainText('SYNTHETIC-001');
   await page.locator('.close-dialog').click();
   await settings(page);

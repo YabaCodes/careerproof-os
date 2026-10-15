@@ -58,7 +58,9 @@ test('employers group multiple overlapping roles; primary role stays consistent'
   await expect(page.getByRole('heading',{name:'Team Lead'})).toBeVisible();
   // CP-012B: a referenced employer is never silently deleted. Its roles need an employer
   // and there is no other employer to move them to, so nothing can be confirmed.
-  await page.locator('[data-action=delete-career][data-kind=employers]').click();
+  // CP-UX1: the name opens the editor; Delete lives in the editor footer.
+  await page.locator('[data-action=edit-career][data-kind=employers]').click();
+  await page.locator('.modal-footer [data-action=delete-career][data-kind=employers]').click();
   await expect(page.getByRole('dialog')).toContainText('Linked to This Employer');
   await expect(page.getByRole('dialog')).toContainText('2 roles');
   await expect(page.locator('#removal-mode-move')).toBeDisabled();
@@ -67,7 +69,8 @@ test('employers group multiple overlapping roles; primary role stays consistent'
   await page.locator('.close-dialog').click();
   expect((await snapshot(page)).employers).toHaveLength(1);
   // The primary role shows its dependents and needs an explicit choice plus confirmation.
-  await page.locator('[data-action="delete-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
+  await page.locator('[data-action="edit-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
+  await page.locator('.modal-footer [data-action="delete-career"][data-kind="roles"][data-id="'+before.roles[1].id+'"]').click();
   await expect(page.getByRole('dialog')).toContainText('Your primary role');
   await expect(page.locator('#removal-mode-move')).toBeChecked(); // another role at the same employer exists
   await page.locator('#removal-mode-unlink').check();

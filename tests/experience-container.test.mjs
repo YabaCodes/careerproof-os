@@ -45,7 +45,7 @@ test('CP-012.4 the card roll-up lists linked achievements newest first, archived
   const roll=experienceRollup(c,'project-1');
   assert.deepEqual(roll.items.map(i=>i.id),['a-new','a-year','achievement-1','a-archived']);
   assert.equal(roll.withOutcome,3,'a-new, achievement-1 and the archived one state outcomes; the draft does not');
-  assert.deepEqual(roll.items.find(i=>i.id==='achievement-1'),{id:'achievement-1',title:c.achievements[0].title,status:'recorded',outcome:c.achievements[0].outcome.trim(),metrics:1});
+  assert.deepEqual(roll.items.find(i=>i.id==='achievement-1'),{id:'achievement-1',title:c.achievements[0].title,status:'recorded',outcome:c.achievements[0].outcome.trim(),metrics:1,occurredStart:c.achievements[0].occurredStart});
   assert.equal(experienceRollup(c,'no-such-project').items.length,0);
 });
 

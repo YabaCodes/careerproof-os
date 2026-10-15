@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {fullCollections,legacyBackup,collections} from '../fixtures.mjs';
 import {generateBackup} from '../../dist/app/domain/validation.js';
+import {openMore} from './ux-helpers.mjs';
 
 async function start(page){
   await page.goto('/');
@@ -190,8 +191,9 @@ test('export focus and invalid restore notification remain inside the dialog',as
 test('native delete confirmation can cancel and then delete a synthetic achievement',async({page})=>{
   await start(page);await seed(page,'light');
   await action(page,'[data-action="detail"]');
+  await openMore(page); // CP-UX1: Archive and Delete sit under More Details
   page.once('dialog',d=>d.dismiss());await action(page,'[data-action="delete-achievement"]');
-  await expect(page.getByRole('dialog',{name:'Achievement details'})).toBeVisible();
+  await expect(page.getByRole('dialog',{name:'SyntheticLongTitle'})).toBeVisible();
   page.once('dialog',d=>{expect(d.message()).toContain('Permanently delete');return d.accept();});
   await action(page,'[data-action="delete-achievement"]');
   await expect(page.getByRole('dialog')).toHaveCount(0);

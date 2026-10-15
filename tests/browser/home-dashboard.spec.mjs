@@ -33,7 +33,7 @@ test('CP-012C Complete Your Record lists documentation gaps that open their reco
   const support=page.locator('.home-gaps details[data-code=achievement-no-support]');
   await support.locator('summary').click();
   await support.locator('[data-action=health-open]').first().click();
-  await expect(page.getByRole('dialog',{name:'Achievement Details'})).toBeVisible();
+  await expect(page.getByRole('dialog',{name:/^Synthetic a-/})).toBeVisible(); // CP-UX1: the dialog is named by the achievement
   await page.locator('.close-dialog').click();
   await expect(support).toHaveAttribute('open','');
 
@@ -58,7 +58,7 @@ test('CP-012C Achievements by Role counts active records per role, most recent f
   await seed(page,world());
   const rows=page.locator('.role-coverage .role-row');
   await expect(rows.locator('strong')).toHaveText(['Synthetic Engineer','Synthetic Process Engineer','Synthetic Intern']);
-  await expect(rows.nth(0)).toContainText('3 achievements · 1 draft · 1 experience');
+  await expect(rows.nth(0)).toContainText('2 achievements · 1 draft · 1 experience'); // CP-UX1: recorded and drafts counted apart
   await expect(rows.nth(1)).toContainText('1 achievement'); // the archived one is not counted
   await expect(rows.nth(2)).toContainText('No achievements recorded yet');
   expect(await rows.evaluateAll(n=>n.map(r=>r.tagName))).toEqual(['BUTTON','BUTTON','DIV']); // empty roles are not links
@@ -66,7 +66,11 @@ test('CP-012C Achievements by Role counts active records per role, most recent f
   await expect(page.locator('#main-content h1')).toHaveText('Achievement Vault');
   await expect(page.locator('#role-filter')).toHaveValue('role-1');
   await expect(page.locator('#vault-filters')).toBeVisible();
-  await expect(page.locator('#vault-results .achievement-row')).toHaveCount(3);
+  await expect(page.locator('[data-action=vault-status][data-status=recorded]')).toHaveAttribute('aria-pressed','true');
+  await expect(page.locator('#vault-results .achievement-row')).toHaveCount(2);
+  await page.locator('[data-action=vault-status][data-status=draft]').click();
+  await expect(page.locator('#vault-results .achievement-row')).toHaveCount(1);
+  await expect(page.locator('#role-filter')).toHaveValue('role-1'); // the role filter is kept across segments
   // Achievements without a role are summarised, not hidden.
   const c=world();c.achievements.push(achievement(c,'a-loose',{outcome:'Synthetic loose result'}));
   await seed(page,c);

@@ -1,10 +1,11 @@
 import {test,expect} from '@playwright/test';
 import {legacyBackup,fullCollections} from '../fixtures.mjs';
 import {generateBackup} from '../../dist/app/domain/validation.js';
+import {fillOccurred,openMore,vaultStatus} from './ux-helpers.mjs';
 async function start(page){await page.goto('/');await expect(page.locator('.hero-card')).toBeVisible();await expect(page.getByRole('heading',{name:'CareerProof',exact:true})).toBeVisible();}
 async function settings(page){await page.locator('.header-settings').click();await expect(page.getByRole('dialog')).toBeVisible();}
 async function capture(page,title='Synthetic mobile entry'){
-  await page.locator('.mobile-create').click();await page.locator('#title').fill(title);await page.locator('#contribution').fill('Synthetic mobile contribution');await page.locator('#occurredOn').fill('2024-02-29');
+  await page.locator('.mobile-create').click();await page.locator('#title').fill(title);await page.locator('#contribution').fill('Synthetic mobile contribution');await fillOccurred(page,'2024-02-29');
 }
 async function importFile(page,backup){
   await settings(page);
@@ -20,9 +21,9 @@ test('mobile capture/edit/archive/profile preserve the accepted dialog behavior 
   await page.locator('[data-action="save-achievement"][data-status="recorded"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.reload();await expect(page.getByRole('button').filter({hasText:'Synthetic mobile entry'}).first()).toBeVisible();
   await page.locator('[data-action="detail"]').first().click();await page.locator('[data-action="edit-achievement"]').click();await page.locator('#title').fill('Edited synthetic entry');await page.locator('[data-action="save-achievement"][data-status="recorded"]').click();
-  await page.locator('[data-action="detail"]').first().click();await page.locator('[data-action="toggle-archive"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.locator('[data-action="detail"]').first().click();await openMore(page);await page.locator('[data-action="toggle-archive"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   let c=await rawCollections(page);expect(c.achievements[0].status).toBe('archived');expect(c.achievements[0].preArchiveStatus).toBe('recorded');
-  await page.locator('.mobile-nav [data-screen="vault"]').click();await page.locator('#status-filter').selectOption('archived');await page.locator('[data-action="detail"]').first().click();await page.locator('[data-action="toggle-archive"]').click();
+  await page.locator('.mobile-nav [data-screen="vault"]').click();await vaultStatus(page,'archived');await page.locator('[data-action="detail"]').first().click();await openMore(page);await page.locator('[data-action="toggle-archive"]').click();
   await page.locator('.mobile-nav [data-screen="profile"]').click();await page.locator('[data-action="edit-profile"]').last().click();await page.locator('#displayName').fill('Synthetic Mobile Engineer');await page.locator('[data-action="save-profile"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.reload();await expect(page.getByText('Synthetic Mobile Engineer').first()).toBeVisible();c=await rawCollections(page);
   expect(c.achievements[0].occurredStart).toEqual({value:'2024-02-29',precision:'day'});expect(c.achievements[0].status).toBe('recorded');expect(c.achievements[0]).not.toHaveProperty('occurredOn');expect(errors).toEqual([]);
@@ -40,7 +41,7 @@ test('schema-1 browser data migrates losslessly and blank draft dates remain bla
   },legacy);
   await start(page);const c=await rawCollections(page);
   for(const old of legacy.collections.achievements){const a=c.achievements.find(x=>x.id===old.id);expect(a.revision).toBe(old.revision);expect(a.createdAt).toBe(old.createdAt);expect(a.updatedAt).toBe(old.updatedAt);expect(a.occurredStart).toEqual(old.occurredOn?{value:old.occurredOn,precision:'day'}:null);expect(a.confidentiality).toBe('confidential');}
-  await page.locator('.mobile-nav [data-screen="vault"]').click();await page.locator('#status-filter').selectOption('draft');
+  await page.locator('.mobile-nav [data-screen="vault"]').click();await vaultStatus(page,'draft');
   await page.locator('[data-action="detail"]').first().click();await page.locator('[data-action="edit-achievement"]').click();await expect(page.locator('#occurredOn')).toHaveValue('');
   await page.locator('[data-action="save-achievement"][data-status="draft"]').click();expect((await rawCollections(page)).achievements.find(a=>a.status==='draft').occurredStart).toBeNull();
 });
@@ -96,14 +97,14 @@ test('mobile navigation has five equal positions at 320/375px and direct backdro
 test('cached PWA opens offline with stored records and all foundation modules',async({page,context})=>{
   await start(page);await capture(page,'Synthetic offline entry');await page.locator('[data-action="save-achievement"][data-status="recorded"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));});
-  const keys=await page.evaluate(()=>caches.keys());expect(keys).toContain('careerproof-v0.1.3-alpha.2');
+  const keys=await page.evaluate(()=>caches.keys());expect(keys).toContain('careerproof-v0.1.3-alpha.3');
   await context.setOffline(true);await page.reload();await expect(page.getByText('Synthetic offline entry').first()).toBeVisible();await settings(page);await expect(page.getByRole('dialog')).toContainText('Database schema 3');
   const cachedAssets=await page.evaluate(async()=>{
     const files=['icon.svg','icon-192.png','icon-512.png','icon-maskable-512.png','apple-touch-icon.png','favicon-32.png','favicon-16.png','app/ui/dialog.js'];
     return Promise.all(files.map(async file=>({file,ok:(await fetch('./'+file)).ok})));
   });
   expect(cachedAssets.every(asset=>asset.ok)).toBe(true);
-  await expect(page.getByRole('dialog')).toContainText('0.1.3-alpha.2');
+  await expect(page.getByRole('dialog')).toContainText('0.1.3-alpha.3');
   await page.locator('[data-action=close]').click();
   expect(await page.locator('.mobile-nav').evaluate(el=>el.getBoundingClientRect().height)).toBe(61);
   await page.locator('[data-action=detail]').first().click();await page.locator('[data-action=edit-achievement]').click();
@@ -131,7 +132,7 @@ test('worker activation replaces the previous cache and retains local records of
     if(!navigator.serviceWorker.controller?.scriptURL.endsWith('/sw.js'))await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
   const cachesNow=await page.evaluate(()=>caches.keys());
-  expect(cachesNow).toContain('careerproof-v0.1.3-alpha.2');await expect.poll(()=>page.evaluate(()=>caches.keys())).not.toContain('careerproof-v0.1.1-alpha.2');
+  expect(cachesNow).toContain('careerproof-v0.1.3-alpha.3');await expect.poll(()=>page.evaluate(()=>caches.keys())).not.toContain('careerproof-v0.1.1-alpha.2');
   expect(await rawCollections(page)).toEqual(before);
   await context.setOffline(true);await page.reload();await expect(page.getByText('Resolved synthetic issue').first()).toBeVisible();expect(await rawCollections(page)).toEqual(before);await context.setOffline(false);
 });
