@@ -1,4 +1,7 @@
 import {test,expect} from '@playwright/test';
+// Keep UI and service worker assertions in sync with compiled app version.
+import {APP_VERSION} from '../../dist/app/domain/models.js';
+const CURRENT_CACHE = `careerproof-v${APP_VERSION}`;
 import {fullCollections} from '../fixtures.mjs';
 
 test.use({isMobile:true,hasTouch:true});
@@ -138,7 +141,7 @@ test('CP-E204 installed offline shell supports Profile, Portfolio, Vault and Com
     if(!navigator.serviceWorker.controller)
       await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));
   });
-  expect(await page.evaluate(()=>caches.keys())).toContain('careerproof-v0.1.3-alpha.4');
+  expect(await page.evaluate(()=>caches.keys())).toContain(CURRENT_CACHE);
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('.hero-card')).toBeVisible();
