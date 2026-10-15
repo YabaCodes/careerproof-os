@@ -577,6 +577,18 @@ function openExperience(id:string|null){
   screen='portfolio';experienceId=id;location.hash=id?`/portfolio/${encodeURIComponent(id)}`:'/portfolio';render();window.scrollTo(0,0);
   const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
 }
+/** Open the exact existing Skill record; this is navigation, not assessment or record editing. */
+function openLinkedSkill(id:string){
+  const skill=careerCollections?.competencies.find(s=>s.id===id);
+  if(!skill)return;
+  skillQuery=skill.name;skillCategory='';skillScope='all';skillShowArchived=skill.status==='archived';
+  navigate('competencies');
+  const entry=[...document.querySelectorAll<HTMLDetailsElement>('details.skill-entry')].find(el=>el.dataset.skill===id);
+  if(!entry)return;
+  entry.open=true;
+  entry.querySelector<HTMLElement>('summary')?.focus({preventScroll:true});
+  entry.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+}
 async function saveCustomSkill(){
   if(saving||!careerCollections)return;
   setSaving(true);
@@ -694,6 +706,7 @@ function runAction(node:HTMLElement){
     case 'confirm-removal':void confirmRemoval();break;
     case 'portfolio-achievement':openModal('detail',node.dataset.id??null);break;
     case 'open-experience':openExperience(node.dataset.id??null);break;
+    case 'open-skill':openLinkedSkill(node.dataset.id??'');break;
     case 'close-experience':openExperience(null);break;
     case 'vault-status':filterStatus=node.dataset.status??'recorded';refreshVaultResults();break;
     case 'project-capture':openCapture(node.dataset.id??null);break;
