@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {fullCollections,base} from '../fixtures.mjs';
-import {fillOccurred,openMore,vaultStatus,openExperience} from './ux-helpers.mjs';
+import {fillOccurred,openMore,vaultStatus,openExperience,captureWhere,captureWhen} from './ux-helpers.mjs';
 
 // CP-UX1 (DEC-036) reading and scanning: Experience timeline and pages, the achievement
 // story, the Vault, the month/year date control and Profile tap-to-edit. Synthetic data only.
@@ -169,11 +169,13 @@ test('CP-UX1 achievement dates: month by default, year or exact day when known, 
   await seed(page);
   const thisMonth=await page.evaluate(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');});
   await page.locator('.mobile-create').click();
+  await captureWhere(page,'project-1'); // CP-UX2: Where → What → When
+  await page.locator('#title').fill('Synthetic month result');
+  await page.locator('#contribution').fill('Synthetic contribution');
+  await captureWhen(page);
   await expect(page.locator('#occurredPrecision-month')).toBeChecked();
   await expect(page.locator('#occurredOn')).toHaveValue(thisMonth);
   await expect(page.locator('.date-field .field-hint')).toHaveText("Use the month or year when you don't know the exact day.");
-  await page.locator('#title').fill('Synthetic month result');
-  await page.locator('#contribution').fill('Synthetic contribution');
   await fillOccurred(page,'2025-03-14');
   // Day → month keeps the month; month → day cannot know the day, so it is left blank.
   await page.locator('#occurredPrecision-month').check();
@@ -191,8 +193,10 @@ test('CP-UX1 achievement dates: month by default, year or exact day when known, 
   expect(saved.occurredStart).toEqual({value:'2025-03',precision:'month'});
   // A year on its own is a complete answer too.
   await page.locator('.mobile-create').click();
+  await captureWhere(page,'project-1');
   await page.locator('#title').fill('Synthetic year result');
   await page.locator('#contribution').fill('Synthetic contribution');
+  await captureWhen(page);
   await fillOccurred(page,'2019');
   await page.locator('[data-action=save-achievement][data-status=recorded]').click();
   await expect(page.locator('.modal')).toHaveCount(0);

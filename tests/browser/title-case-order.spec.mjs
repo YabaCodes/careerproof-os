@@ -20,7 +20,7 @@ function titleCaseViolations(text){
 // A legend that works as a field label (e.g. "When did it happen?") is a question, not a title.
 const TITLE_SELECTORS=['.page-title h1','.page-title p','#next-title','.section-title h2','.career-section-heading h2','#dialog-title',
   '.modal legend:not(.field-legend)','.settings-group h3','.settings-line strong','.rich-section-heading h3','#removal-impact-title','.health-group','.empty-state h3',
-  '.goal-box h2','.experience-skills h2','.experience-notes > summary','.back-link'].join(',');
+  '.goal-box h2','.experience-skills h2','.experience-notes > summary','.back-link','.capture-title','.capture-skills h4'].join(',');
 // The story dialog is named by the user's own achievement title, so only its section headings are checked.
 const STORY_SELECTORS=['.story-result h3','.story-section h3','.story-more > summary','.story-actions .button'].join(',');
 async function expectTitleCase(page,where,selectors=TITLE_SELECTORS){
@@ -64,7 +64,7 @@ test('CP-012.3 titles and subtitles use Title Case on every screen and main dial
 
   const dialogs=[
     ['settings','.header-settings',['Settings & Data','Data Management','Export Career Backup','Data Health','Restore from Backup','Check for Updates']],
-    ['capture','.mobile-create',['Capture an Achievement','Associated Experiences','Competencies Demonstrated','Impact Metrics','Evidence References']],
+    ['capture','.mobile-create',['Capture an Achievement','Where Did This Happen?']],
     ['profile editor','[data-action=edit-profile]',['Edit Career Profile']],
     ['role editor','[data-action=add-career][data-kind=roles]',['Add Employment Role']],
     ['credential editor','[data-action=add-career][data-kind=credentials]',['Add Credential']]
@@ -72,8 +72,17 @@ test('CP-012.3 titles and subtitles use Title Case on every screen and main dial
   for(const [name,trigger,expected] of dialogs){
     await page.locator(trigger).first().click();
     await expect(page.getByRole('dialog')).toBeVisible();
-    if(name==='capture')await page.locator('[data-action=toggle-rich-panel]').click();
     expect(await expectTitleCase(page,name)).toEqual(expect.arrayContaining(expected));
+    if(name==='capture'){
+      // CP-UX2: the other two steps, with everything optional opened.
+      await page.locator('input[name=where]').first().check();await page.locator('[data-action=capture-next]').click();
+      expect(await expectTitleCase(page,'capture: what')).toContain('What Happened?');
+      await page.locator('#title').fill('Synthetic title case');await page.locator('[data-action=capture-next]').click();
+      for(const id of ['capture-metrics','capture-evidence'])await page.locator(`[aria-controls=${id}]`).click();
+      await page.locator('details.capture-more > summary').click();
+      expect(await expectTitleCase(page,'capture: when')).toEqual(expect.arrayContaining(['When Did It Happen?','Skills Shown','Impact Metric','Evidence Reference']));
+      page.once('dialog',d=>d.accept());
+    }
     await close(page);
   }
   await tab(page,'portfolio');

@@ -1,8 +1,8 @@
-# CareerProof OS — v0.1.3-alpha.3 review candidate
+# CareerProof OS — v0.1.3-alpha.4 review candidate
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **Deployed: `v0.1.3-alpha.2`** (CP-013B self-assessment history, merged in PR #33; physical-iPhone checks PA101–PA106 not yet reported). v0.1.3-alpha.1 Evidence Breadth was accepted on iPhone (EB103 not tested). **`v0.1.3-alpha.3` (CP-UX1, DEC-036) is a review candidate, not merged or deployed.** It reorganises how records are read and scanned. Experience becomes a role-grouped timeline with a page per experience, and an achievement reads as a short story. The Vault opens on Recorded with year headings, dates can be a month or a year, and Profile records open by tapping their name. No schema or backup-format change. Current progress is tracked in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **Deployed: `v0.1.3-alpha.3`** (CP-UX1 reading and scanning, PR #34, accepted on iPhone UX101–UX109). **`v0.1.3-alpha.4` (CP-UX2, DEC-037) is a review candidate, not merged or deployed.** It captures a new achievement in three steps: Where (the experience, which brings its role), What, and When (with skill chips). No schema or backup-format change. Current progress is tracked in the [milestone tracker](docs/MILESTONE_TRACKER.md).
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 
@@ -16,7 +16,9 @@ CareerProof OS is a privacy-first, local-first professional career and achieveme
 - **Recovery:** full version-3 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
-**Since v0.1.3-alpha.3 (CP-UX1, in review):**
+**Since v0.1.3-alpha.4 (CP-UX2, in review):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
+
+**Since v0.1.3-alpha.3 (CP-UX1, accepted):**
 - **Experience** lists roles most recent first, each with its experiences as one-line rows. Each experience has a page with its context, goal or expected result, achievements and skills.
 - An achievement opens as Result → What I Did → Context → Skills, with everything else under More Details.
 - The **Vault** opens on Recorded, with Drafts and Archived one tap away.

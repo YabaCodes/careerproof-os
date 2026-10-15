@@ -39,7 +39,9 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **2026-10-12 CP-013A checkpoint:** Read-only evidence breadth implementation proposed as v0.1.3-alpha.1. Full 0.1.3 remains incomplete until separate L1–L4 proficiency persistence, history, migration and restoration gates are implemented and accepted.
 
-**2026-10-15 CP-UX1 candidate (DEC-036):** After reviewing the user's own records, the user approved a three-step UX redesign of existing P0 modules. This is not new P0/P1 scope.
+**2026-10-15 CP-UX2 candidate (DEC-037):** Step 1 (`0.1.3-alpha.3`, PR #34) is merged and accepted (UX101–UX109). Step 2 (`0.1.3-alpha.4`, guided capture) is in review. Step 3 follows. No schema or backup change.
+
+**2026-10-15 CP-UX1 (DEC-036):** After reviewing the user's own records, the user approved a three-step UX redesign of existing P0 modules. This is not new P0/P1 scope.
 - **Step 1, `0.1.3-alpha.3`, in review:** reading and scanning. That covers the Experience timeline and pages, the achievement story, Vault segments and years, Month/Year/Exact-day dates, and Profile tap-to-edit. It also carries the #33 follow-ups.
 - **Step 2:** guided capture.
 - **Step 3:** candidates → Expected Result, and a slimmer Home.

@@ -5,7 +5,8 @@ import { careerSections, careerForm, readCareerForm, syncCareerDisclosures, togg
 import { portfolioForm,readPortfolioForm,updatePortfolioRoleChoices } from '../ui/experiencePortfolio.js';
 import { timelinePage,timelineGroups,experiencePageView } from '../ui/experienceTimeline.js';
 import { achievementRow,achievementStory } from '../ui/achievementStory.js';
-import { achievementContexts,achievementYear } from '../domain/timeline.js';
+import { achievementContexts,achievementYear,roleForExperience } from '../domain/timeline.js';
+import { compareRolesByRecency } from '../domain/chronology.js';
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup, inspectDataHealth, type PreparedBackup } from '../data/backup.js';
 import { dataHealthReport } from '../ui/dataHealth.js';
 import { homeGapsSection, roleCoverageSection } from '../ui/homeDashboard.js';
@@ -15,10 +16,11 @@ import {icon} from '../ui/icons.js';
 import {escapeHtml} from '../ui/html.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
-import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,addInlineExperience} from '../ui/achievementIntelligence.js';
+import {parseRichFields,metricRow,evidenceRow,ROLE_ONLY} from '../ui/achievementIntelligence.js';
+import {captureForm,captureFooter,showCaptureStep,syncWhere,filterWhere,filterSkills,addInlineExperience,switchOccurrencePrecision,hasWhereChoices,type CaptureStep,type Precision} from '../ui/captureFlow.js';
 import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency,defaultSkillScope,skillExampleSummary,type SkillScope} from '../ui/competencyLibrary.js';
 import {proficiencyAssessmentForm,readProficiencyForm} from '../ui/proficiencyAssessment.js';
-import {dateBounds} from '../domain/dates.js';
+import {dateBounds,precisionDateFromInput} from '../domain/dates.js';
 
 type Screen='home'|'vault'|'profile'|'portfolio'|'competencies';
 type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|'assessment'|'remove'|null;
@@ -29,6 +31,8 @@ let careerCollections:CareerCollections|null=null;
 let careerKind:CareerKind='employers';
 let careerEmployerId:string|undefined;
 let captureProjectId:string|null=null;
+/** CP-UX2: the step a new capture is on (1 Where, 2 What, 3 When). */
+let captureStep:CaptureStep=1;
 // CP-UX1: the Experience tab shows a role-grouped timeline, or one experience's page.
 let experienceId:string|null=null;
 let experienceQuery='';
@@ -328,39 +332,46 @@ function modalView():string {
   return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1" class="modal ${modal==='capture'?'capture-modal':''}">${content}</section></div>`;
 }
 function dialogHeader(title:string,subtitle:string):string {return `<div class="modal-header"><div><h2 id="dialog-title">${title}</h2><p id="dialog-description">${subtitle}</p></div><button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">${icon('close',24)}</button></div>${toastView(true)}`;}
-const PRECISIONS:[('month'|'year'|'day'),string][]=[['month','Month'],['year','Year'],['day','Exact day']];
-/** Browsers without a month picker show a text box, so the month field carries a YYYY-MM placeholder. */
-function dateInputAttrs(p:'year'|'month'|'day'):string{return p==='year'?'type="text" inputmode="numeric" maxlength="4" placeholder="YYYY" pattern="[0-9]{4}"':p==='month'?'type="month" placeholder="YYYY-MM"':'type="date"';}
-function occurrenceDateField(precision:'year'|'month'|'day',value:string):string{
-  return `<fieldset class="field date-field"><legend class="field-legend">When did it happen?</legend><div class="precision-switch">${PRECISIONS.map(([v,l])=>`<label class="precision-option"><input type="radio" name="occurredPrecision" id="occurredPrecision-${v}" value="${v}" ${precision===v?'checked':''}/><span>${l}</span></label>`).join('')}</div><label class="sr-only" for="occurredOn">Occurrence date</label><input id="occurredOn" name="occurredOn" ${dateInputAttrs(precision)} value="${escape(value)}"/><p class="field-hint">Use the month or year when you don't know the exact day.</p></fieldset>`;
+const stepText=(step:CaptureStep)=>`Step ${step} of 3`;
+/** The role a new achievement or experience is offered first: the primary role, else the most recent current one. */
+function defaultRoleId():string|null{
+  const c=careerCollections;if(!c||!c.roles.length)return null;
+  if(c.profiles[0]?.primaryRoleId&&c.roles.some(r=>r.id===c.profiles[0]!.primaryRoleId))return c.profiles[0]!.primaryRoleId;
+  return [...c.roles].sort(compareRolesByRecency)[0]?.id??null;
 }
-/** Switching precision keeps what still fits (a day's month, a month's year) and never invents the rest. */
-function switchOccurrencePrecision(p:'year'|'month'|'day'){
-  const input=document.getElementById('occurredOn') as HTMLInputElement|null;if(!input)return;
-  const v=input.value.trim();const next=p==='year'?v.slice(0,4):p==='month'?(v.length>=7?v.slice(0,7):''):(v.length===10?v:'');
-  input.removeAttribute('pattern');input.removeAttribute('placeholder');input.removeAttribute('inputmode');input.removeAttribute('maxlength');
-  if(p==='year'){input.type='text';input.inputMode='numeric';input.maxLength=4;input.placeholder='YYYY';input.pattern='[0-9]{4}';}
-  else{input.type=p==='month'?'month':'date';if(p==='month')input.placeholder='YYYY-MM';}
-  input.value=/^\d{4}$/.test(next)||p!=='year'?next:'';
-}
+/** CP-UX2 (DEC-037): a new achievement is captured in three steps; editing shows the same sections on one page. */
 function achievementForm():string {
   const existing=editing&&selectedId?achievements.find(a=>a.id===selectedId):undefined;
-  const status=existing?.status==='archived'?existing.preArchiveStatus:existing?.status;
-  // CP-UX1: month by default; year or exact day when that is what you know. Never invent a day.
-  const precision=existing?(existing.occurredStart?.precision??'month'):'month';
-  const dateValue=existing?existing.occurredOn:localDate().slice(0,7);
-  return `${dialogHeader(existing?'Edit Achievement':'Capture an Achievement',existing?'Update the details of your contribution.':'Start with what you accomplished. Refine the details later.')}
-  <form id="achievement-form" class="modal-body form-grid" novalidate>
-    <div id="form-error" class="form-error" role="alert" hidden></div>
-    ${captureProjectId&&careerCollections?.projects.some(p=>p.id===captureProjectId)?`<p class="portfolio-capture-context">${icon('layers',16)} Linked experience: <strong>${escape(careerCollections.projects.find(p=>p.id===captureProjectId)?.name)}</strong></p>`:''}
-    <div class="field"><label for="title">Achievement title <span class="required">*</span></label><input id="title" name="title" maxlength="160" placeholder="e.g., Resolved a critical technical issue" value="${escape(existing?.title??'')}" required/><p class="field-hint">Write a short, action-focused title.</p></div>
-    <div class="field"><label for="contribution">What did you do? <span class="required">*</span></label><textarea id="contribution" name="contribution" rows="5" maxlength="6000" placeholder="Describe your personal contribution, decisions, or actions...">${escape(existing?.contribution??'')}</textarea><p class="field-hint">Required for a recorded achievement. Optional for a draft.</p></div>
-    ${occurrenceDateField(precision,dateValue)}
-    <div class="field-row"><div class="field"><label for="impactCategory">Impact category</label><select name="impactCategory" id="impactCategory">${Object.entries(IMPACT_CATEGORIES).map(([key,value])=>`<option value="${key}" ${existing?.impactCategory===key?'selected':''}>${value}</option>`).join('')}</select></div></div>
-    <div class="field"><label for="outcome">Outcome <span class="optional">optional</span></label><textarea id="outcome" name="outcome" rows="3" maxlength="6000" placeholder="What changed as a result? Add measurable results if known.">${escape(existing?.outcome??'')}</textarea></div>
-    ${careerCollections?richAchievementFields(existing,careerCollections,captureProjectId):''}
-    <div class="form-guidance">${icon('info',18)} <p>Capture the facts as you know them. Don't invent metrics or outcomes; you can complete your record later.</p></div>
-  </form><div class="modal-footer"><button class="button button-outline" data-action="save-achievement" data-status="draft">Save draft</button><button class="button button-primary" data-action="save-achievement" data-status="recorded">${icon('check',17)} ${existing?'Save changes':'Save achievement'}</button></div>`;
+  if(!careerCollections)return `${dialogHeader('Capture an Achievement','Your career records are still loading.')}<div class="modal-body"><p>Try again in a moment.</p></div>`;
+  const o={existing,c:careerCollections,projectContext:existing?null:captureProjectId,mode:existing?'all' as const:'steps' as const,step:captureStep,defaultRoleId:defaultRoleId()};
+  return dialogHeader(existing?'Edit Achievement':'Capture an Achievement',existing?'Update the details of your contribution.':stepText(captureStep))+captureForm(o)+captureFooter(o);
+}
+function openCapture(projectId:string|null){
+  captureProjectId=projectId;
+  const fromExperience=Boolean(projectId&&careerCollections?.projects.some(p=>p.id===projectId));
+  // Started from an experience, or nothing to choose from yet: begin with "What happened?".
+  captureStep=fromExperience||!careerCollections||!hasWhereChoices(careerCollections)?2:1;
+  openModal('capture');
+}
+function captureFormEl():HTMLFormElement|null{return document.getElementById('achievement-form') as HTMLFormElement|null;}
+function goToCaptureStep(step:CaptureStep){
+  const form=captureFormEl();if(!form||!careerCollections)return;
+  captureStep=step;syncWhere(form,careerCollections);
+  const heading=showCaptureStep(form,step);
+  const description=document.getElementById('dialog-description');if(description)description.textContent=stepText(step);
+  heading?.focus({preventScroll:true});
+}
+function captureNext(){
+  const form=captureFormEl();if(!form)return;
+  const step=Number(form.dataset.step) as CaptureStep;
+  if(step===1&&!form.querySelector('input[name="where"]:checked'))return showError('Choose where this happened, or choose “Not part of an experience”.');
+  if(step===2&&!form.querySelector<HTMLInputElement>('#title')?.value.trim())return showError('Add a title before you continue.');
+  if(step<3)goToCaptureStep((step+1) as CaptureStep);
+}
+/** On a failed save in the step flow, return to the step that holds the problem. */
+function captureStepFor(message:string):CaptureStep|null{
+  const form=captureFormEl();if(!form||form.dataset.mode!=='steps')return null;
+  return /title|contribution/i.test(message)?2:/date/i.test(message)?3:/metric|evidence|reference|numeric/i.test(message)?3:null;
 }
 function achievementDetail():string {
   const a=achievements.find(x=>x.id===selectedId);if(!a||!careerCollections)return `${dialogHeader('Achievement Unavailable','This entry might have been deleted.')}<div class="modal-body">Please reload your vault.</div>`;
@@ -423,7 +434,7 @@ let lastRenderedScreen:Screen|null=null;
 // Expanded cards (any details[data-keep-open]) stay open when the same screen re-renders, e.g. after a dialog closes.
 function openDisclosureKeys():string[]{return lastRenderedScreen===screen?[...root.querySelectorAll<HTMLDetailsElement>('details[open][data-keep-open]')].map(d=>d.dataset.keepOpen??''):[];}
 function restoreDisclosures(keys:string[]){if(!keys.length)return;const all=[...root.querySelectorAll<HTMLDetailsElement>('details[data-keep-open]')];for(const key of keys){const el=all.find(d=>d.dataset.keepOpen===key);if(el)el.open=true;}}
-function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';const openKeys=openDisclosureKeys();root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;dialogs.update(Boolean(modal));syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}
+function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';const openKeys=openDisclosureKeys();root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;dialogs.update(Boolean(modal));syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}if(modal==='capture'){const form=captureFormEl();if(form&&careerCollections)syncWhere(form,careerCollections);}
   if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(modal){dialogs.focusFirst();}
 }
 function toastView(inDialog=false):string{return `<div id="toast" role="status" aria-live="polite" class="toast ${inDialog?'toast-in-dialog':''} ${toastMessage?'visible':''} toast-${toastKind}">${toastMessage?`${icon(toastKind==='success'?'check':'alert',20)}<span>${escape(toastMessage)}</span>`:''}</div>`;}
@@ -447,26 +458,43 @@ function setSaving(value:boolean){saving=value;const dialog=document.querySelect
 function readAchieveInput(status:'draft'|'recorded') {
   const form=document.getElementById('achievement-form') as HTMLFormElement|null;
   if(!form)throw new Error('Achievement form not available');const values=new FormData(form);
-  return {title:String(values.get('title')??'').trim(),contribution:String(values.get('contribution')??'').trim(),occurredOn:String(values.get('occurredOn')??''),status,outcome:String(values.get('outcome')??'').trim(),impactCategory:String(values.get('impactCategory')??'')};
+  // CP-UX2: a draft saved before "When did it happen?" was shown gets no date, rather than the pre-filled month.
+  const occurredOn=form.dataset.mode==='steps'&&form.dataset.reachedWhen!=='true'?'':String(values.get('occurredOn')??'');
+  return {title:String(values.get('title')??'').trim(),contribution:String(values.get('contribution')??'').trim(),occurredOn,status,outcome:String(values.get('outcome')??'').trim(),impactCategory:String(values.get('impactCategory')??'')};
 }
 async function saveAchievementForm(status:'draft'|'recorded'){
   if(saving)return;setSaving(true);
-  try{const input=readAchieveInput(status);const errors=validateAchievementInput(input);if(errors.length){showError(errors.join(' '));return;}
+  try{const input=readAchieveInput(status);const errors=validateAchievementInput(input);if(errors.length){failCapture(errors.join(' '));return;}
     const existing=editing&&selectedId?achievements.find(x=>x.id===selectedId):undefined;
     if(!careerCollections)throw new ValidationError('Career records are unavailable.');
     const form=document.getElementById('achievement-form') as HTMLFormElement;
     const rich=parseRichFields(form);
-    if(captureProjectId&&!rich.projectIds.includes(captureProjectId))rich.projectIds.push(captureProjectId);
+    const roleId=captureRole(rich,existing,input.occurredOn,form.dataset.initialWhere??'');
     const record=await database.saveAchievementBundle({
       id:existing?.id??crypto.randomUUID(),revision:existing?.revision??0,
       title:input.title,contribution:input.contribution,occurredOn:input.occurredOn,
       status,preArchiveStatus:existing?.status==='archived'?null:existing?.preArchiveStatus??null,
       outcome:input.outcome,impactCategory:input.impactCategory as Achievement['impactCategory'],
-      roleId:rich.roleId,situation:rich.situation,actions:rich.actions,notes:rich.notes,
+      roleId,situation:rich.situation,actions:rich.actions,notes:rich.notes,
       confidentiality:rich.confidentiality
     },rich.projectIds,rich.primaryProjectId,rich.competencyIds,rich.metrics,rich.references,rich.newExperiences);
     achievements=await listAchievements();await loadCareerCollections();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
-  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+  }catch(err){failCapture(errorMessage(err));}finally{setSaving(false);}
+}
+function failCapture(message:string){const step=captureStepFor(message);if(step&&step!==captureStep)goToCaptureStep(step);showError(message);}
+/**
+ * CP-UX2: the achievement's role. "Not part of an experience" uses the chosen
+ * role; a new experience uses the role picked with it; an experience gives its
+ * role (by date when it spans several). An edit that keeps the same Where
+ * choice keeps the role already stored.
+ */
+function captureRole(rich:ReturnType<typeof parseRichFields>,existing:Achievement|undefined,occurredOn:string,initialWhere:string):string|null{
+  const where=rich.where;
+  if(where===ROLE_ONLY)return rich.roleSelect;
+  if(rich.newExperiences.some(x=>x.id===where))return rich.whereRoleId;
+  if(!where||(existing&&where===initialWhere))return existing?.roleId??null;
+  const role=careerCollections?roleForExperience(careerCollections,where,occurredOn?precisionDateFromInput(occurredOn):null):null;
+  return role?.id??existing?.roleId??null;
 }
 async function saveProfileForm(){if(saving)return;setSaving(true);try{
   const form=document.getElementById('profile-form') as HTMLFormElement;const fd=new FormData(form);const input={displayName:String(fd.get('displayName')??'').trim(),headline:String(fd.get('headline')??'').trim(),summary:String(fd.get('summary')??'').trim(),email:String(fd.get('email')??'').trim(),location:String(fd.get('location')??'').trim()};
@@ -501,7 +529,7 @@ function addInlineExperienceFromForm(){
   const form=document.getElementById('achievement-form') as HTMLFormElement|null;
   if(!form||!careerCollections)return;
   if(!addInlineExperience(form,careerCollections.projects))return;
-  updatePrimaryOptions(form);isDirty=true;
+  syncWhere(form,careerCollections);isDirty=true;
   // Collapse the mini form; the status line announces what was linked.
   const panel=document.getElementById('inline-experience-panel'),toggle=form.querySelector<HTMLElement>('[data-action=toggle-inline-experience]');
   if(panel)panel.hidden=true;
@@ -622,7 +650,7 @@ function focusables():HTMLElement[]{return Array.from(document.querySelectorAll<
 function runAction(node:HTMLElement){
   const action=node.dataset.action;switch(action){
     case 'nav':navigate(node.dataset.screen as Screen);break;
-    case 'capture':captureProjectId=null;openModal('capture');break;
+    case 'capture':openCapture(null);break;
     case 'add-competency':openModal('competency');break;
     case 'edit-competency':openModal('competency',node.dataset.id??null,true);break;
     case 'save-competency':void saveCustomSkill();break;
@@ -631,11 +659,20 @@ function runAction(node:HTMLElement){
     case 'archive-competency':void changeCustomSkillStatus(node.dataset.id??'','archived');break;
     case 'restore-competency':void changeCustomSkillStatus(node.dataset.id??'','active');break;
     case 'competency-achievement':openModal('detail',node.dataset.id??null);break;
-    case 'toggle-rich-panel':{
-      const body=document.getElementById('rich-panel-content');
-      if(!body)return;
-      body.hidden=!body.hidden;
-      node.setAttribute('aria-expanded',String(!body.hidden));
+    case 'capture-next':captureNext();break;
+    case 'capture-back':{const step=Number(captureFormEl()?.dataset.step??'1');if(step>1)goToCaptureStep((step-1) as CaptureStep);break;}
+    case 'where-show-all':{const form=captureFormEl();if(!form)break;form.dataset.whereAll='true';filterWhere(form);node.setAttribute('aria-expanded','true');form.querySelector<HTMLInputElement>('.where-options input:checked, .where-options input')?.focus();break;}
+    case 'find-skill':{
+      const form=captureFormEl(),field=document.getElementById('skill-search-field');if(!form||!field)break;
+      field.hidden=false;node.setAttribute('aria-expanded','true');node.hidden=true;filterSkills(form);document.getElementById('skill-search')?.focus();break;
+    }
+    case 'toggle-capture-extra':{
+      const target=document.getElementById(node.getAttribute('aria-controls')??'');if(!target)break;
+      target.hidden=!target.hidden;node.setAttribute('aria-expanded',String(!target.hidden));
+      if(target.id==='capture-situation'){node.hidden=true;target.querySelector<HTMLElement>('textarea')?.focus();}
+      // Opening an empty metrics or evidence section starts its first row.
+      if(!target.hidden&&target.id==='capture-metrics'&&!target.querySelector('.metric-row')){document.getElementById('rich-metrics')?.insertAdjacentHTML('beforeend',metricRow());isDirty=true;}
+      if(!target.hidden&&target.id==='capture-evidence'&&!target.querySelector('.evidence-row')){document.getElementById('rich-evidence')?.insertAdjacentHTML('beforeend',evidenceRow());isDirty=true;}
       break;
     }
     case 'add-rich-metric':document.getElementById('rich-metrics')?.insertAdjacentHTML('beforeend',metricRow());isDirty=true;break;
@@ -659,7 +696,7 @@ function runAction(node:HTMLElement){
     case 'open-experience':openExperience(node.dataset.id??null);break;
     case 'close-experience':openExperience(null);break;
     case 'vault-status':filterStatus=node.dataset.status??'recorded';refreshVaultResults();break;
-    case 'project-capture':captureProjectId=node.dataset.id??null;openModal('capture');break;
+    case 'project-capture':openCapture(node.dataset.id??null);break;
     case 'edit-profile':openModal('profile');break;
     case 'add-career':openCareer(node.dataset.kind as CareerKind,null,node.dataset.employer);break;
     case 'edit-career':openCareer(node.dataset.kind as CareerKind,node.dataset.id??null);break;
@@ -736,7 +773,11 @@ document.addEventListener('click',e=>{
   const actionTarget=resolveActionTarget(e.target);
   if(actionTarget)runAction(actionTarget);
 });
-document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;if(t.id==='experience-search'){experienceQuery=(t as HTMLInputElement).value;refreshTimeline();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;refreshVaultResults();}});
+document.addEventListener('input',e=>{const t=e.target as HTMLElement;
+  // CP-UX2: searching the capture lists is not a change to the record.
+  if(t.id==='where-search'||t.id==='skill-search'){const form=captureFormEl();if(form){if(t.id==='where-search')filterWhere(form);else filterSkills(form);}return;}
+  if(t.id==='title'&&t.closest('#achievement-form')){const count=document.getElementById('title-count');if(count)count.textContent=`${(t as HTMLInputElement).value.length} / 160`;}
+  if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;if(t.id==='experience-search'){experienceQuery=(t as HTMLInputElement).value;refreshTimeline();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;refreshVaultResults();}});
 document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;refreshCompetencies();}
   if(removal&&t.closest('#removal-form')){
     if(t.name==='removal-mode')removal.mode=t.value==='move'?'move':'unlink';
@@ -745,14 +786,13 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
     if(removal.mode==='move'&&!removal.targetId&&careerCollections)removal.targetId=removalImpact(careerCollections,removal.kind,removal.id).targets[0]?.id??'';
     render(true);return;
   }
-  if(t.id==='rich-primaryProjectId'||t.name==='projectId')isDirty=true;
-  if(t.name==='projectId'){const form=t.closest('form');if(form)updatePrimaryOptions(form);}
+  if(t.name==='where'||t.id==='capture-roleId'){const form=t.closest('form');if(form&&careerCollections)syncWhere(form,careerCollections);isDirty=true;}
   if(t.id==='role-filter'){filterRole=t.value;refreshVaultResults();}
   if(t.id==='project-filter'){filterProject=t.value;refreshVaultResults();}
   if(t.id==='competency-filter'){filterCompetency=t.value;refreshVaultResults();}
   if(t.id==='date-start-filter'){filterDateStart=t.value;refreshVaultResults();}
   if(t.id==='date-end-filter'){filterDateEnd=t.value;refreshVaultResults();}
-  if(t.name==='occurredPrecision'){switchOccurrencePrecision(t.value as 'year'|'month'|'day');isDirty=true;}
+  if(t.name==='occurredPrecision'){switchOccurrencePrecision(t.value as Precision);isDirty=true;}
   if(t.id==='portfolio-employerId'){const form=t.closest('form');if(form)updatePortfolioRoleChoices(form);}if(t.dataset.action==='portfolio-date-precision'){const target=t.dataset.target??'';const input=document.getElementById('portfolio-'+target) as HTMLInputElement|null;if(input){input.type=t.value==='year'?'text':t.value==='month'?'month':'date';input.value='';input.placeholder=t.value==='year'?'YYYY':'';input.inputMode=t.value==='year'?'numeric':'';input.maxLength=t.value==='year'?4:524288;}}if(t.id==='sort-order'){sortOrder=t.value;refreshVaultResults();}if(t.id==='restore-file'&&t instanceof HTMLInputElement&&t.files?.[0]){void doFileRestore(t.files[0]);}if(t.dataset.action==='career-date-precision'){
     const target=t.dataset.target??'';
     const input=document.getElementById('career-'+target) as HTMLInputElement|null;
@@ -762,7 +802,7 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
     const end=document.getElementById('career-endDate') as HTMLInputElement|null;if(end)end.value='';
   }
   if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;});
-document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}if((e.target as HTMLElement).id==='proficiency-form'){e.preventDefault();void saveProficiencyForm();}});
+document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();const f=e.target as HTMLFormElement;if(f.dataset.mode==='steps'&&f.dataset.step!=='3')captureNext();else void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}if((e.target as HTMLElement).id==='proficiency-form'){e.preventDefault();void saveProficiencyForm();}});
 document.addEventListener('keydown',e=>{
   if(!modal)return;
   // A native radiogroup changes selection with arrow keys, not repeated Tab.
@@ -775,7 +815,8 @@ document.addEventListener('keydown',e=>{
     const next=direction?(index+direction+buttons.length)%buttons.length:e.key==='Home'?0:e.key==='End'?buttons.length-1:-1;
     if(next>=0){e.preventDefault();buttons[next]?.focus();buttons[next]?.click();return;}
   }
-  if(e.key==='Enter'&&(e.target as HTMLElement|null)?.id==='inline-experience-name'){e.preventDefault();addInlineExperienceFromForm();return;}if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+  if(e.key==='Enter'&&(e.target as HTMLElement|null)?.id==='inline-experience-name'){e.preventDefault();addInlineExperienceFromForm();return;}
+  if(e.key==='Enter'&&['where-search','skill-search'].includes((e.target as HTMLElement|null)?.id??'')){e.preventDefault();return;}if(e.key==='Escape'){e.preventDefault();closeModal();}if(e.key==='Tab'){const elements=focusables();if(!elements.length)return;const first=elements[0]!,last=elements[elements.length-1]!;if(!document.activeElement?.closest('.modal')){e.preventDefault();(e.shiftKey?last:first).focus();}else if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 document.addEventListener('toggle',e=>{
   const d=e.target;if(!(d instanceof HTMLDetailsElement)||!d.classList.contains('role-group'))return;
   // CP-UX1: the timeline keeps the groups you opened or closed while you move between pages.

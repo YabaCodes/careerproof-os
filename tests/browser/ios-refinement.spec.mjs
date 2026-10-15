@@ -59,17 +59,24 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
     expect(await page.locator('.modal-body').evaluate(el=>el.scrollTop)).toBe(0);
     const titleLabel=await page.locator('label[for=title]').boundingBox(),body=await page.locator('.modal-body').boundingBox();
     expect(titleLabel.y).toBeGreaterThanOrEqual(body.y);
-    const fields=await page.locator('#title,#contribution,#occurredOn,#impactCategory,#outcome').evaluateAll(nodes=>nodes.map(el=>{
+    // CP-UX2: "What happened?" (step 2) holds title, what you did and result; the date is on step 3.
+    const measureFields=selector=>page.locator(selector).evaluateAll(nodes=>nodes.map(el=>{
       const r=el.getBoundingClientRect(),field=el.closest('.field').getBoundingClientRect(),body=el.closest('.modal-body'),b=body.getBoundingClientRect(),s=getComputedStyle(el),bs=getComputedStyle(body);
       return {id:el.id,left:r.left,right:r.right,width:r.width,height:r.height,fieldLeft:field.left,fieldRight:field.right,bodyLeft:b.left+parseFloat(bs.paddingLeft),bodyRight:b.right-parseFloat(bs.paddingRight),appearance:s.appearance,align:s.textAlign,border:s.borderTopWidth,borderColor:s.borderTopColor,radius:s.borderTopLeftRadius,bg:s.backgroundColor,font:s.fontSize,padding:s.padding,line:s.lineHeight};
     }));
+    const fields=await measureFields('#title,#contribution,#outcome');
+    await page.locator('#title').fill('Synthetic date check');
+    await page.locator('[data-action=capture-next]').click();
+    fields.push(...await measureFields('#occurredOn'));
+    expect(fields).toHaveLength(4);
     for(const f of fields){expect(f.left).toBeGreaterThanOrEqual(f.bodyLeft-.1);expect(f.right).toBeLessThanOrEqual(f.bodyRight+.1);expect(f.left).toBe(f.fieldLeft);expect(f.right).toBe(f.fieldRight);expect(f.font).toBe('16px');}
-    const date=fields.find(f=>f.id==='occurredOn'),title=fields.find(f=>f.id==='title'),category=fields.find(f=>f.id==='impactCategory');
-    expect(date.height).toBe(48);expect(date.width).toBe(title.width);expect(category.height).toBe(48);
+    const date=fields.find(f=>f.id==='occurredOn'),title=fields.find(f=>f.id==='title');
+    expect(date.height).toBe(48);expect(date.width).toBe(title.width);
     for(const key of ['border','borderColor','radius','bg','font','padding','line'])expect(date[key],key).toBe(title[key]);
     expect(date.appearance).toBe('none');expect(date.align).toBe('left');
     // CP-UX1: month is the default precision; the exact day is one tap away.
-    await expect(page.getByRole('group',{name:'When did it happen?'})).toBeVisible();
+    await expect(page.getByRole('group',{name:'When did it happen?'})).toBeAttached();
+    await expect(page.locator('#capture-title-3')).toHaveText('When Did It Happen?');
     await expect(page.locator('#occurredPrecision-month')).toBeChecked();
     await expect(page.getByLabel('Occurrence date',{exact:true})).toHaveAttribute('type','month');
     const options=await page.locator('.precision-option').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
@@ -94,7 +101,7 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
       // Wait for final geometry instead of racing the keyboard resize event.
       const measure=()=>page.evaluate(()=>{
         const r=s=>{const b=document.querySelector(s).getBoundingClientRect();return {top:b.top,bottom:b.bottom};};
-        return {header:r('.modal-header'),body:r('.modal-body'),label:r('label[for=outcome]'),input:r('#outcome'),footer:r('.modal-footer'),buttons:[...document.querySelectorAll('.modal-footer button')].map(el=>{const b=el.getBoundingClientRect();return {top:b.top,bottom:b.bottom,height:b.height,width:b.width};})};
+        return {header:r('.modal-header'),body:r('.modal-body'),label:r('label[for=outcome]'),input:r('#outcome'),footer:r('.modal-footer'),buttons:[...document.querySelectorAll('.modal-footer button')].filter(el=>el.getClientRects().length).map(el=>{const b=el.getBoundingClientRect();return {top:b.top,bottom:b.bottom,height:b.height,width:b.width};})};
       });
       await expect.poll(async()=>{
         const b=await measure();
@@ -151,103 +158,69 @@ for(const occurredStart of [null,{value:'2024',precision:'year'},{value:'2024-06
     const restored=(await snapshot(page)).collections.achievements.find(x=>x.id===a.id);expect(restored.status).toBe(occurredStart?'recorded':'draft');expect(restored.occurredStart).toEqual(occurredStart);
   });
 }
-test('a deliberately cleared new draft remains unspecified after reopening',async({page})=>{
-  await start(page);await page.locator('.mobile-create').click();await page.locator('#title').fill('Synthetic blank-date draft');await page.locator('#occurredOn').fill('');
+test('a new draft has no date unless one is entered on "When did it happen?"',async({page})=>{
+  // CP-UX2: a draft saved from "What happened?" never gets the pre-filled month it was not shown.
+  await start(page);await page.locator('.mobile-create').click();await page.locator('#title').fill('Synthetic step-two draft');
   await page.locator('[data-status=draft]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
-  const a=(await snapshot(page)).collections.achievements[0];expect(a.occurredStart).toBeNull();
+  expect((await snapshot(page)).collections.achievements[0].occurredStart).toBeNull();
+  // A date deliberately cleared on step 3 stays unspecified too, also after reopening.
+  await page.locator('.mobile-create').click();await page.locator('#title').fill('Synthetic blank-date draft');
+  await page.locator('[data-action=capture-next]').click();await page.locator('#occurredOn').fill('');
+  await page.locator('[data-status=draft]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
+  const a=(await snapshot(page)).collections.achievements.find(x=>x.title==='Synthetic blank-date draft');expect(a.occurredStart).toBeNull();
   await page.reload();await expect(page.locator('.hero-card')).toBeVisible();await edit(page,a.id);await expect(page.locator('#occurredOn')).toHaveValue('');
 });
 
-
-for(const width of [320,375,390,430]){
-  test('expanded enrichment stays inside iPhone modal and collapses without overlapping fields: '+width,async({page})=>{
-    await page.setViewportSize({width,height:812});
-    await start(page);
-    await page.locator('.mobile-create').click();
-    const toggle=page.locator('#rich-detail-panel [data-action=toggle-rich-panel]');
-    await expect(toggle).toBeVisible();
-    await expect(toggle).toHaveAttribute('aria-expanded','false');
-    await expect(page.locator('#rich-panel-content')).toBeHidden();
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-expanded','true');
-    await expect(page.locator('#rich-panel-content')).toBeVisible();
-    const bounds=await page.locator('.modal-body').evaluate(el=>{
-      const r=el.getBoundingClientRect();
-      return {overflow:el.scrollWidth-el.clientWidth,
-        fields:[...el.querySelectorAll('#rich-panel-content .field input,#rich-panel-content .field textarea,#rich-panel-content .field select')]
-          .filter(x=>x.getClientRects().length>0)
-          .map(x=>{const b=x.getBoundingClientRect();return {left:b.left,right:b.right,parent:x.closest('.field')?.getBoundingClientRect().right??r.right};}),
-        left:r.left,right:r.right};
-    });
-    expect(bounds.overflow).toBeLessThanOrEqual(1);
-    expect(bounds.fields.length).toBeGreaterThan(0);
-    for(const field of bounds.fields){
-      expect(field.left).toBeGreaterThanOrEqual(bounds.left-.5);
-      expect(field.right).toBeLessThanOrEqual(bounds.right+.5);
-    }
-    await toggle.click();
-    await expect(page.locator('#rich-panel-content')).toBeHidden();
-    await expect(page.locator('#outcome')).toBeVisible();
-  });
-}
-
-
-// CP-011D.1 native iPhone report: the optional details control must never
-// share physical space with the "What did you do?" label or adjacent controls.
+// CP-011D.1 native iPhone report, carried into CP-UX2: on every capture step, no control
+// shares physical space with another or leaves the modal, including expanded optional sections.
 for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
-  test('Quick Capture fields and More details never overlap: '+width+'px '+theme,async({page})=>{
+  test('capture steps keep every control inside the iPhone modal without overlap: '+width+'px '+theme,async({page})=>{
     await page.setViewportSize({width,height:812});
     await start(page,theme);
+    const c=fullCollections();c.projects.push({...c.projects[0],id:'project-2',name:'Synthetic second experience with a long name that wraps onto two lines'});
+    await page.evaluate(async c=>{const {database}=await import('/app/data/db.js');await database.replaceAllData(c,{theme:'light'},await database.getGeneration());},c);
+    await page.reload();await expect(page.locator('.hero-card')).toBeVisible();
     await page.locator('.mobile-create').click();
     const form=page.locator('#achievement-form');
-    const toggle=form.locator('[data-action=toggle-rich-panel]');
-    await expect(toggle).toHaveText(/More details/);
-    await expect(toggle).toHaveAttribute('aria-expanded','false');
-    await expect(form.locator('#rich-panel-content')).toBeHidden();
-
-    async function measure(){
-      return form.evaluate(el=>{
-        const rect=(selector)=>{
-          const node=el.querySelector(selector);
-          if(!node)throw Error('Missing field '+selector);
-          const r=node.getBoundingClientRect();
-          return {top:r.top,bottom:r.bottom,left:r.left,right:r.right,height:r.height};
-        };
-        return {title:rect('#title'),contribution:rect('#contribution'),
-          contributionLabel:rect('label[for=contribution]'),date:rect('#occurredOn'),
-          category:rect('#impactCategory'),outcome:rect('#outcome'),
-          outcomeLabel:rect('label[for=outcome]'),
-          panel:rect('#rich-detail-panel'),toggle:rect('.rich-expander'),
-          guidance:rect('.form-guidance'),
-          scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};
+    // Visible controls of the current step: inside the scrollport, no overlaps, no sideways scroll.
+    async function check(step){
+      const r=await form.evaluate(el=>{
+        const b=el.getBoundingClientRect();
+        const boxes=[...el.querySelectorAll('input:not([type=radio]):not([type=checkbox]):not([type=hidden]),textarea,select,button,label.where-option,label.skill-chip,.capture-switch')]
+          .filter(x=>x.getClientRects().length&&!x.closest('[hidden]')).map(x=>{const q=x.getBoundingClientRect();return {id:x.id||x.className||x.tagName,top:q.top,bottom:q.bottom,left:q.left,right:q.right,h:q.height};});
+        return {overflow:el.scrollWidth-el.clientWidth,left:b.left,right:b.right,boxes};
       });
+      expect(r.overflow,step+' sideways scroll').toBeLessThanOrEqual(1);
+      for(const x of r.boxes){expect(x.left,step+' '+x.id).toBeGreaterThanOrEqual(r.left-.5);expect(x.right,step+' '+x.id).toBeLessThanOrEqual(r.right+.5);}
+      const outside=r.boxes.filter(x=>!x.id.includes('skill-chip')&&!x.id.includes('precision'));
+      for(let i=0;i<outside.length;i++)for(let j=i+1;j<outside.length;j++){
+        const a=outside[i],o=outside[j];const nested=a.top<=o.top&&a.bottom>=o.bottom&&a.left<=o.left&&a.right>=o.right||o.top<=a.top&&o.bottom>=a.bottom&&o.left<=a.left&&o.right>=a.right;
+        if(nested)continue; // e.g. a radio label containing nothing else measured
+        const overlap=Math.min(a.bottom,o.bottom)-Math.max(a.top,o.top)>1&&Math.min(a.right,o.right)-Math.max(a.left,o.left)>1;
+        expect(overlap,step+' '+a.id+' overlaps '+o.id).toBe(false);
+      }
     }
-    const collapsed=await measure();
-    expect(collapsed.contributionLabel.top).toBeGreaterThanOrEqual(collapsed.title.bottom+2);
-    expect(collapsed.date.top).toBeGreaterThanOrEqual(collapsed.contribution.bottom+2);
-    expect(collapsed.outcomeLabel.top).toBeGreaterThanOrEqual(collapsed.date.bottom+2);
-    expect(collapsed.panel.top).toBeGreaterThanOrEqual(collapsed.outcome.bottom+2);
-    expect(collapsed.guidance.top).toBeGreaterThanOrEqual(collapsed.panel.bottom+2);
-    expect(collapsed.toggle.top).toBeGreaterThanOrEqual(collapsed.panel.top);
-    expect(collapsed.toggle.bottom).toBeLessThanOrEqual(collapsed.panel.bottom);
-    expect(collapsed.toggle.height).toBeGreaterThanOrEqual(44);
-    expect(collapsed.scrollWidth-collapsed.clientWidth).toBeLessThanOrEqual(1);
-
-    await toggle.click();
-    await expect(toggle).toHaveAttribute('aria-expanded','true');
-    await expect(form.locator('#rich-panel-content')).toBeVisible();
-    const expanded=await measure();
-    expect(expanded.guidance.top).toBeGreaterThanOrEqual(expanded.panel.bottom+2);
-    expect(expanded.panel.top).toBeGreaterThanOrEqual(expanded.outcome.bottom+2);
-    expect(expanded.scrollWidth-expanded.clientWidth).toBeLessThanOrEqual(1);
-
-    await toggle.click();
-    await expect(form.locator('#rich-panel-content')).toBeHidden();
-    const closedAgain=await measure();
-    expect(closedAgain.guidance.top).toBeGreaterThanOrEqual(closedAgain.panel.bottom+2);
-    await page.locator('#title').fill('Synthetic no-overlap draft');
+    await expect(form).toHaveAttribute('data-step','1');
+    await page.locator('[data-action=where-show-all]').isVisible().then(v=>v?page.locator('[data-action=where-show-all]').click():null);
+    await page.locator('[data-action=toggle-inline-experience]').click();
+    await check('Where');
+    await page.locator('input[name=where][value=project-2]').check();
+    await page.locator('[data-action=capture-next]').click();
+    await page.locator('[data-action=toggle-capture-extra][aria-controls=capture-situation]').click();
+    await expect(page.locator('#rich-situation')).toBeFocused();
+    await page.locator('#title').fill('Synthetic overlap check');
+    await check('What');
+    await page.locator('[data-action=capture-next]').click();
+    for(const id of ['capture-metrics','capture-evidence'])await page.locator(`[aria-controls=${id}]`).click();
+    await page.locator('[data-action=find-skill]').click();
+    await page.locator('details.capture-more > summary').click();
+    await check('When');
+    for(const h of await page.locator('.skill-chip:visible, .capture-add-row, .capture-switch').evaluateAll(els=>els.map(e=>e.getBoundingClientRect().height)))expect(h).toBeGreaterThanOrEqual(40);
     await page.locator('[data-action=save-achievement][data-status=draft]').click();
     await expect(form).toHaveCount(0);
-    expect((await snapshot(page)).collections.achievements.some(x=>x.title==='Synthetic no-overlap draft')).toBe(true);
+    const saved=(await snapshot(page)).collections;
+    expect(saved.achievements.some(x=>x.title==='Synthetic overlap check')).toBe(true);
+    // Rows opened but left empty are not saved as metrics or evidence.
+    expect(saved.impactMetrics).toHaveLength(1);expect(saved.evidenceReferences).toHaveLength(1);
   });
 }

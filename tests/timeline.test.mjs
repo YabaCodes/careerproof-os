@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {experienceTimeline,experienceRoles,experienceSkills,achievementContexts,achievementYear,compareExperiencesByRecency,isOngoing} from '../dist/app/domain/timeline.js';
+import {experienceTimeline,experienceRoles,experienceSkills,achievementContexts,achievementYear,compareExperiencesByRecency,isOngoing,experiencesByRecency,rolesOfExperience,roleForExperience} from '../dist/app/domain/timeline.js';
 import {fullCollections,base} from './fixtures.mjs';
 
 // CP-UX1 (DEC-036) reading and scanning: pure derivations only, nothing written. Synthetic data only.
@@ -118,4 +118,29 @@ test('CP-UX1 the derivations never change the records they read',()=>{
   const c=world(),before=structuredClone(c);
   experienceTimeline(c);experienceRoles(c,'p-span');experienceSkills(c,'p-span');achievementContexts(c);
   assert.deepEqual(c,before);
+});
+
+// CP-UX2 (DEC-037) capture: the Where list and the role an achievement takes from its experience.
+test('CP-UX2 the Where list offers every experience, ongoing first, then by latest end',()=>{
+  const ids=experiencesByRecency(world()).map(p=>p.id);
+  assert.deepEqual(ids.slice(0,2),['p-live-new','p-live-old']);
+  assert.equal(ids.length,world().projects.length);
+  assert.equal(ids.at(-1).startsWith('p-'),true);
+});
+
+test('CP-UX2 an achievement takes the role its experience was in at that date, else the most recent role',()=>{
+  const c=world(); // p-span: role-old (2019 – Dec 2021) and role-1 (2022 – current)
+  assert.deepEqual(rolesOfExperience(c,'p-span').map(r=>r.id),['role-1','role-old']);
+  assert.equal(roleForExperience(c,'p-span',y('2021-06')).id,'role-old');
+  assert.equal(roleForExperience(c,'p-span',y('2021-12-31')).id,'role-old');
+  assert.equal(roleForExperience(c,'p-span',y('2022-01')).id,'role-1');
+  assert.equal(roleForExperience(c,'p-span',y('2023')).id,'role-1');
+  // A year that overlaps both roles goes to the more recent one.
+  c.roles.find(r=>r.id==='role-1').startDate=y('2021-10');
+  assert.equal(roleForExperience(c,'p-span',y('2021')).id,'role-1');
+  // No date, or a date outside every linked role: the most recent linked role.
+  assert.equal(roleForExperience(c,'p-span',null).id,'role-1');
+  assert.equal(roleForExperience(c,'p-span',y('2010')).id,'role-1');
+  // An experience linked to no role gives none.
+  assert.equal(roleForExperience(c,'p-no-role',y('2017')),null);
 });

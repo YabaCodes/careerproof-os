@@ -34,7 +34,8 @@ async function layout(page,state){
     const controls=[...document.querySelectorAll('button,input:not([type=file]),select,textarea')].filter(visible);
     return {
       overflow:document.documentElement.scrollWidth-innerWidth,
-      small:controls.filter(el=>{const r=el.getBoundingClientRect();return r.width<43.9||r.height<43.9;}).map(el=>el.id||el.textContent.trim()),
+      // A radio or checkbox wrapped in its label is tapped through the whole label (CP-UX2 choices and chips).
+      small:controls.filter(el=>{const t=(el.type==='radio'||el.type==='checkbox')&&el.closest('label')?el.closest('label'):el;const r=t.getBoundingClientRect();return r.width<43.9||r.height<43.9;}).map(el=>el.id||el.value||el.textContent.trim()),
       missingLabels:controls.filter(el=>el.tagName==='BUTTON'?!el.textContent.trim()&&!el.getAttribute('aria-label'):!el.labels?.length&&!el.getAttribute('aria-label')).map(el=>el.id||el.tagName),
       bodyOverflow:[...document.querySelectorAll('.modal-body')].some(el=>el.scrollWidth>el.clientWidth+1),
       outside:[...document.querySelectorAll('.modal button,.modal input,.modal select,.modal textarea')].filter(visible).some(el=>{const r=el.getBoundingClientRect();return r.left<0||r.right>innerWidth+1;}),
@@ -93,10 +94,15 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430,768,1024
     await action(page,'[data-screen="profile"]');await layout(page,'Long Profile');
     await action(page,'[data-action="edit-profile"]');await layout(page,'Profile editor');
     await action(page,'[data-action="close"]');
-    await action(page,'[data-action="capture"]');await layout(page,'Capture');
-    expect(await page.locator('#title').evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
-    await action(page,'[data-status="recorded"]');
+    // CP-UX2: capture opens on "Where did this happen?"; every step is checked.
+    await action(page,'[data-action="capture"]');await layout(page,'Capture: Where');
+    await action(page,'[data-action="capture-next"]');
     await expect(page.locator('#form-error')).toBeVisible();await layout(page,'Validation');
+    await page.locator('input[name=where]').first().check();await action(page,'[data-action="capture-next"]');await layout(page,'Capture: What');
+    expect(await page.locator('#title').evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+    await page.locator('#title').fill('Synthetic sweep');await action(page,'[data-action="capture-next"]');
+    await action(page,'[data-action="find-skill"]');await layout(page,'Capture: When');
+    page.once('dialog',d=>d.accept()); // discard the unsaved capture
     await action(page,'[data-action="close"]');
     await action(page,'[data-action="settings"]');await layout(page,'Settings');
     for(const backup of [generateBackup(c),legacyBackup()]){
@@ -123,14 +129,19 @@ test('dialog focus, scroll lock, dirty confirmation and hash events preserve inp
   await expect(page.getByRole('dialog')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.locator('.close-dialog')).toBeFocused();
+  // CP-UX2: with nothing to choose, capture opens on "What happened?", whose Back leads to Where.
+  await page.keyboard.press('Tab');
+  await expect(page.locator('[data-action=capture-back]:visible')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.locator('#title')).toBeFocused();
   await expect(page.locator('.content-wrap')).toHaveAttribute('inert','');
   await expect(page.locator('.mobile-nav')).toHaveAttribute('inert','');
   await page.keyboard.press('Shift+Tab');
+  await expect(page.locator('[data-action=capture-back]:visible')).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
   await expect(page.locator('.close-dialog')).toBeFocused();
   await page.keyboard.press('Shift+Tab');
-  await expect(page.locator('[data-status="recorded"]')).toBeFocused();
+  await expect(page.locator('[data-action="capture-next"]')).toBeFocused(); // hidden buttons are skipped
   await page.keyboard.press('Tab');await expect(page.locator('.close-dialog')).toBeFocused();
   await page.locator('#title').fill('Synthetic unsaved form');
   await page.evaluate(()=>location.hash='/vault');
@@ -203,6 +214,7 @@ test('pending achievement save exposes busy state and prevents duplicate button 
   await start(page);await action(page,'[data-action="capture"]');
   await page.locator('#title').fill('Synthetic pending save');
   await page.locator('#contribution').fill('Synthetic contribution');
+  await action(page,'[data-action="capture-next"]');
   await page.evaluate(async()=>{
     const {database}=await import('/app/data/db.js');
     // The editor saves through saveAchievementBundle (CP-011D). Gating the old

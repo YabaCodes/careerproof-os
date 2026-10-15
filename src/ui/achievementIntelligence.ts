@@ -1,17 +1,16 @@
-import type {AchievementView, CareerCollections, ImpactMetric, EvidenceReference, Confidentiality, RecordLink, Project} from '../domain/models.js';
+/**
+ * Achievement detail rows (impact metrics, evidence references) and reading
+ * the capture form back into an achievement bundle. The form itself is built
+ * by captureFlow.ts (CP-UX2, DEC-037).
+ */
+import type {ImpactMetric, EvidenceReference, Confidentiality, Project} from '../domain/models.js';
 import {ValidationError} from '../domain/validation.js';
-import {EXPERIENCE_NAME_MAX,matchingExperience,type InlineExperienceDraft} from '../domain/experience.js';
-import {normalizeName} from '../domain/taxonomy.js';
-import {icon} from './icons.js';
+import type {InlineExperienceDraft} from '../domain/experience.js';
 import {escapeHtml} from './html.js';
 
 const html=escapeHtml;
-const field=(name:string,label:string,value:string,area=false)=>{
-  const attrs='id="rich-'+name+'" name="'+name+'" maxlength="6000"';
-  return '<div class="field"><label for="rich-'+name+'">'+html(label)+'</label>'+
-    (area?'<textarea '+attrs+' rows="3">'+html(value)+'</textarea>':
-      '<input '+attrs+' type="text" value="'+html(value)+'"/>')+'</div>';
-};
+/** The "Where" choice for an achievement that belongs to no experience (a role, or nothing). */
+export const ROLE_ONLY='__role';
 export function metricRow(record?:ImpactMetric):string {
   const id=html(record?.id??crypto.randomUUID()), revision=record?.revision??0;
   const data='data-id="'+id+'" data-revision="'+revision+'"';
@@ -40,104 +39,7 @@ export function evidenceRow(record?:EvidenceReference):string {
     '<p class="field-hint">References are user-entered, not independently verified. Do not upload confidential company documents.</p>'+
     '<button type="button" class="career-inline-add rich-remove" data-action="remove-rich-row">Remove reference</button></fieldset>';
 }
-const INLINE_TYPES:[Project['experienceType'],string][]=[['project','Project'],['initiative','Initiative'],['ongoing-responsibility','Ongoing responsibility']];
-/**
- * CP-012.4 (DEC-034): create an experience without leaving the achievement form.
- * The controls carry no form names, so only the checkbox they add is submitted;
- * the experience is created with the achievement, in the same transaction.
- */
-function inlineExperienceControl():string{
-  return '<div class="inline-experience"><button type="button" class="career-inline-add" data-action="toggle-inline-experience" aria-expanded="false" aria-controls="inline-experience-panel">'+icon('plus',15)+' New experience</button>'+
-    '<div id="inline-experience-panel" class="inline-experience-panel" hidden>'+
-    '<div class="field"><label for="inline-experience-name">Experience name</label><input id="inline-experience-name" type="text" maxlength="'+EXPERIENCE_NAME_MAX+'" autocomplete="off" enterkeyhint="done" placeholder="e.g., Line upgrade project"/></div>'+
-    '<div class="field"><label for="inline-experience-type">Type</label><select id="inline-experience-type">'+INLINE_TYPES.map(([v,l])=>'<option value="'+v+'">'+l+'</option>').join('')+'</select></div>'+
-    '<p id="inline-experience-error" class="form-error" role="alert" hidden></p>'+
-    '<p class="field-hint">Saved with this achievement. If you chose a role above, the experience is linked to that role and its employer.</p>'+
-    '<button type="button" class="button button-outline" data-action="add-inline-experience">Add and link</button></div>'+
-    '<p id="inline-experience-status" class="field-hint inline-experience-status" role="status" aria-live="polite"></p></div>';
-}
-/**
- * Adds a checked "New" experience to the form, or ticks an existing one with the
- * same name instead of creating a duplicate. Returns true when the form changed.
- */
-export function addInlineExperience(form:HTMLFormElement,projects:readonly Project[]):boolean{
-  const nameInput=form.querySelector<HTMLInputElement>('#inline-experience-name');
-  const typeSelect=form.querySelector<HTMLSelectElement>('#inline-experience-type');
-  const list=form.querySelector<HTMLElement>('.rich-experience-list');
-  const error=form.querySelector<HTMLElement>('#inline-experience-error');
-  const status=form.querySelector<HTMLElement>('#inline-experience-status');
-  if(!nameInput||!typeSelect||!list||!error||!status)return false;
-  const name=nameInput.value.trim().replace(/\s+/g,' ');
-  const fail=(message:string)=>{error.textContent=message;error.hidden=false;nameInput.focus();return false;};
-  if(!name)return fail('Enter a name for the experience.');
-  if(name.length>EXPERIENCE_NAME_MAX)return fail('Use '+EXPERIENCE_NAME_MAX+' characters or fewer.');
-  const type=INLINE_TYPES.find(([v])=>v===typeSelect.value)?.[0];
-  if(!type)return fail('Choose a valid experience type.');
-  error.hidden=true;error.textContent='';
-  const boxes=[...list.querySelectorAll<HTMLInputElement>('input[name="projectId"]')];
-  const existing=matchingExperience(projects,name);
-  const same=existing?boxes.find(b=>b.value===existing.id):boxes.find(b=>b.dataset.newName&&normalizeName(b.dataset.newName)===normalizeName(name));
-  if(same){
-    same.checked=true;
-    status.textContent='“'+(existing?.name??same.dataset.newName??name)+'” already exists, so it is now linked instead of creating a duplicate.';
-  }else{
-    list.querySelector('.career-empty')?.remove();
-    list.insertAdjacentHTML('beforeend','<label class="rich-check is-new"><input type="checkbox" name="projectId" value="'+html(crypto.randomUUID())+'" data-new-name="'+html(name)+'" data-new-type="'+type+'" checked/>'+
-      '<span>'+html(name)+'</span><small class="rich-new-tag">New</small></label>');
-    status.textContent='Added “'+name+'”. It is saved when you save this achievement.';
-  }
-  nameInput.value='';
-  return true;
-}
-export function richAchievementFields(a:AchievementView|undefined,c:CareerCollections,projectContext:string|null):string{
-  const linked=(type:string):Set<string>=>new Set(c.recordLinks.filter(l=>l.sourceId===a?.id&&l.linkType===type).map(l=>l.targetId));
-  const linkedProjects=linked('achievement-project');
-  if(projectContext)linkedProjects.add(projectContext);
-  const linkedCompetencies=linked('achievement-competency');
-  const activeCompetencies=c.competencies.filter(x=>x.status==='active'||linkedCompetencies.has(x.id))
-    .sort((a,b)=>a.name.localeCompare(b.name));
-  const primary=c.recordLinks.find(l=>l.sourceId===a?.id&&l.linkType==='achievement-project'&&l.isPrimary)?.targetId??'';
-  // IndexedDB's primary-key order is unrelated to when a metric was entered.
-  // Keep the editing ledger stable after reload and across backup restoration.
-  const chronological=<T extends {createdAt:string;id:string}>(rows:T[]):T[]=>
-    rows.sort((left,right)=>left.createdAt.localeCompare(right.createdAt)||left.id.localeCompare(right.id));
-  const metrics=chronological(c.impactMetrics.filter(m=>m.achievementId===a?.id));
-  const references=chronological(c.evidenceReferences.filter(e=>e.achievementId===a?.id));
-  const roleSelect='<div class="field"><label for="rich-roleId">Employment role</label><select id="rich-roleId" name="roleId">'+
-    '<option value="">No role selected</option>'+c.roles.map(r=>{
-      const employer=c.employers.find(x=>x.id===r.employerId);
-      return '<option value="'+html(r.id)+'" '+(a?.roleId===r.id?'selected':'')+'>'+html(r.title+' — '+(employer?.name??''))+'</option>';
-    }).join('')+'</select></div>';
-  const projectOptions=c.projects.map(p=>{
-    const checked=linkedProjects.has(p.id);
-    return '<label class="rich-check"><input type="checkbox" name="projectId" value="'+html(p.id)+'" '+(checked?'checked':'')+'/>'+
-      '<span>'+html(p.name)+'</span></label>';
-  }).join('');
-  const competencyOptions=activeCompetencies.map(x=>
-    '<label class="rich-check"><input type="checkbox" name="competencyId" value="'+html(x.id)+'" '+(linkedCompetencies.has(x.id)?'checked':'')+'/>'+
-    '<span>'+html(x.name)+(x.status==='archived'?' (archived historical link)':'')+'</span></label>').join('');
-  const primaryOptions='<div class="field"><label for="rich-primaryProjectId">Primary experience (optional)</label><select id="rich-primaryProjectId" name="primaryProjectId">'+
-    '<option value="">No primary experience</option>'+c.projects.filter(p=>linkedProjects.has(p.id)).map(p=>
-      '<option value="'+html(p.id)+'" '+(primary===p.id?'selected':'')+'>'+html(p.name)+'</option>').join('')+'</select></div>';
-  const confidentiality='<div class="field"><label for="rich-confidentiality">Confidentiality</label><select name="confidentiality" id="rich-confidentiality">'+
-    [['confidential','Confidential (default)'],['standard-private','Standard private']].map(([v,l])=>
-      '<option value="'+v+'" '+((a?.confidentiality??'confidential')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></div>';
-  return '<div class="rich-panel" id="rich-detail-panel"><button type="button" class="rich-expander" data-action="toggle-rich-panel" aria-label="Show more achievement details, experience and evidence" aria-expanded="false" aria-controls="rich-panel-content"><span>More details</span><span class="rich-summary-hint">Optional</span></button>'+
-    '<div class="rich-panel-body" id="rich-panel-content" hidden>'+
-    field('situation','Situation / challenge',a?.situation??'',true)+
-    field('actions','Actions taken',a?.actions??'',true)+field('notes','Additional notes',a?.notes??'',true)+
-    confidentiality+roleSelect+
-    '<fieldset class="rich-link-fieldset"><legend>Associated Experiences</legend><div class="rich-choice-list rich-experience-list">'+
-    (projectOptions||'<p class="career-empty">No experiences yet. Add one below.</p>')+'</div>'+inlineExperienceControl()+primaryOptions+'</fieldset>'+
-    '<fieldset class="rich-link-fieldset"><legend>Competencies Demonstrated</legend><p class="field-hint">Link documented examples to skills. These are not proficiency scores.</p>'+
-    '<div class="rich-choice-list rich-competencies">'+(competencyOptions||'<p class="career-empty">No active competencies available.</p>')+
-    '</div></fieldset>'+
-    '<section><div class="rich-section-heading"><h3>Impact Metrics</h3><button type="button" class="button button-outline" data-action="add-rich-metric">Add metric</button></div>'+
-    '<div id="rich-metrics">'+metrics.map(m=>metricRow(m)).join('')+'</div><p class="field-hint">Use measured values and state their source or context. Never estimate results as facts.</p></section>'+
-    '<section><div class="rich-section-heading"><h3>Evidence References</h3><button type="button" class="button button-outline" data-action="add-rich-evidence">Add reference</button></div>'+
-    '<div id="rich-evidence">'+references.map(e=>evidenceRow(e)).join('')+'</div></section>'+
-    '</div></div>';
-}
+export const INLINE_TYPES:[Project['experienceType'],string][]=[['project','Project'],['initiative','Initiative'],['ongoing-responsibility','Ongoing responsibility']];
 const str=(fd:FormData,key:string)=>String(fd.get(key)??'').trim();
 const numeric=(fd:FormData,key:string):number|null=>{
   const raw=str(fd,key);
@@ -149,12 +51,20 @@ const numeric=(fd:FormData,key:string):number|null=>{
 const safeUrl=(v:string)=>{try{const u=new URL(v);return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password;}catch{return false;}};
 export function parseRichFields(form:HTMLFormElement){
   const fd=new FormData(form);
-  const projectIds=fd.getAll('projectId').map(String),competencyIds=fd.getAll('competencyId').map(String);
-  const primaryProjectId=str(fd,'primaryProjectId')||null;
-  if(primaryProjectId&&!projectIds.includes(primaryProjectId))throw new ValidationError('Choose a selected experience as primary.');
-  const confidentiality=str(fd,'confidentiality');
-  if(confidentiality!=='confidential'&&confidentiality!=='standard-private')throw new ValidationError('Invalid confidentiality selection.');
-  const metrics=[...form.querySelectorAll<HTMLElement>('.metric-row')].map(row=>{
+  // CP-UX2: the experience chosen under "Where" is the primary one; "Other
+  // experiences" adds further links. A missing switch keeps the safe default.
+  const where=str(fd,'where');
+  const whereInput=form.querySelector<HTMLInputElement>('input[name="where"]:checked');
+  const isExperience=Boolean(where)&&where!==ROLE_ONLY;
+  const others=fd.getAll('projectId').map(String).filter(id=>id!==where);
+  const projectIds=isExperience?[where,...others]:others;
+  const primaryProjectId=isExperience?where:null;
+  const competencyIds=fd.getAll('competencyId').map(String);
+  const confidentialSwitch=form.querySelector<HTMLInputElement>('#rich-confidential');
+  const confidentiality:Confidentiality=!confidentialSwitch||confidentialSwitch.checked?'confidential':'standard-private';
+  // CP-UX2: a row opened but left completely empty is not a record; existing rows are always read.
+  const untouched=(row:HTMLElement)=>row.dataset.revision==='0'&&[...row.querySelectorAll<HTMLInputElement|HTMLTextAreaElement>('input,textarea')].every(el=>!el.value.trim());
+  const metrics=[...form.querySelectorAll<HTMLElement>('.metric-row')].filter(row=>!untouched(row)).map(row=>{
     const data=FormDataFromRow(row);
     const metricName=str(data,'metricName'),baselineValue=numeric(data,'baselineValue'),resultValue=numeric(data,'resultValue'),reportedValue=numeric(data,'reportedValue');
     if(!metricName)throw new ValidationError('Metric name is required.');
@@ -165,7 +75,7 @@ export function parseRichFields(form:HTMLFormElement){
       metricName,unit:str(data,'unit'),baselineValue,resultValue,reportedValue,
       direction:direction===''?null:direction as 'increase'|'decrease'|'neutral',sourceNote:str(data,'sourceNote')};
   });
-  const references=[...form.querySelectorAll<HTMLElement>('.evidence-row')].map(row=>{
+  const references=[...form.querySelectorAll<HTMLElement>('.evidence-row')].filter(row=>!untouched(row)).map(row=>{
     const data=FormDataFromRow(row);
     const referenceType=str(data,'referenceType');
     if(!['description','url','document-reference'].includes(referenceType))throw new ValidationError('Choose a valid evidence type.');
@@ -175,13 +85,13 @@ export function parseRichFields(form:HTMLFormElement){
       referenceType:referenceType as EvidenceReference['referenceType'],label:str(data,'label'),
       referenceValue:str(data,'referenceValue'),notes:str(data,'notes'),userReviewedAt:row.dataset.reviewedAt||null};
   });
-  const newExperiences:InlineExperienceDraft[]=[...form.querySelectorAll<HTMLInputElement>('input[name="projectId"][data-new-name]:checked')].map(box=>{
+  const newExperiences:InlineExperienceDraft[]=[...form.querySelectorAll<HTMLInputElement>('input[data-new-name]:checked')].map(box=>{
     const type=INLINE_TYPES.find(([v])=>v===box.dataset.newType)?.[0];
     if(!type)throw new ValidationError('Choose a valid experience type.');
     return {id:box.value,name:box.dataset.newName??'',experienceType:type};
   });
-  return {projectIds,primaryProjectId,competencyIds,metrics,references,newExperiences,roleId:str(fd,'roleId')||null,
-    confidentiality:confidentiality as Confidentiality,
+  return {projectIds,primaryProjectId,competencyIds,metrics,references,newExperiences,
+    where,whereRoleId:whereInput?.dataset.newRole||null,roleSelect:str(fd,'roleId')||null,confidentiality,
     situation:str(fd,'situation'),actions:str(fd,'actions'),notes:str(fd,'notes')};
 }
 function FormDataFromRow(row:HTMLElement):FormData{
@@ -192,16 +102,4 @@ function FormDataFromRow(row:HTMLElement):FormData{
     }
   }
   return new FormData(form);
-}
-export function updatePrimaryOptions(form:HTMLFormElement):void{
-  const selected=new Set([...form.querySelectorAll<HTMLInputElement>('input[name="projectId"]:checked')].map(x=>x.value));
-  const select=form.querySelector<HTMLSelectElement>('#rich-primaryProjectId');
-  if(!select)return;
-  const current=select.value;
-  for(const option of [...select.options]){if(option.value&&!selected.has(option.value))option.remove();}
-  const available=[...form.querySelectorAll<HTMLInputElement>('input[name="projectId"]')];
-  for(const field of available)if(selected.has(field.value)&&![...select.options].some(x=>x.value===field.value)){
-    const o=document.createElement('option');o.value=field.value;o.textContent=field.parentElement?.querySelector('span')?.textContent??field.value;select.append(o);
-  }
-  select.value=selected.has(current)?current:'';
 }
