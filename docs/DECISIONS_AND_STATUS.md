@@ -4,7 +4,15 @@
 
 ## 1. Current truth: repository and release state
 
-### Verified current state (2026-10-15, at CP-UX1)
+### Verified current state (2026-10-16, at CP-UX2 retrospective acceptance)
+
+- **Deployed `main` version:** `0.1.3-alpha.5` at merge commit `cd058e84cf399ddf0e904bd98121783982e8712f` (PR #38 acceptance-documentation merge). [Main build/test/Pages deployment run 38770747570](https://github.com/YabaCodes/careerproof-os/actions/runs/38770747570) completed successfully. IndexedDB schema **3**, backup format **3**; no code changes for acceptance documentation.
+- **CP-UX-Links alpha.5:** merged in PR #36 (test-only CI repair PR #37) and user-accepted on physical iPhone via **UX301–UX307 all PASS, 2026-10-16**; acceptance-documentation PR #38 merged.
+- **CP-UX2 Guided Capture alpha.4:** introduced/merged in PR #35; user reported **UX201–UX207 all PASS on 2026-10-16**, tested **retrospectively on installed alpha.5**, not on a historical alpha.4 installation. **UX201 qualification limit:** version `alpha.5`, schema 3 and record retention confirmed, but the alpha.4 version screen/upgrade transition was not tested.
+- **Unresolved v0.1.3 release gate:** CP-013B proficiency self-assessment **PA101–PA106 not yet reported**. Neither this acceptance record nor alpha.5 acceptance constitutes a full `v0.1.3` final release.
+- The third approved UX improvement (candidate drafts → Experience Expected Result, slimmer Home) remains separate and is not implemented by these acceptance updates.
+
+### Historical verified state (2026-10-15, at CP-UX1)
 
 - `main` = `ffc72ef` (merge of PR #33). App **`0.1.3-alpha.2`** deployed by main CI run 38684412367 (success). DB schema **3**, backup format **3** (formats 1 and 2 importable), taxonomy **1.0**.
 - v0.1.2 final was promoted in PR #30 (merged 2026-10-11). PR #31 (docs closing v0.1.2 after F201–F204) is open with merge conflicts. CP-013A (`0.1.3-alpha.1`, #32) accepted with EB103 not tested; CP-013B (`0.1.3-alpha.2`, #33) merged, PA101–PA106 not yet reported.
@@ -323,3 +331,9 @@ Step 2 (DEC-037) replaces the single long capture form with the approved Where �
 - **Not in step 2:** moving candidate drafts to an experience's Expected Result, and the slimmer Home (step 3).
 - **Known limitation:** the old rich-panel styles remain in `styles.css`, unused, for a later clean-up.
 
+
+## 2026-10-16 — CP-UX2 guided-capture retrospective acceptance (alpha.4 functionality tested in alpha.5)
+
+After the user completed CP-UX-Links UX301–UX307 and PR #38 was merged, the user separately ran the outstanding CP-UX2 physical-iPhone checks **UX201–UX207** on their *currently installed `v0.1.3-alpha.5`* PWA. All seven were reported PASS, including **UX205 Part A** (recorded achievement persisted with Experience/Role links) and **UX205 Part B** (draft saved before When remained undated). UX202–UX204 confirmed Where / What / When, and UX206–UX207 confirmed edit preservation and mobile appearance/keyboard operation.
+
+**Exception:** UX201 confirmed alpha.5 and database schema 3 with existing data intact; it did not observe the historical alpha.4 version label or its update transition. Acceptance is therefore **retrospective functional acceptance of CP-UX2**, not retrospective proof that alpha.4 was individually installed and tested. No app code, schema, backup format, or user records changed for this documentation update. See [ACCEPTANCE_TESTS.md](ACCEPTANCE_TESTS.md) and [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md). **PA101–PA106 remain unreported; full `v0.1.3` final acceptance remains pending.**
