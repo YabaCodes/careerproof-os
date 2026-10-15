@@ -15,10 +15,11 @@ import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
 import {richAchievementFields,parseRichFields,metricRow,evidenceRow,updatePrimaryOptions,achievementEnrichmentDetails,addInlineExperience} from '../ui/achievementIntelligence.js';
 import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency,defaultSkillScope,skillExampleSummary,type SkillScope} from '../ui/competencyLibrary.js';
+import {proficiencyAssessmentForm,readProficiencyForm} from '../ui/proficiencyAssessment.js';
 import {dateBounds} from '../domain/dates.js';
 
 type Screen='home'|'vault'|'profile'|'portfolio'|'competencies';
-type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|'remove'|null;
+type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|'assessment'|'remove'|null;
 const root=document.getElementById('app')!;
 let profile:Profile;
 let achievements:Achievement[]=[];
@@ -60,7 +61,7 @@ let pwaHadController=false;
 let toastTimer:number|undefined;
 let toastMessage='';
 let toastKind:'success'|'error'='success';
-const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships'};
+const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships',proficiencyAssessments:'Proficiency assessments'};
 
 const escape=escapeHtml;
 const formatDate=formatPrecisionDate;
@@ -285,6 +286,7 @@ function modalView():string {
   }
   if(modal==='competency'&&careerCollections)content=customCompetencyForm(careerCollections,
     careerCollections.competencies.find(x=>x.id===selectedId));
+  if(modal==='assessment'&&careerCollections){const skill=careerCollections.competencies.find(x=>x.id===selectedId);if(skill)content=proficiencyAssessmentForm(skill,localDate());}
   if(modal==='remove')content=removalView();
   if(modal==='settings')content=settingsView();
   if(modal==='restore')content=restoreView();
@@ -364,7 +366,7 @@ async function confirmRemoval(){
 function restoreView():string {
   if(!pendingBackup)return '';
   const m=pendingBackup.backup.manifest;
-  return `${dialogHeader('Restore Career Data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This Replaces Your Current Data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
+  return `${dialogHeader('Restore Career Data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This Replaces Your Current Data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.sourceFormat===2?'<p><strong>Older format-2 backup:</strong> this file predates proficiency history. Restoring it replaces local data and removes any newer self-assessments. Export your current data first.</p>':''}${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System. Any proficiency assessments will also be removed.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
 }
 let lastRenderedScreen:Screen|null=null;
 /** Keep expanded Experience cards and skill entries open when the same screen redraws (e.g. after a dialog closes). */
@@ -468,6 +470,18 @@ async function saveProjectForm(){
     closeModal(true);notify('Experience saved.');
   }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
 }
+async function saveProficiencyForm(){
+  if(saving||!careerCollections)return;
+  setSaving(true);
+  try{
+    const skill=careerCollections.competencies.find(x=>x.id===selectedId);
+    if(!skill)throw new ValidationError('Selected competency is unavailable.');
+    const form=document.getElementById('proficiency-form') as HTMLFormElement|null;
+    if(!form)throw new ValidationError('Proficiency form is unavailable.');
+    await database.saveProficiencyAssessment(readProficiencyForm(form,skill.id));
+    await loadCareerCollections();closeModal(true);notify('Self-assessment saved to your history.');
+  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+}
 function currentSkillScope():SkillScope{return skillScope??(careerCollections?defaultSkillScope(careerCollections):'all');}
 function refreshCompetencies(){
   const target=document.querySelector<HTMLElement>('.skill-groups');
@@ -554,6 +568,8 @@ function runAction(node:HTMLElement){
     case 'add-competency':openModal('competency');break;
     case 'edit-competency':openModal('competency',node.dataset.id??null,true);break;
     case 'save-competency':void saveCustomSkill();break;
+    case 'assess-competency':openModal('assessment',node.dataset.id??null);break;
+    case 'save-proficiency':void saveProficiencyForm();break;
     case 'archive-competency':void changeCustomSkillStatus(node.dataset.id??'','archived');break;
     case 'restore-competency':void changeCustomSkillStatus(node.dataset.id??'','active');break;
     case 'competency-achievement':openModal('detail',node.dataset.id??null);break;
@@ -657,7 +673,7 @@ document.addEventListener('click',e=>{
   const actionTarget=resolveActionTarget(e.target);
   if(actionTarget)runAction(actionTarget);
 });
-document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
+document.addEventListener('input',e=>{const t=e.target as HTMLElement;if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;if(t.id==='portfolio-search'){portfolioFilters.query=(t as HTMLInputElement).value;refreshPortfolioCards();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;const results=document.getElementById('vault-results');if(results)results.innerHTML=vaultRows();}});
 document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;refreshCompetencies();}
   if(removal&&t.closest('#removal-form')){
     if(t.name==='removal-mode')removal.mode=t.value==='move'?'move':'unlink';
@@ -681,8 +697,8 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
   if(t.id==='career-isCurrent'&&t instanceof HTMLInputElement&&t.checked){
     const end=document.getElementById('career-endDate') as HTMLInputElement|null;if(end)end.value='';
   }
-  if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form,#competency-form'))isDirty=true;});
-document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}});
+  if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;});
+document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}if((e.target as HTMLElement).id==='proficiency-form'){e.preventDefault();void saveProficiencyForm();}});
 document.addEventListener('keydown',e=>{
   if(!modal)return;
   // A native radiogroup changes selection with arrow keys, not repeated Tab.

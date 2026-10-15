@@ -81,7 +81,7 @@ test('adding metrics and references persists after reload and restores from priv
     return {format:backup.backup.manifest.formatVersion,metrics:backup.backup.manifest.counts.impactMetrics,
       references:backup.backup.manifest.counts.evidenceReferences,competencyLinks:backup.backup.collections.recordLinks.filter(l=>l.linkType==='achievement-competency').length};
   });
-  expect(check).toEqual({format:2,metrics:2,references:2,competencyLinks:1});
+  expect(check).toEqual({format:3,metrics:2,references:2,competencyLinks:1});
   await page.reload();await openEdit(page);
   await expect(page.locator('.metric-row')).toHaveCount(2);
   await expect(page.locator('.evidence-row')).toHaveCount(2);

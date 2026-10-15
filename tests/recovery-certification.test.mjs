@@ -20,8 +20,8 @@ test('CP-012E / E219: isolated synthetic destructive restore survives a cold dat
   await first.replaceAllData(original,{theme:'dark'},1);
   const exported=await createBackup(first);
   const raw=JSON.parse(exported.json);
-  assert.equal(raw.manifest.formatVersion,2);
-  assert.equal(raw.manifest.schemaVersion,2);
+  assert.equal(raw.manifest.formatVersion,3);
+  assert.equal(raw.manifest.schemaVersion,3);
   for(const store of P0_STORES)assert.equal(raw.manifest.counts[store],original[store].length,store);
   assert.equal(raw.collections.achievements[0].confidentiality,'confidential');
   assert.equal(raw.collections.recordLinks.length,3);
@@ -81,7 +81,7 @@ test('CP-012E: legacy v1 upgrade plus format-2 export/restore retains migrated r
   assert.equal(migrated.collections.achievements.length,3);
   assert.deepEqual(migrated.collections.achievements.map(a=>a.status).sort(),['archived','draft','recorded']);
   const backup=(await createBackup(upgraded)).json;
-  assert.equal(JSON.parse(backup).manifest.formatVersion,2);
+  assert.equal(JSON.parse(backup).manifest.formatVersion,3);
   await upgraded.close();
   const reopened=new CareerDatabase(factory,name);await reopened.initialize();
   sameData((await reopened.readSnapshot()).collections,migrated.collections);

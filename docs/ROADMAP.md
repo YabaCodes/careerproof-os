@@ -39,6 +39,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **2026-10-12 CP-013A checkpoint:** Read-only evidence breadth implementation proposed as v0.1.3-alpha.1. Full 0.1.3 remains incomplete until separate L1–L4 proficiency persistence, history, migration and restoration gates are implemented and accepted.
 
+**2026-10-12 CP-013B candidate:** The next increment implements explicit L1–L4 self-assessment history and related schema-3 / backup-format-3 recovery. This is **not yet merged or accepted**. The CP-013A evidence-breadth alpha.1 increment is user-accepted with EB103 manual coverage outstanding. v0.1.3 full release qualification remains separate.
+
 ## 3. Requirements traceability
 
 | Functional ID | Capability | Main UI | Stores / services | Acceptance |

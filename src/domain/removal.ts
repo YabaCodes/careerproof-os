@@ -91,6 +91,7 @@ export function removalImpact(c: CareerCollections, kind: RemovableKind, id: str
     case 'competencies': {
       const skill = c.competencies.find(s => s.id === id)!;
       if (skill.isBuiltIn) throw new ValidationError('Built-in skills cannot be deleted.');
+      if(c.proficiencyAssessments.some(a=>a.competencyId===id))throw new ValidationError('This skill has historical self-assessments. Archive it rather than deleting or silently moving its history.');
       base.achievements = achievementRefs(c, links.filter(l => l.linkType === 'achievement-competency' && l.targetId === id).map(l => l.sourceId));
       base.targets = c.competencies.filter(s => s.id !== id && s.status === 'active').map(s => ({ id: s.id, label: s.name })).sort(byLabel);
       if (!base.targets.length) base.moveBlockedReason = 'There is no other active skill to move these links to.';

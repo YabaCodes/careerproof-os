@@ -104,6 +104,8 @@ The other 29 competency-specific rubrics must be authored and reviewed before as
 - Append assessment history with rubric version. Do not automatically change old ratings when evidence changes.
 - A 12-month-old assessment may trigger a reminder, not automatic invalidation.
 
+**CP-013B implementation note (2026-10-12; review candidate):** Explicit L1–L4 ratings are user-supplied and saved as append-only proficiencyAssessment records with a date, generic rubric version 1.0 and optional rationale, development note and assessment context. The newest **assessment date** is current; earlier entries remain visible. This increment does not implement 29 missing skill-specific rubrics, selected achievement snapshots, automated reminders or any auto-up/down-rating; Evidence Breadth remains entirely independent.
+
 ## 4. Evidence breadth (P1 deterministic rules)
 
 Eligible examples are **Recorded** achievements explicitly linked to the competency. Draft or Archived examples are excluded. Apply thresholds **Broad → Moderate → Emerging → Not documented**.

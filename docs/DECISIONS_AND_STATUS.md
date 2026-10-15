@@ -287,3 +287,11 @@ User reported six of six alpha.11 CP-012E acceptance outcomes as passed: RE101 i
 
 **Decision:** All v0.1.2 alpha.11 qualification gates met; prepare a separate version-only final promotion PR with no automatic merge, schema change, backup format change or IndexedDB reset. After a successful promotion-PR CI run, require user manual merge, GitHub Pages deployment, and non-destructive installed-iPhone smoke F201–F204. Do not tag/publish a GitHub Release without separate user approval. The immediately following user workflow is privately backfilling four-plus years of professional roles, Experiences, achievements and related evidence, without putting confidential records in the public repo.
 
+
+
+### CP-013B (2026-10-12) — Candidate, awaiting CI and device testing
+- Use schema 3 and full private backup format 3 to preserve append-only self-assessed proficiency histories. Keep format-1 and format-2 import compatibility with clearly destructive preview.
+- Preserve old schema-2 dataset metadata through additive upgrade; no default skill rating, no inference from Evidence Breadth.
+- Use original generic rubric v1.0 until distinct skill-specific rubrics are actually developed and reviewed. User records a calendar-day assessment, optional rationale/context/development note.
+- Historical assessment entries are immutable; archive a custom competency with history rather than deleting or silently reassigning it.
+- No merge/deploy or release acceptance until CI and PA101–PA106 physical-iPhone checks pass.

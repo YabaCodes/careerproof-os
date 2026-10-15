@@ -38,7 +38,8 @@ const fields: {[K in P0Store]: Record<string,Check>} = {
   competencyCategories: {name:text(160,true),isBuiltIn:bool,sortOrder:integer,description:text(6000)},
   competencies: {categoryId:id,name:text(160,true),normalizedName:text(200,true),isBuiltIn:bool,status:enumeration('active','archived'),taxonomyKey:nullable(id),aliases:strings,description:text(6000),rubricId:nullable(id)},
   evidenceReferences: {achievementId:id,referenceType:enumeration('description','url','document-reference'),label:text(200,true),referenceValue:text(6000,true),userReviewedAt:nullable(validTime),notes:text(6000)},
-  recordLinks: {linkType:enumeration('role-project','achievement-project','achievement-competency'),sourceId:id,targetId:id,isPrimary:bool,note:text(6000)}
+  recordLinks: {linkType:enumeration('role-project','achievement-project','achievement-competency'),sourceId:id,targetId:id,isPrimary:bool,note:text(6000)},
+  proficiencyAssessments: {competencyId:id,selfAssessedLevel:v=>Number.isInteger(v)&&[1,2,3,4].includes(v as number),assessmentDate:isPrecisionDate,rubricVersion:text(80,true),rationale:text(6000),developmentNote:text(6000),assessmentContext:text(2000)}
 };
 function shape(value: unknown, rules: Record<string,Check>): value is Record<string,unknown> {
   return obj(value) && Object.keys(value).length===Object.keys(rules).length && Object.entries(rules).every(([key,check])=>Object.hasOwn(value,key)&&check(value[key]));
@@ -120,6 +121,7 @@ export function validateCollections(raw: unknown): CareerCollections {
   c.achievements.forEach(r=>ref('roles',r.roleId));
   c.impactMetrics.forEach(r=>ref('achievements',r.achievementId));
   c.evidenceReferences.forEach(r=>ref('achievements',r.achievementId));
+  c.proficiencyAssessments.forEach(r=>ref('competencies',r.competencyId));
   const names = new Set<string>();
   c.competencyCategories.forEach(r=>{
     const key=normalizeName(r.name); if(names.has(key))throw new ValidationError('Duplicate competency category name.');names.add(key);
@@ -170,7 +172,21 @@ export function validateBackup(raw: unknown): CareerBackup {
     Object.assign(result,builtInTaxonomy());
     return generateBackup(result,{theme:'system'},m.exportedAt as string);
   }
-  if(m.formatVersion!==2||m.schemaVersion!==2)throw new ValidationError('The backup format or schema is unsupported.');
+  if(m.formatVersion===2&&m.schemaVersion===2){
+    // Format-2 backups have exactly 12 collections; migrate in memory
+    // before destructive restore confirmation, preserving every old record.
+    if(Object.keys(raw).length!==3||Object.keys(m).length!==7||m.taxonomyVersion!==TAXONOMY_VERSION||!isPreferences(raw.preferences))
+      throw new ValidationError('Unsupported taxonomy or invalid backup preferences.');
+    const older=P0_STORES.filter(s=>s!=='proficiencyAssessments');
+    const olderCounts=m.counts as Record<string,unknown>;
+    if(Object.keys(c).length!==older.length||Object.keys(olderCounts).length!==older.length||
+       older.some(s=>!Array.isArray(c[s])||olderCounts[s]!==c[s].length))
+      throw new ValidationError('Invalid format-2 backup collections or counts.');
+    const adapted:CareerCollections={...(c as unknown as Omit<CareerCollections,'proficiencyAssessments'>),proficiencyAssessments:[]};
+    validateCollections(adapted);
+    return generateBackup(adapted,raw.preferences as Preferences,m.exportedAt as string);
+  }
+  if(m.formatVersion!==3||m.schemaVersion!==3)throw new ValidationError('The backup format or schema is unsupported.');
   if(Object.keys(raw).length!==3||Object.keys(m).length!==7||m.taxonomyVersion!==TAXONOMY_VERSION||!isPreferences(raw.preferences))throw new ValidationError('Unsupported taxonomy or invalid backup preferences.');
   validateCollections(c);
   const counts=m.counts;

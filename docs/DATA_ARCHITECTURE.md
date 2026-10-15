@@ -14,6 +14,16 @@
 
 IndexedDB does **not** enforce relational foreign keys. Repository/domain services must implement ID integrity and atomic multi-store updates. No remote backend for v0.1.x.
 
+### CP-013B implemented candidate contract (2026-10-12; pending PR/CI/device acceptance)
+
+The proposed `v0.1.3-alpha.2` moves the actual shipped **12 collection schema-2** baseline to a **13 collection schema-3** database. The only new collection at this increment is `proficiencyAssessments` (append-only), indexed on `[competencyId, assessmentDate.value]`. Dates use the existing `PrecisionDate` shape; the UI captures a full calendar day. Common rubric version `1.0` is stored on each entry. User-entered rationale, assessmentContext and developmentNote are optional. There is **no auto-scoring**, evidence-based level calculation, custom rubric catalog, or independent skill verification.
+
+The schema-2→3 IndexedDB upgrade is additive: do not rewrite any of the original twelve collections or reset datasetGeneration, sourceDataRevision, preferences or previous export metadata. An upgrade from version 1 still follows the established lossless historical migration and creates the new empty assessment collection.
+
+Private JSON **backup format 3** contains all 13 collections. Old format-1 and format-2 backups are validated and upgraded in memory, appending an empty assessment history; restoring them remains a deliberate atomic **full replacement**. Explicitly warn when loading an old format-2 file would remove newer assessments. Format-3 backups restore assessment history exactly. Reject schema/format future versions. Deleting a custom competency with historical assessments is blocked; archive instead.
+
+This is a **development candidate**, not a claim that the increment passed CI or is deployed.
+
 ## 2. Universal record conventions
 
 - User-created IDs: stable UUID strings; current local profile uses reserved `local-profile` ID.
