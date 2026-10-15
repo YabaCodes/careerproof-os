@@ -1,8 +1,20 @@
-# CareerProof OS — v0.1.3-alpha.4 review candidate
+# CareerProof OS — v0.1.3-alpha.5 review candidate
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **Deployed: `v0.1.3-alpha.3`** (CP-UX1 reading and scanning, PR #34, accepted on iPhone UX101–UX109). **`v0.1.3-alpha.4` (CP-UX2, DEC-037) is a review candidate, not merged or deployed.** It captures a new achievement in three steps: Where (the experience, which brings its role), What, and When (with skill chips). No schema or backup-format change. Current progress is tracked in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.3-alpha.4` CP-UX2 was merged in PR #35** (iPhone UX201–UX207 acceptance unreported). **`v0.1.3-alpha.5` CP-UX-Links is a review candidate, not merged or deployed.** It lets you navigate among existing achievements, experiences, roles and skills without editing the data. Current progress is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+
+## v0.1.3-alpha.5 — Context Navigation (CP-UX-Links)
+
+This **read-only** improvement makes saved associations tappable without inventing links or proficiency scores:
+- Achievement detail → primary Experience and employment-role Vault filter; other Experiences remain under More Details and are now actionable.
+- Achievement detail → linked Skills; the specific skill expands in the Skills page, including archived linked skills.
+- Experience detail → Skills Shown Here. Tapping a chip opens the existing skill and its linked achievement examples/self-assessed proficiency.
+- Skills continue to link back to achievement detail, closing the contextual loop.
+
+The original Result → What I Did → Context → Skills reading order, Guided Capture flow, search/filter controls, IndexedDB schema **3**, backup format **3**, taxonomy and privacy rules remain unchanged. Navigation writes no records. Mobile controls target at least 44px, and scrolling honors Reduce Motion.
+
+**Qualification:** a review candidate; no physical iPhone acceptance is implied. Previous CP-UX2 alpha.4 is merged in PR #35, but UX201–UX207 results are not yet recorded.
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 
@@ -16,7 +28,7 @@ CareerProof OS is a privacy-first, local-first professional career and achieveme
 - **Recovery:** full version-3 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
-**Since v0.1.3-alpha.4 (CP-UX2, in review):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
+**Since v0.1.3-alpha.4 (CP-UX2, merged, device acceptance pending):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
 
 **Since v0.1.3-alpha.3 (CP-UX1, accepted):**
 - **Experience** lists roles most recent first, each with its experiences as one-line rows. Each experience has a page with its context, goal or expected result, achievements and skills.
