@@ -39,16 +39,16 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **2026-10-12 CP-013A checkpoint:** Read-only evidence breadth implementation proposed as v0.1.3-alpha.1. Full 0.1.3 remains incomplete until separate L1–L4 proficiency persistence, history, migration and restoration gates are implemented and accepted.
 
-**2026-10-15 CP-UX2 candidate (DEC-037):** Step 1 (`0.1.3-alpha.3`, PR #34) is merged and accepted (UX101–UX109). Step 2 (`0.1.3-alpha.4`, guided capture) is in review. Step 3 follows. No schema or backup change.
+**2026-10-16 CP-UX2 acceptance checkpoint (DEC-037):** Step 1 (`0.1.3-alpha.3`, PR #34) is merged and accepted (UX101–UX109). Step 2 (`0.1.3-alpha.4`, guided capture, PR #35) is merged and **retrospectively accepted** by user-reported iPhone **UX201–UX207 PASS** on installed **alpha.5**. UX201 confirms alpha.5/schema 3/record retention, **not** the historical alpha.4 update screen. The independent alpha.5 context-navigation increment (PR #36; test-only repair #37) is accepted UX301–UX307. Step 3 remains separate. No schema or backup change from these UX increments. PA101–PA106 are still unreported; full `v0.1.3` release acceptance is not claimed.
 
-**2026-10-15 CP-UX1 (DEC-036):** After reviewing the user's own records, the user approved a three-step UX redesign of existing P0 modules. This is not new P0/P1 scope.
-- **Step 1, `0.1.3-alpha.3`, in review:** reading and scanning. That covers the Experience timeline and pages, the achievement story, Vault segments and years, Month/Year/Exact-day dates, and Profile tap-to-edit. It also carries the #33 follow-ups.
+**2026-10-15 CP-UX1 (DEC-036; historical approved design, now accepted):** After reviewing the user's own records, the user approved a three-step UX redesign of existing P0 modules. This is not new P0/P1 scope.
+- **Step 1, `0.1.3-alpha.3`, merged and accepted:** reading and scanning. That covers the Experience timeline and pages, the achievement story, Vault segments and years, Month/Year/Exact-day dates, and Profile tap-to-edit. It also carries the #33 follow-ups.
 - **Step 2:** guided capture.
 - **Step 3:** candidates → Expected Result, and a slimmer Home.
 
 No schema or backup change. CP-013B (#33) is merged and deployed, with PA101–PA106 not yet reported.
 
-**2026-10-12 CP-013B candidate:** The next increment implements explicit L1–L4 self-assessment history and related schema-3 / backup-format-3 recovery. This is **not yet merged or accepted**. The CP-013A evidence-breadth alpha.1 increment is user-accepted with EB103 manual coverage outstanding. v0.1.3 full release qualification remains separate.
+**2026-10-12 CP-013B original candidate, subsequent status corrected:** This increment implements explicit L1–L4 self-assessment history and related schema-3 / backup-format-3 recovery. **Merged as PR #33; PA101–PA106 remain unreported, so it is not device-accepted.** The CP-013A evidence-breadth alpha.1 increment is user-accepted with EB103 manual coverage outstanding. v0.1.3 full release qualification remains separate.
 
 ## 3. Requirements traceability
 
