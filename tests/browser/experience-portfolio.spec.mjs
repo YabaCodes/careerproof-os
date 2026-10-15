@@ -138,13 +138,14 @@ test('achievement captured from project is atomically linked and accessible',asy
   await expect(page.getByRole('dialog')).toContainText('Capture an Achievement');
   await page.locator('#title').fill('Synthetic validation milestone');
   await page.locator('#contribution').fill('Completed verification with synthetic fixtures');
+  await page.locator('[data-action=capture-next]').click(); // CP-UX2: When
   await page.locator('[data-action=save-achievement][data-status=recorded]').click();
   await expect(page.locator('.modal')).toHaveCount(0);
   const records=await snapshot(page);
   expect(records.achievements).toHaveLength(1);
   expect(records.recordLinks.filter(x=>x.linkType==='achievement-project')).toHaveLength(1);
   expect(records.recordLinks.find(x=>x.linkType==='achievement-project')).toMatchObject({
-    sourceId:records.achievements[0].id,targetId:records.projects[0].id,isPrimary:false
+    sourceId:records.achievements[0].id,targetId:records.projects[0].id,isPrimary:true // CP-UX2: the experience it was captured in is primary
   });
   // The experience's page stays open and lists the new achievement with its date.
   await onPage(page,'Synthetic Process Validation');

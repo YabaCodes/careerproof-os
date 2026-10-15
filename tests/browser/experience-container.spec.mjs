@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {fullCollections} from '../fixtures.mjs';
+import {captureWhen} from './ux-helpers.mjs';
 
 // CP-012.4 (DEC-034): Experience is a container for achievements. Synthetic data only.
 test.use({isMobile:true,hasTouch:true,viewport:{width:390,height:844}});
@@ -102,10 +103,11 @@ test('CP-UX1 an ongoing experience shows its goal as the expected result, with a
   await expect(page.locator('.goal-box p')).toHaveText('Synthetic line qualified for volume production');
   await page.locator('.goal-box [data-action=project-capture]').click();
   await expect(page.locator('#achievement-form')).toBeVisible();
-  // The capture form opens linked to this experience.
-  await page.locator('[data-action=toggle-rich-panel]').click();
-  await expect(page.locator('input[name=projectId][value=project-1]')).toBeChecked();
-  page.once('dialog',d=>d.accept());await page.keyboard.press('Escape');
+  // CP-UX2: started from the experience, capture skips Where and opens on "What happened?".
+  await expect(page.locator('#achievement-form')).toHaveAttribute('data-step','2');
+  await expect(page.locator('#capture-context-text')).toHaveText('Synthetic Initiative');
+  await expect(page.locator('input[name=where][value=project-1]')).toBeChecked();
+  await page.keyboard.press('Escape');
   await expect(page.locator('.modal')).toHaveCount(0);
   // Back returns to the timeline, where the ongoing experience is marked live.
   await page.locator('[data-action=close-experience]').click();
@@ -118,51 +120,55 @@ test('CP-012.4 an achievement creates and links a new experience inline, saved a
   await seed(page);
   const before=await snapshot(page);
   await page.locator('.mobile-create').click();
-  await page.locator('#title').fill('Synthetic inline result');
-  await page.locator('#contribution').fill('Synthetic contribution for an inline experience');
-  await page.locator('[data-action=toggle-rich-panel]').click();
-  await page.locator('#rich-roleId').selectOption('role-1');
+  // CP-UX2: a new experience is added from "Where did this happen?", with the role it belongs to.
+  await expect(page.locator('#achievement-form')).toHaveAttribute('data-step','1');
   const toggle=page.locator('[data-action=toggle-inline-experience]');
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-expanded','true');
   await expect(page.locator('#inline-experience-name')).toBeFocused();
+  await expect(page.locator('#inline-experience-role')).toHaveValue('role-1'); // the primary role is offered first
 
   // Empty name is refused in place.
   await page.locator('[data-action=add-inline-experience]').click();
   await expect(page.locator('#inline-experience-error')).toHaveText('Enter a name for the experience.');
 
-  // A same-named saved experience is linked instead of duplicated.
+  // A same-named saved experience is chosen instead of duplicated.
   await page.locator('#inline-experience-name').fill('  synthetic   INITIATIVE ');
   await page.locator('[data-action=add-inline-experience]').click();
   await expect(page.locator('#inline-experience-status')).toContainText('already exists');
-  await expect(page.locator('input[name=projectId][value=project-1]')).toBeChecked();
-  await expect(page.locator('.rich-check.is-new')).toHaveCount(0);
+  await expect(page.locator('input[name=where][value=project-1]')).toBeChecked();
+  await expect(page.locator('.where-option.is-new')).toHaveCount(0);
 
-  // A new one is added as a checked "New" choice (Enter works) and offered as primary.
+  // A new one is added as the chosen option (Enter works).
   const name='Synthetic <b>Line</b> & \'24 Upgrade';
   await toggle.click();
   await page.locator('#inline-experience-name').fill(name);
   await page.locator('#inline-experience-name').press('Enter');
-  const added=page.locator('.rich-check.is-new');
+  const added=page.locator('.where-option.is-new');
   await expect(added).toHaveCount(1);
-  await expect(added.locator('span')).toHaveText(name);
+  await expect(added.locator('strong')).toHaveText(name);
   await expect(added.locator('input')).toBeChecked();
   await expect(page.locator('#inline-experience-panel')).toBeHidden();
   await expect(toggle).toHaveAttribute('aria-expanded','false');
   await expect(page.locator('#inline-experience-status')).toContainText('saved when you save this achievement');
-  await page.locator('#rich-primaryProjectId').selectOption({label:name});
   expect((await snapshot(page)).projects).toHaveLength(before.projects.length); // nothing saved yet
   const overflow=await page.locator('.modal-body').evaluate(el=>el.scrollWidth-el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 
+  await page.locator('[data-action=capture-next]').click();
+  await expect(page.locator('#capture-context-text')).toHaveText(name);
+  await page.locator('#title').fill('Synthetic inline result');
+  await page.locator('#contribution').fill('Synthetic contribution for an inline experience');
+  await captureWhen(page);
   await page.locator('[data-action=save-achievement][data-status=recorded]').click();
   await expect(page.locator('.modal')).toHaveCount(0);
   const after=await snapshot(page);
   const created=after.projects.find(p=>p.name===name);
   expect(created).toMatchObject({employerId:'employer-1',status:'active',revision:1,confidentiality:'confidential',objective:'',outcome:''});
   const saved=after.achievements.find(a=>a.title==='Synthetic inline result');
+  expect(saved.roleId).toBe('role-1');
   const links=after.recordLinks.filter(l=>l.sourceId===saved.id&&l.linkType==='achievement-project');
-  expect(links.map(l=>[l.targetId,l.isPrimary]).sort()).toEqual([[created.id,true],['project-1',false]].sort());
+  expect(links.map(l=>[l.targetId,l.isPrimary])).toEqual([[created.id,true]]); // the Where choice is primary
   expect(after.recordLinks.filter(l=>l.linkType==='role-project'&&l.targetId===created.id).map(l=>l.sourceId)).toEqual(['role-1']);
 
   // It appears on the Experience timeline under its role, text shown literally.
@@ -177,28 +183,29 @@ test('CP-012.4 a new experience typed into a discarded achievement is never crea
   await seed(page);
   const before=await snapshot(page);
   await page.locator('.mobile-create').click();
-  await page.locator('#title').fill('Discarded synthetic result');
-  await page.locator('[data-action=toggle-rich-panel]').click();
   await page.locator('[data-action=toggle-inline-experience]').click();
   await page.locator('#inline-experience-name').fill('Discarded Synthetic Experience');
   await page.locator('[data-action=add-inline-experience]').click();
-  await expect(page.locator('.rich-check.is-new')).toHaveCount(1);
+  await expect(page.locator('.where-option.is-new')).toHaveCount(1);
   page.once('dialog',d=>d.accept()); // "You have unsaved changes. Discard them?"
   await page.locator('.close-dialog').click();
   await expect(page.locator('.modal')).toHaveCount(0);
   expect(await snapshot(page)).toEqual(before);
-  // Unticking a new experience before saving also creates nothing.
+  // Choosing something else before saving also creates nothing.
   await page.locator('.mobile-create').click();
+  await page.locator('[data-action=toggle-inline-experience]').click();
+  await page.locator('#inline-experience-name').fill('Unchosen Synthetic Experience');
+  await page.locator('[data-action=add-inline-experience]').click();
+  await page.locator('input[name=where][value=__role]').check();
+  await expect(page.locator('.where-option.is-new input')).not.toBeChecked();
+  await page.locator('[data-action=capture-next]').click();
   await page.locator('#title').fill('Synthetic result without the new experience');
   await page.locator('#contribution').fill('Synthetic contribution');
-  await page.locator('[data-action=toggle-rich-panel]').click();
-  await page.locator('[data-action=toggle-inline-experience]').click();
-  await page.locator('#inline-experience-name').fill('Unticked Synthetic Experience');
-  await page.locator('[data-action=add-inline-experience]').click();
-  await page.locator('.rich-check.is-new input').uncheck();
+  await captureWhen(page);
   await page.locator('[data-action=save-achievement][data-status=recorded]').click();
   await expect(page.locator('.modal')).toHaveCount(0);
   const after=await snapshot(page);
   expect(after.projects).toEqual(before.projects);
   expect(after.achievements).toHaveLength(before.achievements.length+1);
+  expect(after.achievements.find(a=>a.title==='Synthetic result without the new experience').roleId).toBe('role-1');
 });

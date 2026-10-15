@@ -26,7 +26,8 @@ async function openEdit(page){
   await page.locator('[data-action=detail][data-id=achievement-1]').click();
   await page.locator('[data-action=edit-achievement]').click();
   await expect(page.locator('#achievement-form')).toBeVisible();
-  await page.locator('#rich-detail-panel [data-action=toggle-rich-panel]').click();
+  // CP-UX2: editing shows Where, What and When on one page; nothing is folded except More details.
+  await expect(page.locator('#achievement-form')).toHaveAttribute('data-mode','all');
 }
 async function save(page){
   await page.locator('[data-action=save-achievement][data-status=recorded]').click();
@@ -34,13 +35,14 @@ async function save(page){
 }
 test('rich achievement edits preserve existing role, precision, IDs, links, metrics and evidence',async({page})=>{
   await start(page);await openEdit(page);
-  await expect(page.locator('#rich-roleId')).toHaveValue('role-1');
-  await expect(page.locator('#rich-confidentiality')).toHaveValue('confidential');
+  // The primary experience is the Where choice; its role is kept as stored.
+  await expect(page.locator('input[name=where][value=project-1]')).toBeChecked();
+  await expect(page.locator('.where-role')).toBeHidden();
+  await expect(page.locator('#rich-confidential')).toBeChecked();
   await expect(page.locator('.metric-row')).toHaveCount(1);
   await expect(page.locator('.evidence-row')).toHaveCount(1);
-  await expect(page.locator('input[name=projectId][value=project-1]')).toBeChecked();
   await expect(page.locator('input[name=competencyId][value=custom-competency]')).toBeChecked();
-  await expect(page.locator('#rich-primaryProjectId')).toHaveValue('project-1');
+  await expect(page.locator('details.capture-more')).toHaveAttribute('open','');
   await page.locator('#rich-situation').fill('A synthetic challenge during preproduction');
   await page.locator('#rich-actions').fill('Prepared a hypothetical engineering study');
   await page.locator('.metric-row [name=resultValue]').fill('4');
@@ -205,7 +207,6 @@ test('archived competency remains linked to historical achievement through edit/
   await page.locator('.mobile-nav [data-screen=vault]').click();
   await page.locator('[data-action=detail][data-id=achievement-1]').click();
   await page.locator('[data-action=edit-achievement]').click();
-  await page.locator('#rich-detail-panel [data-action=toggle-rich-panel]').click();
   await expect(page.locator('input[name=competencyId][value=custom-competency]')).toBeChecked();
   await expect(page.locator('input[name=competencyId][value=custom-competency]').locator('..')).toContainText('archived historical link');
   await save(page);
