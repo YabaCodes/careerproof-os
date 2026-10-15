@@ -115,7 +115,7 @@ export function experiencePageView(c: CareerCollections, projectId: string): str
     + `<button type="button" class="text-action" data-action="project-capture" data-id="${esc(p.id)}">${icon('plus', 16)} Add</button></div>`
     + (rows ? `<div class="panel list-card">${rows}</div>` : `<div class="panel experience-empty"><p>No achievements yet. Add the first result from this experience.</p></div>`)
     + '</section>'
-    + (skills.length ? `<section class="experience-skills" aria-labelledby="experience-skills-title"><h2 id="experience-skills-title">Skills Shown Here</h2><div class="chip-row">${skills.map(s => `<span class="chip">${esc(s.name)} · ${s.count}</span>`).join('')}</div></section>` : '')
+    + (skills.length ? `<section class="experience-skills" aria-labelledby="experience-skills-title"><h2 id="experience-skills-title">Skills Shown Here</h2><div class="chip-row">${skills.map(s => `<button type="button" class="chip chip-action" data-action="open-skill" data-id="${esc(s.id)}" aria-label="View skill ${esc(s.name)}">${esc(s.name)} · ${s.count} ${icon('arrow',14)}</button>`).join('')}</div></section>` : '')
     + (p.technologies.length ? `<p class="experience-tech"><strong>Technologies</strong> ${esc(p.technologies.join(', '))}</p>` : '')
     + (notes.length ? `<details class="experience-notes" data-keep-open="notes:${esc(p.id)}"><summary>Earlier Notes</summary><p class="career-meta">Written before results moved to linked achievements.</p>${notes.map(n => `<h3>${esc(n.label)}</h3><p>${esc(n.value)}</p>`).join('')}</details>` : '')
     + (p.confidentiality === 'confidential' ? `<p class="experience-privacy">${icon('lock', 14)} Confidential · included only in your private backup</p>` : '')

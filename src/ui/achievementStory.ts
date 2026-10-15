@@ -39,7 +39,14 @@ export function achievementStory(a: AchievementView, c: CareerCollections): Stor
   const projects = projectLinks.map(l => c.projects.find(p => p.id === l.targetId)).filter((p): p is NonNullable<typeof p> => Boolean(p));
   const role = c.roles.find(r => r.id === a.roleId);
   const skills = c.recordLinks.filter(l => l.linkType === 'achievement-competency' && l.sourceId === a.id)
-    .map(l => c.competencies.find(s => s.id === l.targetId)?.name).filter((n): n is string => Boolean(n)).sort((x, y) => x.localeCompare(y));
+    .map(l => c.competencies.find(s => s.id === l.targetId)).filter((s): s is NonNullable<typeof s> => Boolean(s))
+    .sort((x, y) => x.name.localeCompare(y.name));
+  // Render controls only for existing linked records, never inferred or fabricated.
+  const related = [
+    ...projects.slice(0, 1).map(p => `<button type="button" class="story-related-link" data-action="open-experience" data-id="${esc(p.id)}" aria-label="View experience ${esc(p.name)}">${icon('layers',16)}<span>Experience · ${esc(p.name)}</span>${icon('arrow',16)}</button>`),
+    ...(role ? [`<button type="button" class="story-related-link" data-action="role-achievements" data-id="${esc(role.id)}" aria-label="View achievements for role ${esc(role.title)}">${icon('briefcase',16)}<span>Role · ${esc(role.title)}</span>${icon('arrow',16)}</button>`] : [])
+  ];
+  const context = para(a.situation) + (related.length ? `<div class="story-related-links" aria-label="Related career records">${related.join('')}</div>` : '');
   const metrics = c.impactMetrics.filter(m => m.achievementId === a.id);
   const evidence = c.evidenceReferences.filter(e => e.achievementId === a.id);
   const subtitle = [dateText(a), projects[0]?.name, role?.title].filter(Boolean).join(' · ');
@@ -57,7 +64,7 @@ export function achievementStory(a: AchievementView, c: CareerCollections): Stor
     section('Impact Category', a.impactCategory ? `<p class="readable-text">${esc(IMPACT_CATEGORIES[a.impactCategory])}</p>` : ''),
     section('Evidence References', evidence.length ? `<ul class="story-list">${evidence.map(e => `<li><strong>${esc(e.label)}</strong> ${e.referenceType === 'url'
       ? `<a href="${esc(e.referenceValue)}" target="_blank" rel="noopener noreferrer">${esc(e.referenceValue)}</a>` : esc(e.referenceValue)}${e.notes ? `<span class="fine-text">${esc(e.notes)}</span>` : ''}</li>`).join('')}</ul><p class="fine-text">User provided, not independently verified.</p>` : ''),
-    section('Other Experiences', projects.length > 1 ? `<p class="readable-text">${esc(projects.slice(1).map(p => p.name).join(' · '))}</p>` : ''),
+    section('Other Experiences', projects.length > 1 ? `<div class="story-related-links">${projects.slice(1).map(p => `<button type="button" class="story-related-link" data-action="open-experience" data-id="${esc(p.id)}" aria-label="View experience ${esc(p.name)}">${icon('layers',16)}<span>${esc(p.name)}</span>${icon('arrow',16)}</button>`).join('')}</div>` : ''),
     section('Privacy', `<p class="readable-text">${a.confidentiality === 'confidential' ? 'Confidential — excluded from anything you share later' : 'Standard private'}</p>`),
     `<p class="fine-text story-record">Created ${esc(new Date(a.createdAt).toLocaleDateString())} · Last updated ${esc(new Date(a.updatedAt).toLocaleDateString())}</p>`,
     `<div class="story-actions"><button type="button" class="button button-outline" data-action="toggle-archive">${icon(a.status === 'archived' ? 'refresh' : 'archive', 16)} ${a.status === 'archived' ? 'Restore' : 'Archive'}</button>`
@@ -65,8 +72,8 @@ export function achievementStory(a: AchievementView, c: CareerCollections): Stor
   ].join('');
   const body = `<div class="modal-body story">${notice}${result}`
     + section('What I Did', a.contribution.trim() ? para(a.contribution) : '<p class="readable-text is-missing">Not added yet</p>')
-    + section('Context', para(a.situation))
-    + (skills.length ? `<section class="story-section"><h3>Skills Shown</h3><div class="chip-row">${skills.map(s => `<span class="chip">${esc(s)}</span>`).join('')}</div></section>` : '')
+    + section('Context', context)
+    + (skills.length ? `<section class="story-section"><h3>Skills Shown</h3><div class="chip-row">${skills.map(s => `<button type="button" class="chip chip-action" data-action="open-skill" data-id="${esc(s.id)}" aria-label="View skill ${esc(s.name)}">${esc(s.name)} ${icon('arrow',14)}</button>`).join('')}</div></section>` : '')
     + `<details class="story-more" data-keep-open="story-more"><summary>More Details</summary>${more}</details></div>`;
   const footer = `<div class="modal-footer"><button type="button" class="button button-primary" data-action="edit-achievement">${icon('edit', 16)} Edit</button></div>`;
   return { title: a.title, subtitle, body, footer };
