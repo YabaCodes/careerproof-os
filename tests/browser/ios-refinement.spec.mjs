@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {fullCollections} from '../fixtures.mjs';
+import {openMore,vaultStatus} from './ux-helpers.mjs';
 
 test.use({isMobile:true,hasTouch:true});
 async function start(page,theme='light'){
@@ -67,9 +68,16 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
     expect(date.height).toBe(48);expect(date.width).toBe(title.width);expect(category.height).toBe(48);
     for(const key of ['border','borderColor','radius','bg','font','padding','line'])expect(date[key],key).toBe(title[key]);
     expect(date.appearance).toBe('none');expect(date.align).toBe('left');
+    // CP-UX1: month is the default precision; the exact day is one tap away.
+    await expect(page.getByRole('group',{name:'When did it happen?'})).toBeVisible();
+    await expect(page.locator('#occurredPrecision-month')).toBeChecked();
+    await expect(page.getByLabel('Occurrence date',{exact:true})).toHaveAttribute('type','month');
+    const options=await page.locator('.precision-option').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
+    expect(options).toHaveLength(3);for(const h of options)expect(h).toBeGreaterThanOrEqual(40);
+    await page.locator('#occurredPrecision-day').check();
     await expect(page.getByLabel('Occurrence date',{exact:true})).toHaveAttribute('type','date');
     await page.getByLabel('Occurrence date',{exact:true}).fill('2024-02-29');
-    await info.attach('date-and-category',{body:await page.locator('.field-row').screenshot(),contentType:'image/png'});
+    await info.attach('date-and-category',{body:await page.locator('.date-field').screenshot(),contentType:'image/png'});
     expect(await page.locator('.modal-body').evaluate(el=>el.scrollWidth-el.clientWidth)).toBe(0);
   });
   test(`keyboard viewport preserves labels and footer: ${width}px ${theme}`,async({page})=>{
@@ -125,7 +133,9 @@ for(const occurredStart of [null,{value:'2024',precision:'year'},{value:'2024-06
     const before=(await snapshot(page)).collections.achievements[0];
     await edit(page,a.id);const date=page.getByLabel(/Occurrence date/);
     await expect(date).toHaveValue(occurredStart?.value??'');
-    await expect(date).toHaveAttribute('type',occurredStart?.precision==='year'?'text':occurredStart?.precision==='month'?'month':'date');
+    // CP-UX1: an undated record opens at the default Month precision; a stored precision is kept.
+    await expect(date).toHaveAttribute('type',occurredStart?.precision==='year'?'text':occurredStart?.precision==='day'?'date':'month');
+    await expect(page.locator('#occurredPrecision-'+(occurredStart?.precision??'month'))).toBeChecked();
     if(occurredStart?.precision!=='year')expect(await date.evaluate(el=>getComputedStyle(el).appearance)).toBe('none');
     await page.locator('#title').fill('Edited synthetic precision entry');
     await page.locator(`[data-status=${occurredStart?'recorded':'draft'}]`).click();await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -134,10 +144,10 @@ for(const occurredStart of [null,{value:'2024',precision:'year'},{value:'2024-06
     expect(out.occurredStart).toEqual(occurredStart);expect(out.id).toBe(before.id);expect(out.createdAt).toBe(before.createdAt);expect(out.revision).toBe(before.revision+1);
     for(const key of ['actions','situation','confidentiality','roleId','occurredEnd'])expect(out[key]).toEqual(before[key]);
     expect(out).not.toHaveProperty('occurredOn');
-    await page.locator(`.achievement-row[data-id="${a.id}"]`).first().click();await page.locator('[data-action=toggle-archive]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.locator(`.achievement-row[data-id="${a.id}"]`).first().click();await openMore(page);await page.locator('[data-action=toggle-archive]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
     const archived=(await snapshot(page)).collections.achievements.find(x=>x.id===a.id);expect(archived.status).toBe('archived');expect(archived.occurredStart).toEqual(occurredStart);
-    await page.locator('.mobile-nav [data-screen=vault]').click();await page.locator('#status-filter').selectOption('archived');
-    await page.locator(`.achievement-row[data-id="${a.id}"]`).click();await page.locator('[data-action=toggle-archive]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page.locator('.mobile-nav [data-screen=vault]').click();await vaultStatus(page,'archived');
+    await page.locator(`.achievement-row[data-id="${a.id}"]`).click();await openMore(page);await page.locator('[data-action=toggle-archive]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
     const restored=(await snapshot(page)).collections.achievements.find(x=>x.id===a.id);expect(restored.status).toBe(occurredStart?'recorded':'draft');expect(restored.occurredStart).toEqual(occurredStart);
   });
 }

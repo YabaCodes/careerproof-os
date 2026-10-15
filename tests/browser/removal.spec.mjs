@@ -19,9 +19,11 @@ test('CP-012B moving an experience re-points links, keeps one primary and never 
   await seed(page,world());
   const before=await snapshot(page);
   await page.locator('.mobile-nav [data-screen=portfolio]').click();
-  const card=page.locator('details.portfolio-card[data-project-id=project-1]');
-  await card.locator('summary').click();
-  await card.locator('[data-action=remove-project]').click();
+  // CP-UX1: open the experience's page, then its editor; Delete is in the editor footer.
+  await page.locator('.experience-row[data-id=project-1]').click();
+  await expect(page.locator('.experience-page h1')).toHaveText('Synthetic Initiative');
+  await page.locator('.experience-page [data-action=edit-project]').click();
+  await page.locator('.modal-footer [data-action=remove-project][data-id=project-1]').click();
   const dialog=page.getByRole('dialog');
   await expect(dialog).toContainText('Linked to This Experience');
   await expect(dialog.locator('.removal-flag')).toHaveText('primary');
@@ -31,6 +33,10 @@ test('CP-012B moving an experience re-points links, keeps one primary and never 
   await page.locator('#removal-confirm').check();
   await page.locator('[data-action=confirm-removal]').click();
   await expect(page.locator('#toast')).toContainText('Experience deleted. 1 achievement, 1 role moved to “Target synthetic experience”.');
+  // The deleted experience's page closes and the timeline shows what remains.
+  await expect(page.locator('.experience-page')).toHaveCount(0);
+  expect(new URL(page.url()).hash).toBe('#/portfolio');
+  await expect(page.locator('.experience-row')).toHaveCount(1);
   const after=await snapshot(page);
   expect(after.projects.map(p=>p.id)).toEqual(['project-2']);
   expect(after.achievements.map(a=>a.id)).toEqual(before.achievements.map(a=>a.id));
@@ -63,7 +69,8 @@ test('CP-012B removal sheet fits 320px, keeps 44px targets and can export a back
   await seed(page,c);
   const before=await snapshot(page);
   await page.locator('.mobile-nav [data-screen=profile]').click();
-  await page.locator('[data-action=delete-career][data-kind=roles][data-id=role-1]').click();
+  await page.locator('[data-action=edit-career][data-kind=roles][data-id=role-1]').click();
+  await page.locator('.modal-footer [data-action=delete-career][data-kind=roles][data-id=role-1]').click();
   await expect(page.locator('#removal-form')).toBeVisible();
   expect(await page.locator('.modal-body').evaluate(el=>el.scrollWidth-el.clientWidth)).toBeLessThanOrEqual(1);
   for(const box of await page.locator('.removal-option, .removal-confirm, .modal-footer .button').evaluateAll(els=>els.map(e=>{const r=e.getBoundingClientRect();return {h:r.height,l:r.left,r:r.right};}))){

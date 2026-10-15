@@ -39,6 +39,13 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **2026-10-12 CP-013A checkpoint:** Read-only evidence breadth implementation proposed as v0.1.3-alpha.1. Full 0.1.3 remains incomplete until separate L1–L4 proficiency persistence, history, migration and restoration gates are implemented and accepted.
 
+**2026-10-15 CP-UX1 candidate (DEC-036):** After reviewing the user's own records, the user approved a three-step UX redesign of existing P0 modules. This is not new P0/P1 scope.
+- **Step 1, `0.1.3-alpha.3`, in review:** reading and scanning. That covers the Experience timeline and pages, the achievement story, Vault segments and years, Month/Year/Exact-day dates, and Profile tap-to-edit. It also carries the #33 follow-ups.
+- **Step 2:** guided capture.
+- **Step 3:** candidates → Expected Result, and a slimmer Home.
+
+No schema or backup change. CP-013B (#33) is merged and deployed, with PA101–PA106 not yet reported.
+
 **2026-10-12 CP-013B candidate:** The next increment implements explicit L1–L4 self-assessment history and related schema-3 / backup-format-3 recovery. This is **not yet merged or accepted**. The CP-013A evidence-breadth alpha.1 increment is user-accepted with EB103 manual coverage outstanding. v0.1.3 full release qualification remains separate.
 
 ## 3. Requirements traceability
@@ -95,7 +102,7 @@ Module-level summary below; per-feature lifecycle status is in [MILESTONE_TRACKE
 |---|---|---|
 | M01 Profile | Core Complete: employer/role history, promotions, education and credentials; compact timeline and iPhone acceptance passed | Additional improvements after v0.1.1 |
 | M02 Vault | Core Complete for v0.1.1: quick/advanced capture, impact metrics, user-provided evidence, atomic project/skill links, advanced filters, full local recovery; candidate UAT passed | Extended reporting and deletion controls v0.1.2 |
-| M03 Experience Portfolio | Core Complete for v0.1.1: projects, initiatives and responsibilities with role/achievement associations; user accepted on iPhone. Own **Experience** tab from 0.1.2-alpha.3 | Container model (DEC-034, 0.1.2-alpha.7): short context, outcome roll-up from linked achievements, inline creation from the achievement form |
+| M03 Experience Portfolio | Core Complete for v0.1.1: projects, initiatives and responsibilities with role/achievement associations; user accepted on iPhone. Own **Experience** tab from 0.1.2-alpha.3 | Container model (DEC-034, 0.1.2-alpha.7): short context, outcome roll-up from linked achievements. CP-UX1 (DEC-036, 0.1.3-alpha.3, in review): role-grouped timeline, a page per experience, Goal / Expected Result, inline creation from the achievement form |
 | M04 Competency Intelligence | Partial: core v0.1.1 taxonomy and linked examples, custom skill create/edit/archive/restore accepted; own **Skills** tab with a with-examples view from 0.1.2-alpha.3; no user-assessed proficiency or evidence-breadth ratings | Assessments and evidence breadth v0.1.3 |
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |

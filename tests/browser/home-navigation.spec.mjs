@@ -45,7 +45,7 @@ test('CP-012.2 Home next action follows first achievement → draft → backup �
 
 test('CP-012.2 five tabs open their own screens; Settings and capture live in the header',async({page})=>{
   await seed(page,fullCollections());
-  const tabs=[['home','CareerProof'],['vault','Achievement Vault'],['portfolio','Experience Portfolio'],['competencies','Skills'],['profile','Career Profile']];
+  const tabs=[['home','CareerProof'],['vault','Achievement Vault'],['portfolio','Experience'],['competencies','Skills'],['profile','Career Profile']];
   for(const [screen,title] of tabs){
     await page.locator(`.mobile-nav [data-screen=${screen}]`).click();
     await expect(page.locator('#main-content h1')).toHaveText(title);

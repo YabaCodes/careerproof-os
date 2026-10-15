@@ -1,8 +1,8 @@
-# CareerProof OS — v0.1.3-alpha.2 review candidate
+# CareerProof OS — v0.1.3-alpha.3 review candidate
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **v0.1.3-alpha.1 Evidence Breadth was accepted on iPhone (EB101/102/104/105 passed; EB103 not tested). v0.1.3-alpha.2 self-assessment history is a review candidate, not yet merged or deployed.** CP-013B adds explicit proficiency assessments and dated history alongside the already accepted, read-only Evidence Breadth calculation. It includes an additive IndexedDB schema upgrade and an updated full private backup format, without rewriting the existing career records. Physical-device acceptance remains required after user merge. Current progress is tracked in [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **Deployed: `v0.1.3-alpha.2`** (CP-013B self-assessment history, merged in PR #33; physical-iPhone checks PA101–PA106 not yet reported). v0.1.3-alpha.1 Evidence Breadth was accepted on iPhone (EB103 not tested). **`v0.1.3-alpha.3` (CP-UX1, DEC-036) is a review candidate, not merged or deployed.** It reorganises how records are read and scanned. Experience becomes a role-grouped timeline with a page per experience, and an achievement reads as a short story. The Vault opens on Recorded with year headings, dates can be a month or a year, and Profile records open by tapping their name. No schema or backup-format change. Current progress is tracked in the [milestone tracker](docs/MILESTONE_TRACKER.md).
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 
@@ -15,6 +15,13 @@ CareerProof OS is a privacy-first, local-first professional career and achieveme
 - **Local data integrity:** Settings → **Check data** validates all 13 IndexedDB collections and their full version-3 backup-format round-trip without uploading, restoring or changing records.
 - **Recovery:** full version-3 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
+
+**Since v0.1.3-alpha.3 (CP-UX1, in review):**
+- **Experience** lists roles most recent first, each with its experiences as one-line rows. Each experience has a page with its context, goal or expected result, achievements and skills.
+- An achievement opens as Result → What I Did → Context → Skills, with everything else under More Details.
+- The **Vault** opens on Recorded, with Drafts and Archived one tap away.
+- Achievement dates are Month, Year or Exact day.
+- In **Profile**, a record's name opens its editor, which holds Delete.
 
 The v0.1.2 iPhone bottom navigation is **Home / Vault / Experience / Skills / Profile**, with **＋ (new achievement)** and **Settings** in each screen's header (DEC-029). The look follows the Wealth OS design language with CareerProof's navy/teal (DEC-030). Titles and subtitles use Title Case (DEC-032) and Employment History lists the most recent employer first (DEC-033). Home shows **Complete Your Record** and **Achievements by Role** (DEC-035): derived counts and links, no scores.
 

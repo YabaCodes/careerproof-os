@@ -17,10 +17,14 @@ function titleCaseViolations(text){
   });
 }
 // App-authored titles only. User-entered names are never re-cased.
+// A legend that works as a field label (e.g. "When did it happen?") is a question, not a title.
 const TITLE_SELECTORS=['.page-title h1','.page-title p','#next-title','.section-title h2','.career-section-heading h2','#dialog-title',
-  '.modal legend','.settings-group h3','.settings-line strong','.rich-section-heading h3','#removal-impact-title','.health-group','.portfolio-detail strong','.empty-state h3'].join(',');
-async function expectTitleCase(page,where){
-  const texts=await page.locator(TITLE_SELECTORS).evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length).map(n=>n.textContent.replace(/\s+/g,' ').trim()).filter(Boolean));
+  '.modal legend:not(.field-legend)','.settings-group h3','.settings-line strong','.rich-section-heading h3','#removal-impact-title','.health-group','.empty-state h3',
+  '.goal-box h2','.experience-skills h2','.experience-notes > summary','.back-link'].join(',');
+// The story dialog is named by the user's own achievement title, so only its section headings are checked.
+const STORY_SELECTORS=['.story-result h3','.story-section h3','.story-more > summary','.story-actions .button'].join(',');
+async function expectTitleCase(page,where,selectors=TITLE_SELECTORS){
+  const texts=await page.locator(selectors).evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length).map(n=>n.textContent.replace(/\s+/g,' ').trim()).filter(Boolean));
   expect(texts.length,where+' has titles to check').toBeGreaterThan(0);
   const bad=texts.map(t=>({t,words:titleCaseViolations(t)})).filter(x=>x.words.length);
   expect(bad,where).toEqual([]);
@@ -45,8 +49,14 @@ test('CP-012.3 titles and subtitles use Title Case on every screen and main dial
   await tab(page,'vault');
   expect(await expectTitleCase(page,'vault')).toContain('1 Achievement · 0 Drafts');
   await tab(page,'portfolio');
-  await page.locator('details.portfolio-card summary').first().click();
-  expect(await expectTitleCase(page,'experience')).toEqual(expect.arrayContaining(['1 Experience','Associated Roles','Linked Achievements (1)']));
+  expect(await expectTitleCase(page,'experience timeline')).toEqual(expect.arrayContaining(['Experience','1 Role · 1 Experience']));
+  await page.locator('.experience-row').first().click();
+  expect(await expectTitleCase(page,'experience page')).toEqual(expect.arrayContaining(['Experience','Goal','Achievements · 1','Skills Shown Here','Earlier Notes']));
+  await page.locator('.story-row').first().click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.locator('.story-more > summary').click();
+  expect(await expectTitleCase(page,'achievement story',STORY_SELECTORS)).toEqual(expect.arrayContaining(['Result','What I Did','Context','Skills Shown','More Details','Detailed Actions','Notes','Impact Category','Evidence References','Privacy','Archive','Delete']));
+  await close(page);
   await tab(page,'competencies');
   expect(await expectTitleCase(page,'skills')).toContain('1 of 33 Skills with Examples');
   await tab(page,'profile');
@@ -70,8 +80,9 @@ test('CP-012.3 titles and subtitles use Title Case on every screen and main dial
   await page.locator('[data-action=add-project]').first().click();
   expect(await expectTitleCase(page,'experience editor')).toEqual(expect.arrayContaining(['Add Experience','Associated Employment Roles']));
   await close(page);
-  await page.locator('details.portfolio-card summary').first().click();
-  await page.locator('[data-action=remove-project]').click();
+  await page.locator('.experience-row').first().click();
+  await page.locator('.experience-page [data-action=edit-project]').click();
+  await page.locator('.modal-footer [data-action=remove-project]').click();
   expect(await expectTitleCase(page,'removal sheet')).toEqual(expect.arrayContaining(['Delete Experience “Synthetic Initiative”?','Linked to This Experience','What Should Happen to Them?']));
   await close(page);
   // User-entered text is never re-cased.
