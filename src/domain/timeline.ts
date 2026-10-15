@@ -139,3 +139,40 @@ export function achievementContexts(c: CareerCollections): Map<string, string> {
 
 /** The year heading an achievement is listed under in the Vault. */
 export const achievementYear = (occurredStart: PrecisionDate | null): string => occurredStart ? occurredStart.value.slice(0, 4) : 'No Date';
+
+/**
+ * CP-UX2 (DEC-037): every experience, most recent first (ongoing first), for
+ * the "Where did this happen?" step of the capture flow.
+ */
+export function experiencesByRecency(c: CareerCollections): Project[] {
+  return [...c.projects].sort(compareExperiencesByRecency);
+}
+
+/** The roles an experience is linked to, most recent first. */
+export function rolesOfExperience(c: CareerCollections, projectId: string): Role[] {
+  const ids = new Set(c.recordLinks.filter(l => l.linkType === 'role-project' && l.targetId === projectId).map(l => l.sourceId));
+  return c.roles.filter(r => ids.has(r.id)).sort(compareRolesByRecency);
+}
+
+/**
+ * CP-UX2: the role an achievement takes from its experience. When the
+ * experience spans several roles, the role whose dates contain the
+ * achievement's date wins (most recent first); without a date, or when no
+ * role's dates contain it, the most recent linked role. Null when the
+ * experience is linked to no role. Dates are compared by their bounds, so a
+ * month or a year counts as inside a role when it overlaps it.
+ */
+export function roleForExperience(c: CareerCollections, projectId: string, occurredStart: PrecisionDate | null): Role | null {
+  const roles = rolesOfExperience(c, projectId);
+  if (!roles.length) return null;
+  if (occurredStart) {
+    const when = dateBounds(occurredStart);
+    const inside = roles.find(r => {
+      const start = dateBounds(r.startDate).earliest;
+      const end = r.isCurrent || !r.endDate ? '9999-12-31' : dateBounds(r.endDate).latest;
+      return start <= when.latest && when.earliest <= end;
+    });
+    if (inside) return inside;
+  }
+  return roles[0]!;
+}

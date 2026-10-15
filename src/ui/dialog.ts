@@ -100,8 +100,10 @@ export class DialogController {
     requestAnimationFrame(()=>{
       // Phone autofocus can open the keyboard and pan past the first label even
       // with preventScroll. Start at the named dialog; typing is a deliberate tap.
+      // Hidden controls (e.g. other steps of the capture flow) are skipped.
+      const visible=(selector:string)=>[...document.querySelectorAll<HTMLElement>(selector)].find(el=>el.getClientRects().length>0)??null;
       const node=window.matchMedia('(max-width:767px)').matches?document.querySelector<HTMLElement>('.modal'):
-        document.querySelector<HTMLElement>('.modal input:not([type=file]),.modal textarea,.modal select')??document.querySelector<HTMLElement>('.modal button,.modal');
+        visible('.modal input:not([type=file]):not([type=hidden]),.modal textarea,.modal select')??visible('.modal button')??document.querySelector<HTMLElement>('.modal');
       node?.focus({preventScroll:true});
     });
   }
@@ -113,7 +115,12 @@ export class DialogController {
     const body=field?.closest<HTMLElement>('.modal-body');
     if(!field||!body)return;
 
-    const fieldRect=field.getBoundingClientRect();
+    // The part that must stay visible while typing is the label and the
+    // control; a hint below the control may scroll out of view (CP-UX2).
+    const control=active.getBoundingClientRect();
+    const firstLabel=field.querySelector('label')?.getBoundingClientRect();
+    const fieldRect={top:Math.min(control.top,firstLabel?.top??control.top),bottom:control.bottom,height:0};
+    fieldRect.height=fieldRect.bottom-fieldRect.top;
     const bodyRect=body.getBoundingClientRect();
     const bodyStyle=getComputedStyle(body);
     const top=bodyRect.top+Math.min(parseFloat(bodyStyle.paddingTop)||0,12)+4;
@@ -132,8 +139,7 @@ export class DialogController {
       // could yield zero and leave the active control covered. Show the field
       // label and at least the first lines; let the native textarea scroll
       // its own caret as more text is entered.
-      const control=active.getBoundingClientRect();
-      const label=field.querySelector('label')?.getBoundingClientRect();
+      const label=firstLabel;
       const visible=Math.max(0,Math.min(control.bottom,bottom)-Math.max(control.top,top));
       const minimumVisible=Math.min(56,Math.max(28,available/2));
       const labelHidden=Boolean(label&&(label.top<top||label.bottom>bottom-minimumVisible));

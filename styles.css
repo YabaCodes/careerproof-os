@@ -948,3 +948,99 @@ button.role-row:focus-visible { outline: 2px solid var(--focus); outline-offset:
 .career-open:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
 .career-open-icon { display: inline-flex; color: var(--muted); flex: none; }
 .skill-delete-note { margin: 0; align-self: center; }
+
+/* ===== CP-UX2 (DEC-037): guided capture — Where → What → When ===== */
+.capture-form { gap: var(--space-4); }
+.capture-step { display: grid; gap: var(--space-4); min-width: 0; align-content: start; }
+.capture-step[hidden] { display: none !important; }
+.capture-form[data-mode="all"] .capture-step + .capture-step { border-top: 1px solid var(--line); padding-top: var(--space-4); }
+.capture-progress { height: 4px; border-radius: 999px; background: var(--surface-alt); overflow: hidden; margin-top: calc(var(--space-1) * -1); }
+.capture-progress span { display: block; height: 100%; width: 33.4%; background: var(--teal); border-radius: inherit; transition: width .2s ease; }
+.capture-form[data-step="2"] .capture-progress span { width: 66.7%; }
+.capture-form[data-step="3"] .capture-progress span { width: 100%; }
+@media (prefers-reduced-motion: reduce) { .capture-progress span { transition: none; } }
+.capture-title { margin: 0; font-size: 22px; line-height: 1.25; color: var(--ink); letter-spacing: -0.01em; }
+.capture-form[data-mode="all"] .capture-title { font-size: 17px; }
+.capture-title:focus { outline: none; }
+.capture-title:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+.capture-lead { margin: calc(var(--space-3) * -1) 0 0; color: var(--muted); font-size: var(--type-meta); }
+.capture-back { justify-self: start; margin: calc(var(--space-2) * -1) 0 calc(var(--space-2) * -1) calc(var(--space-2) * -1); }
+.capture-context { display: inline-flex; align-items: center; gap: 6px; justify-self: start; max-width: 100%; margin: 0; padding: 4px 10px; border-radius: 999px; background: var(--teal-soft); color: var(--teal); font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.capture-context svg { flex: none; }
+.field-hint-split { display: flex; justify-content: space-between; gap: var(--space-3); }
+#title-count { flex: none; font-variant-numeric: tabular-nums; }
+
+/* Where */
+.where-search { background: var(--surface); }
+.where-list { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: var(--space-2); }
+.capture-kicker { padding: 0; margin: 0 0 var(--space-1); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.where-options { display: grid; gap: var(--space-2); }
+.where-option { position: relative; display: flex; align-items: center; gap: var(--space-3); min-height: 56px; padding: var(--space-3); border: 1px solid var(--line); border-radius: 14px; background: var(--surface); cursor: pointer; }
+.where-option[hidden] { display: none; }
+.where-option input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--teal); }
+.where-option:has(input:checked) { border-color: var(--teal); background: var(--teal-soft); }
+.where-option:has(input:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.where-option-text { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.where-option-text strong { font-size: 15px; line-height: 1.35; color: var(--ink); overflow-wrap: anywhere; }
+.where-option-text small { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.where-role-only { border-style: dashed; }
+.where-option .rich-new-tag { margin-left: 0; }
+.where-more { justify-self: start; padding-left: 0; }
+.where-more svg { transform: rotate(90deg); }
+.where-role[hidden] { display: none; }
+.capture-step .inline-experience { margin: 0; }
+.capture-step .inline-experience > .text-action { padding-left: 0; }
+
+/* What */
+.capture-extra { display: grid; gap: var(--space-2); }
+.capture-extra > .text-action { justify-self: start; padding-left: 0; }
+.capture-extra .field[hidden] { display: none; }
+
+/* When: skills as chips, optional rows, confidentiality */
+.capture-skills { display: grid; gap: var(--space-2); }
+.capture-skills h4 { margin: 0; font-size: 15px; color: var(--ink); }
+.skill-chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.skill-chip { position: relative; display: inline-flex; }
+.skill-chip[hidden] { display: none; }
+.skill-chip input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.skill-chip span { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 var(--space-3); border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 14px; color: var(--text); }
+.skill-chip span svg { display: none; }
+.skill-chip input:checked + span { border-color: var(--teal); background: var(--teal-soft); color: var(--teal); font-weight: 600; }
+.skill-chip input:checked + span svg { display: inline; }
+.skill-chip input:focus-visible + span { outline: 2px solid var(--focus); outline-offset: 2px; }
+.capture-skills > .text-action { justify-self: start; padding-left: 0; }
+.skill-search[hidden] { display: none; }
+.skill-search { background: var(--surface); }
+.capture-adds { display: grid; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.capture-add-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); width: 100%; min-height: 52px; padding: 0 var(--space-4); border: 0; border-bottom: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.capture-add-row svg { flex: none; color: var(--muted); transition: transform .15s ease; }
+.capture-add-row[aria-expanded="true"] svg { transform: rotate(90deg); }
+.capture-add-row:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.capture-extra-panel { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--line); display: grid; gap: var(--space-2); min-width: 0; }
+.capture-extra-panel[hidden] { display: none; }
+.capture-extra-panel > .text-action { justify-self: start; padding-left: 0; }
+.capture-switch { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 60px; padding: var(--space-2) var(--space-4); background: var(--surface); cursor: pointer; }
+.capture-switch-text { display: grid; gap: 2px; }
+.capture-switch-text small { font-size: 13px; color: var(--muted); }
+.capture-switch input { flex: none; appearance: none; -webkit-appearance: none; width: 51px; height: 31px; margin: 0; border-radius: 999px; background: var(--control-line, #c7d0d9); position: relative; cursor: pointer; transition: background .15s ease; }
+.capture-switch input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(15 23 42 / 25%); transition: transform .15s ease; }
+.capture-switch input:checked { background: var(--teal); }
+.capture-switch input:checked::after { transform: translateX(20px); }
+.capture-switch input:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .capture-switch input, .capture-switch input::after, .capture-add-row svg { transition: none; } }
+.capture-more { border-top: 1px solid var(--line); }
+.capture-more > summary { min-height: 48px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; font-weight: 600; color: var(--teal); list-style: none; }
+.capture-more > summary::-webkit-details-marker { display: none; }
+.capture-more > summary::after { content: ''; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); margin: -4px 6px 0 0; }
+.capture-more[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
+.capture-more > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.capture-more[open] { display: grid; gap: var(--space-4); padding-bottom: var(--space-2); }
+.capture-footer .button[hidden] { display: none; }
+.capture-footer .button:not([hidden]) { flex: 1 1 0; min-width: 0; }
+.modal-footer.capture-footer { display: flex; }
+/* Anything the capture flow hides stays hidden, whatever its component styles say. */
+.capture-form [hidden], .capture-footer [hidden] { display: none !important; }
+.capture-skills-head { display: flex; align-items: baseline; gap: var(--space-2); }
+/* 44px targets for the date precision and skill chips (CP-UX2 sweep). */
+.precision-option span { min-height: 44px; }
+.skill-chip span { min-height: 44px; }
