@@ -2,7 +2,7 @@
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.3-alpha.5` CP-UX-Links was merged in PR #36, its version-specific CI assertions were repaired in PR #37, and the subsequent `main` build/test/deployment passed.** The user confirmed **UX301–UX307 all PASS on physical iPhone (2026-10-16)** for context navigation among existing achievements, experiences, roles and skills. Earlier `v0.1.3-alpha.4` CP-UX2 was merged in PR #35, but its separate UX201–UX207 acceptance is unreported. Current progress is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.3-alpha.5` CP-UX-Links was merged in PR #36, its version-specific CI assertions were repaired in PR #37, and the subsequent `main` build/test/deployment passed.** The user confirmed **UX301–UX307 all PASS on physical iPhone (2026-10-16)** for context navigation among existing achievements, experiences, roles and skills. Earlier `v0.1.3-alpha.4` CP-UX2 was merged in PR #35; the user has since confirmed **UX201–UX207 all PASS retrospectively on the installed alpha.5 build (2026-10-16)**. The original alpha.4 version/update transition was not physically tested. Current progress is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
 
 ## v0.1.3-alpha.5 — Context Navigation (CP-UX-Links)
 
@@ -14,7 +14,7 @@ This **read-only** improvement makes saved associations tappable without inventi
 
 The original Result → What I Did → Context → Skills reading order, Guided Capture flow, search/filter controls, IndexedDB schema **3**, backup format **3**, taxonomy and privacy rules remain unchanged. Navigation writes no records. Mobile controls target at least 44px, and scrolling honors Reduce Motion.
 
-**Qualification:** CP-UX-Links alpha.5 **accepted** based on physical iPhone UX301–UX307 PASS. [Main CI build/test/deploy run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) succeeded. This is acceptance of the contextual navigation increment only, **not final v0.1.3 release acceptance**. CP-UX2 alpha.4 UX201–UX207 and CP-013B PA101–PA106 results have not yet been reported.
+**Qualification:** CP-UX-Links alpha.5 **accepted** based on physical iPhone UX301–UX307 PASS. [Main CI build/test/deploy run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) succeeded. This is acceptance of the contextual navigation increment only, **not final v0.1.3 release acceptance**. CP-UX2 alpha.4 UX201–UX207 are retrospectively accepted on the alpha.5 build, with the historical alpha.4 version/update check excluded. CP-013B PA101–PA106 have not yet been reported.
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 
@@ -28,7 +28,7 @@ The original Result → What I Did → Context → Skills reading order, Guided 
 - **Recovery:** full version-3 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
-**Since v0.1.3-alpha.4 (CP-UX2, merged, device acceptance pending):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
+**Since v0.1.3-alpha.4 (CP-UX2, merged and retrospectively device-accepted on alpha.5):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
 
 **Since v0.1.3-alpha.3 (CP-UX1, accepted):**
 - **Experience** lists roles most recent first, each with its experiences as one-line rows. Each experience has a page with its context, goal or expected result, achievements and skills.
