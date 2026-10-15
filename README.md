@@ -1,8 +1,8 @@
-# CareerProof OS — v0.1.3-alpha.5 review candidate
+# CareerProof OS — v0.1.3-alpha.5 (CP-UX-Links accepted)
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.3-alpha.4` CP-UX2 was merged in PR #35** (iPhone UX201–UX207 acceptance unreported). **`v0.1.3-alpha.5` CP-UX-Links is a review candidate, not merged or deployed.** It lets you navigate among existing achievements, experiences, roles and skills without editing the data. Current progress is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.3-alpha.5` CP-UX-Links was merged in PR #36, its version-specific CI assertions were repaired in PR #37, and the subsequent `main` build/test/deployment passed.** The user confirmed **UX301–UX307 all PASS on physical iPhone (2026-10-16)** for context navigation among existing achievements, experiences, roles and skills. Earlier `v0.1.3-alpha.4` CP-UX2 was merged in PR #35, but its separate UX201–UX207 acceptance is unreported. Current progress is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
 
 ## v0.1.3-alpha.5 — Context Navigation (CP-UX-Links)
 
@@ -14,7 +14,7 @@ This **read-only** improvement makes saved associations tappable without inventi
 
 The original Result → What I Did → Context → Skills reading order, Guided Capture flow, search/filter controls, IndexedDB schema **3**, backup format **3**, taxonomy and privacy rules remain unchanged. Navigation writes no records. Mobile controls target at least 44px, and scrolling honors Reduce Motion.
 
-**Qualification:** a review candidate; no physical iPhone acceptance is implied. Previous CP-UX2 alpha.4 is merged in PR #35, but UX201–UX207 results are not yet recorded.
+**Qualification:** CP-UX-Links alpha.5 **accepted** based on physical iPhone UX301–UX307 PASS. [Main CI build/test/deploy run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) succeeded. This is acceptance of the contextual navigation increment only, **not final v0.1.3 release acceptance**. CP-UX2 alpha.4 UX201–UX207 and CP-013B PA101–PA106 results have not yet been reported.
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 
