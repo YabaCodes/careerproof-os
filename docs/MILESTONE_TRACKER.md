@@ -1,8 +1,22 @@
 # CareerProof OS — Milestone Tracker
 
-**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-15 · **main:** `3fd7cb4` (PR #34 merged; `0.1.3-alpha.3` deployed by main CI run 38693021202; UX101–UX109 accepted) · **In review:** `0.1.3-alpha.4` CP-UX2 (DEC-037)
+**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-15 · **Baseline:** `0.1.3-alpha.4` (PR #35 merged; UX201–UX207 acceptance unreported) · **In review:** `0.1.3-alpha.5` CP-UX-Links (read-only navigation)
 
 This is the authoritative per-feature progress record. It is updated in **every** PR. Module-level completion stages remain in [ROADMAP.md §5](ROADMAP.md); scope and acceptance criteria are defined in [ROADMAP.md](ROADMAP.md), [PRODUCT_SPEC.md](PRODUCT_SPEC.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md) and [CAREER_INTELLIGENCE.md](CAREER_INTELLIGENCE.md).
+
+**2026-10-15 CP-UX-Links candidate (v0.1.3-alpha.5):** Existing related Experience, Role and Skill associations are now tappable in the achievement story and experience page. Skills continue linking to supporting achievements. The exact skill, even when archived, is expanded on navigation. No model, scoring, schema or backup changes. In Review, pending CI and iPhone UX301–UX307. CP-UX2 alpha.4 was merged in PR #35, but UX201–UX207 remain unreported.
+
+### CP-UX-Links — Physical iPhone Gate (UX301–UX307)
+
+| ID | Acceptance |
+|---|---|
+| UX301 | Linked Experience and Role buttons appear in achievement details; original story reading order remains intact |
+| UX302 | Experience opens the correct page, Back returns, records/relationships unchanged |
+| UX303 | Achievement → Skills opens the exact expanded skill, with existing evidence/proficiency kept distinct |
+| UX304 | Experience → Skills → linked achievement works, including when multiple experiences share a skill |
+| UX305 | Other linked experiences live under More Details; each opens accurately |
+| UX306 | Missing links are not invented; archived skill links remain inspectable but do not alter archived status |
+| UX307 | 320–390px, touch/focus, dark/light, Reduce Motion, offline reopen and record/backup retention |
 
 ## Status vocabulary
 
@@ -30,7 +44,7 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 - Skills are chips suggested from the experience.
 - The impact category leaves the form, and its data is kept.
 
-No schema or backup change. **Not merged or accepted.** UX201–UX207 are pending.
+No schema or backup change. **Merged via PR #35; physical-iPhone acceptance unreported.** UX201–UX207 are pending.
 
 **2026-10-15 CP-UX1 (accepted):** `v0.1.3-alpha.3` is step 1 of the user-approved UX redesign (DEC-036).
 - Experience becomes a role-grouped timeline with a page per experience, and the objective returns as Goal / Expected Result.
