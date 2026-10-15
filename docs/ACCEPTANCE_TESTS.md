@@ -10,33 +10,35 @@
 - [x] **UX306 — Missing and archived links:** Part A: no fabricated links on unlinked achievement (**PASS**). Part B: archived linked skill opens without changing its archived state (**PASS**). **Overall PASS**.
 - [x] **UX307 — Final device verification:** Mobile layout/navigation **PASS**; light/dark appearance and Reduce Motion **PASS**; offline reopening/navigation **PASS**; saved data, Data Health and backup export **PASS**. **Overall PASS**.
 
-**Qualification boundaries:** The user tested their own iPhone, not each possible 320–390px physical-device width. Playwright viewport checks supplement but do not replace device results. No destructive restore of the user's personal data was requested or performed. Existing IndexedDB schema 3 and backup format 3 remain unchanged by CP-UX-Links. **CP-UX2 alpha.4 UX201–UX207 and CP-013B PA101–PA106 remain unreported**, even though those capabilities are present in the deployed build.
+**Qualification boundaries:** The user tested their own iPhone, not each possible 320–390px physical-device width. Playwright viewport checks supplement but do not replace device results. No destructive restore of the user's personal data was requested or performed. Existing IndexedDB schema 3 and backup format 3 remain unchanged by CP-UX-Links. **CP-UX2 alpha.4 UX201–UX207 have since passed retrospectively on the installed alpha.5 build (see below); CP-013B PA101–PA106 remain unreported**, even though those capabilities are present in the deployed build.
 
 ---
 
-## CP-UX2 — v0.1.3-alpha.4 guided capture: physical-iPhone checks (pending)
+## CP-UX2 — v0.1.3-alpha.4 guided capture: accepted through retrospective physical-iPhone checks (2026-10-16)
 
-**Only after PR CI passes, the user merges, and GitHub Pages deploys.** Use the existing Home Screen app, with no reinstall and no cleared data. Export a private backup first. Cancel anything you don't want to keep.
+**Accepted: UX201–UX207 all PASS**, individually reported by the user on 2026-10-16 using the **already-installed v0.1.3-alpha.5** app. Guided Capture was introduced in [merged PR #35](https://github.com/YabaCodes/careerproof-os/pull/35); the [post-repair alpha.5 main build/test/deployment run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) succeeded. No downgrade, reinstall or IndexedDB reset was performed. This is **retrospective device qualification of alpha.4 guided-capture functionality**, not proof the original alpha.4 release screen or update prompt was tested.
 
-- [ ] **UX201 — Update:** Settings shows `v0.1.3-alpha.4` and schema 3. Your Vault counts are unchanged.
-- [ ] **UX202 — Where:**
+- [x] **UX201 — Version and data retention (retrospective): PASS.** On installed `v0.1.3-alpha.5`, Settings showed schema **3**, and the user reported existing Vault achievements, Experiences, Roles and Skills retained. **Exception:** the original `v0.1.3-alpha.4` version label and installation transition were **not** physically verified; UX201 is not evidence of that historical update.
+- [x] **UX202 (PASS) — Where:**
   - ＋ opens "Where did this happen?" with your five most recent experiences.
   - "Show all" and search find older ones, and Next without a choice asks you to choose.
   - "Not part of an experience" shows a role picker.
-- [ ] **UX203 — What:**
+- [x] **UX203 (PASS) — What:**
   - The chosen experience shows at the top, and the title counter works.
   - "Add context" opens a context field.
   - Typing in the Result field keeps its label and box visible above the keyboard.
-- [ ] **UX204 — When:**
+- [x] **UX204 (PASS) — When:**
   - Month is preselected. Skills already used in that experience appear as chips you can tap, and "Find another skill" searches all skills.
   - The Confidential switch is on.
   - Back keeps what you typed.
-- [ ] **UX205 — Save:**
+- [x] **UX205 (PASS) — Save:**
   - Record one real achievement (or a test draft you then delete). It appears in the Vault and on the experience's page, with the right role.
   - A draft saved from step 2 shows "No date".
-- [ ] **UX206 — Edit:** Edit on an existing achievement shows the three sections on one page. Saving without changes keeps its experience and role.
-- [ ] **UX207 — Layout:** Nothing is clipped or overlapping on any step, in light and dark mode. Footer buttons are easy to reach.
+- [x] **UX206 (PASS) — Edit:** Edit on an existing achievement shows the three sections on one page. Saving without changes keeps its experience and role.
+- [x] **UX207 (PASS) — Layout:** Nothing is clipped or overlapping on any step, in light and dark mode. Footer buttons are easy to reach.
 
+
+**Detailed device outcomes:** UX202 (Where selection/search/Role picker) PASS; UX203 (What fields, title counter, context, keyboard) PASS; UX204 (Month/Year/Exact-day controls, skill chips/search, Confidential, Back) PASS; UX205 **Part A recorded-save/Experience-Role relationships PASS** and **Part B undated draft showing No date PASS**; UX206 (unified edit and unchanged relationships after save/reopen) PASS; UX207 (Where/What/When layout, keyboard, light/dark mode, tap targets, cancel without unintended record) PASS. All user-reported; test device was one iPhone. Responsive-width automated tests supplement but do not establish physical testing at every width. No destructive backup restore was performed. Separate **PA101–PA106 proficiency assessment** is still pending; the complete `v0.1.3` release is not certified.
 **Automated qualification:**
 - Node tests cover role-by-date across two roles, most-recent fallback, no-role experiences and the Where order.
 - Browser tests cover:
@@ -46,7 +48,7 @@
   - no date for step-2 drafts, empty rows not saved
   - the per-step 320–430px light/dark geometry, focus order and the keyboard reveal
 
-CI success is not iPhone acceptance.
+CI success alone is not iPhone acceptance; **UX201–UX207 have separate physical-iPhone PASS evidence recorded above.**
 
 ## CP-UX1 — v0.1.3-alpha.3 reading and scanning: physical-iPhone checks (all passed, user-reported 2026-10-15)
 
