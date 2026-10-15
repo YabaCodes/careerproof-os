@@ -1,3 +1,19 @@
+## CP-UX-Links — v0.1.3-alpha.5 contextual navigation: accepted on physical iPhone (2026-10-16)
+
+**Release evidence:** [PR #36](https://github.com/YabaCodes/careerproof-os/pull/36) merged; [PR #37](https://github.com/YabaCodes/careerproof-os/pull/37) merged to correct stale version-specific browser assertions. The [post-repair main GitHub Actions run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) completed **build, tests and Pages deployment successfully**. The user separately confirmed all seven checks PASS on their installed iPhone. This is **physical acceptance of alpha.5 context navigation**, not final v0.1.3 release sign-off.
+
+- [x] **UX301 — Linked context:** Primary Experience and Role links appear in achievement details with the reading order intact. **PASS**.
+- [x] **UX302 — Experience navigation:** Achievement → correct Experience page, Back/navigation and saved records preserved. **PASS**.
+- [x] **UX303 — Achievement to skill:** Linked Skill opens the exact expanded skill with evidence breadth and self-assessed proficiency kept distinct. **PASS**.
+- [x] **UX304 — Cross-module path:** Experience → Skill → linked Achievement works correctly. **PASS**.
+- [x] **UX305 — Additional Experiences:** Secondary linked Experiences appear under More Details and open the intended records without changing relationships. **PASS**.
+- [x] **UX306 — Missing and archived links:** Part A: no fabricated links on unlinked achievement (**PASS**). Part B: archived linked skill opens without changing its archived state (**PASS**). **Overall PASS**.
+- [x] **UX307 — Final device verification:** Mobile layout/navigation **PASS**; light/dark appearance and Reduce Motion **PASS**; offline reopening/navigation **PASS**; saved data, Data Health and backup export **PASS**. **Overall PASS**.
+
+**Qualification boundaries:** The user tested their own iPhone, not each possible 320–390px physical-device width. Playwright viewport checks supplement but do not replace device results. No destructive restore of the user's personal data was requested or performed. Existing IndexedDB schema 3 and backup format 3 remain unchanged by CP-UX-Links. **CP-UX2 alpha.4 UX201–UX207 and CP-013B PA101–PA106 remain unreported**, even though those capabilities are present in the deployed build.
+
+---
+
 ## CP-UX2 — v0.1.3-alpha.4 guided capture: physical-iPhone checks (pending)
 
 **Only after PR CI passes, the user merges, and GitHub Pages deploys.** Use the existing Home Screen app, with no reinstall and no cleared data. Export a private backup first. Cancel anything you don't want to keep.
