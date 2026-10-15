@@ -1,30 +1,64 @@
-## CP-UX1 — v0.1.3-alpha.3 reading and scanning: physical-iPhone checks (pending)
+## CP-UX2 — v0.1.3-alpha.4 guided capture: physical-iPhone checks (pending)
+
+**Only after PR CI passes, the user merges, and GitHub Pages deploys.** Use the existing Home Screen app, with no reinstall and no cleared data. Export a private backup first. Cancel anything you don't want to keep.
+
+- [ ] **UX201 — Update:** Settings shows `v0.1.3-alpha.4` and schema 3. Your Vault counts are unchanged.
+- [ ] **UX202 — Where:**
+  - ＋ opens "Where did this happen?" with your five most recent experiences.
+  - "Show all" and search find older ones, and Next without a choice asks you to choose.
+  - "Not part of an experience" shows a role picker.
+- [ ] **UX203 — What:**
+  - The chosen experience shows at the top, and the title counter works.
+  - "Add context" opens a context field.
+  - Typing in the Result field keeps its label and box visible above the keyboard.
+- [ ] **UX204 — When:**
+  - Month is preselected. Skills already used in that experience appear as chips you can tap, and "Find another skill" searches all skills.
+  - The Confidential switch is on.
+  - Back keeps what you typed.
+- [ ] **UX205 — Save:**
+  - Record one real achievement (or a test draft you then delete). It appears in the Vault and on the experience's page, with the right role.
+  - A draft saved from step 2 shows "No date".
+- [ ] **UX206 — Edit:** Edit on an existing achievement shows the three sections on one page. Saving without changes keeps its experience and role.
+- [ ] **UX207 — Layout:** Nothing is clipped or overlapping on any step, in light and dark mode. Footer buttons are easy to reach.
+
+**Automated qualification:**
+- Node tests cover role-by-date across two roles, most-recent fallback, no-role experiences and the Where order.
+- Browser tests cover:
+  - required choice, search and show-all, and role picker
+  - primary-experience and role derivation for new captures and edits
+  - other experiences, skill chips and search, the confidentiality switch, and the impact category carried through
+  - no date for step-2 drafts, empty rows not saved
+  - the per-step 320–430px light/dark geometry, focus order and the keyboard reveal
+
+CI success is not iPhone acceptance.
+
+## CP-UX1 — v0.1.3-alpha.3 reading and scanning: physical-iPhone checks (all passed, user-reported 2026-10-15)
 
 **Only after PR CI passes, the user merges, and GitHub Pages deploys.** Use the existing Home Screen app, with no reinstall and no cleared website data. Export a private backup first and keep it somewhere safe. These checks are **non-destructive**: cancel any Delete you open, and change a real record only if you actually want the change.
 
-- [ ] **UX101 — Update and data retention:** Settings shows `v0.1.3-alpha.3` and schema 3. The Vault's *Recorded · n* plus *Drafts · m* match your totals before the update. Experiences, roles and skills are all still there.
-- [ ] **UX102 — Experience timeline:**
+- [x] **UX101 — Update and data retention:** Settings shows `v0.1.3-alpha.3` and schema 3. The Vault's *Recorded · n* plus *Drafts · m* match your totals before the update. Experiences, roles and skills are all still there.
+- [x] **UX102 — Experience timeline:**
   - Roles are listed most recent first, and the two most recent are open.
   - Each experience appears once. "Also: …" names the earlier role where an experience spans two.
   - Collapse one group, open an experience, then go Back. The group stays collapsed.
-- [ ] **UX103 — Experience page:**
+- [x] **UX103 — Experience page:**
   - Context, Goal or Expected Result, achievements with their result lines, and skills read clearly.
   - Edit opens the editor, with Delete at the bottom left. Cancel it.
   - The iPhone back gesture and the Back link both return to the timeline.
-- [ ] **UX104 — Achievement story:** Result comes first, then What I Did and Context. More Details opens the rest, including Archive and Delete. Don't delete anything.
-- [ ] **UX105 — Vault:**
+- [x] **UX104 — Achievement story:** Result comes first, then What I Did and Context. More Details opens the rest, including Archive and Delete. Don't delete anything.
+- [x] **UX105 — Vault:**
   - It opens on Recorded, with your drafts under Drafts and year headings in order.
   - Search and Filters sit on one line, and Sort is inside Filters.
   - Tapping a row opens the story.
-- [ ] **UX106 — Date control:**
+- [x] **UX106 — Date control:**
   - New achievement starts on Month with this month filled in. Year and Exact day switch the field, and the hint reads clearly.
   - Cancel without saving. Optionally, give one of your undated drafts the month or year it happened and record it.
-- [ ] **UX107 — Profile tap-to-edit:** Tapping an employer, role, qualification or credential name opens its editor with Delete at the bottom. Cancel. Cards no longer show Edit/Delete buttons, and Add role is still under each employer.
-- [ ] **UX108 — #33 follow-ups:**
+- [x] **UX107 — Profile tap-to-edit:** Tapping an employer, role, qualification or credential name opens its editor with Delete at the bottom. Cancel. Cards no longer show Edit/Delete buttons, and Add role is still under each employer.
+- [x] **UX108 — #33 follow-ups:**
   - Skills assessment rejects a date after today.
   - Assessment dates read like "Oct 12, 2026".
   - A skill with history says it can be archived but not deleted.
-- [ ] **UX109 — Offline and themes:** Reopen offline. All five tabs, an experience page and an achievement story load, with nothing clipped or overlapping in light and dark.
+- [x] **UX109 — Offline and themes:** Reopen offline. All five tabs, an experience page and an achievement story load, with nothing clipped or overlapping in light and dark.
 
 **Automated qualification:**
 - Domain tests cover role grouping, the most recent role, "Also", ordering, recorded-versus-draft counts, loose achievements, contexts, years and no mutation.

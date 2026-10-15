@@ -1,3 +1,37 @@
+## v0.1.3-alpha.4 — CP-UX2 guided capture (review candidate)
+
+**Status:** PR open, CI result stated in the PR; **not merged, deployed or accepted**. Step 2 of the user-approved redesign (DEC-037). Step 1 (`0.1.3-alpha.3`, PR #34) is merged, deployed and accepted on iPhone (UX101–UX109).
+
+- **New achievement in three short steps:** *Where did this happen?* → *What happened?* → *When did it happen?* A step counter and progress bar are at the top, Back is on steps 2 and 3, and Save draft is available from step 2.
+- **Where:**
+  - Your experiences are listed most recent first (five, then "Show all"), with search.
+  - **New experience** asks for its name, type and role.
+  - **Not part of an experience** records a role, or none.
+  - A choice is needed to continue, so nothing is attributed by accident.
+  - Started from an experience's page, capture opens on step 2 with that experience chosen.
+- **The experience you choose is the primary one automatically, and the role comes with it.** If the experience spans two roles, the role at the achievement's date is used, otherwise the most recent one. Editing without changing the experience keeps the stored role.
+- **What:** Title (with a counter), What did you do?, Result, and "Add context (why it was needed)" on demand.
+- **When:**
+  - Month, Year or Exact day.
+  - **Skill chips**, suggested from the skills the experience's recorded achievements already show (never pre-ticked), plus "Find another skill".
+  - "Add a measured number" and "Add evidence".
+  - A **Confidential** switch (on by default).
+  - **More details**: detailed actions, notes, other experiences.
+- **Impact category** is no longer asked for. Stored values are kept and still shown under More Details.
+- **Editing** shows all three sections on one page.
+- **Safety:**
+  - A draft saved before reaching the When step gets **no date**, rather than the pre-filled month.
+  - A number or evidence row opened but left completely empty is not saved.
+  - Searching the lists is not counted as an unsaved change.
+- **Keyboard on iPhone:** while typing, the label and field stay in view even when a hint sits below the field.
+- **Data:** unchanged. Schema 3, backup format 3, no migration. Only the role and primary-experience values that the user's own choice determines are written.
+- **Tests (local):** `npm test` passes 102 Node and 139 browser tests.
+  - New: 2 Node tests for role-by-date and the Where order, and `ux-capture.spec` (7 browser tests).
+  - The old single-form layout checks were replaced by per-step geometry checks at 320–430px in light and dark.
+  - Existing specs were updated for the step flow.
+- **Not in this step:** moving "Candidate" drafts into an experience's Expected Result, and the slimmer Home (step 3).
+- Pending: CI, user review and merge, Pages deployment and iPhone checks UX201–UX207.
+
 ## v0.1.3-alpha.3 — CP-UX1 reading and scanning (review candidate)
 
 **Status:** PR open, CI result stated in the PR; **not merged, deployed or accepted**. Step 1 of the user-approved redesign (DEC-036), plus follow-ups to #33.

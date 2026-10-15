@@ -1,6 +1,6 @@
 # CareerProof OS — Milestone Tracker
 
-**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-15 · **main:** `ffc72ef` (PR #33 merged; `0.1.3-alpha.2` deployed by main CI run 38684412367) · **In review:** `0.1.3-alpha.3` CP-UX1 (DEC-036)
+**Document ID:** CP-TRK-001 (DEC-027) · **Last updated:** 2026-10-15 · **main:** `3fd7cb4` (PR #34 merged; `0.1.3-alpha.3` deployed by main CI run 38693021202; UX101–UX109 accepted) · **In review:** `0.1.3-alpha.4` CP-UX2 (DEC-037)
 
 This is the authoritative per-feature progress record. It is updated in **every** PR. Module-level completion stages remain in [ROADMAP.md §5](ROADMAP.md); scope and acceptance criteria are defined in [ROADMAP.md](ROADMAP.md), [PRODUCT_SPEC.md](PRODUCT_SPEC.md), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md) and [CAREER_INTELLIGENCE.md](CAREER_INTELLIGENCE.md).
 
@@ -24,7 +24,15 @@ Rules: never mark a row Accepted without the user's device confirmation; never m
 
 **2026-10-12 CP-013B candidate:** v0.1.3-alpha.2 adds append-only self-assessed L1–L4 proficiency, generic rubric 1.0, historical assessments, indexed schema-3 storage, backup format 3 and validated compatibility for existing format-1/format-2 restores. Automated and device gates pending; **not accepted and not merged**. CP-013A alpha.1 is accepted on iPhone, with EB103 draft/archive-only manual scenario untested but synthetically covered. Do not mark v0.1.3 final shipped.
 
-**2026-10-15 CP-UX1 candidate:** `v0.1.3-alpha.3` is step 1 of the user-approved UX redesign (DEC-036).
+**2026-10-15 CP-UX2 candidate:** `v0.1.3-alpha.4` is step 2 of the redesign (DEC-037).
+- A new achievement is captured in three steps: Where → What → When.
+- The chosen experience becomes the primary one, and the role is derived from it by date.
+- Skills are chips suggested from the experience.
+- The impact category leaves the form, and its data is kept.
+
+No schema or backup change. **Not merged or accepted.** UX201–UX207 are pending.
+
+**2026-10-15 CP-UX1 (accepted):** `v0.1.3-alpha.3` is step 1 of the user-approved UX redesign (DEC-036).
 - Experience becomes a role-grouped timeline with a page per experience, and the objective returns as Goal / Expected Result.
 - Achievements read as a story with More Details. The Vault opens on Recorded with year headings.
 - Dates are Month/Year/Exact day, and Profile is tap-to-edit with Delete in the editors.
@@ -46,7 +54,7 @@ No schema or backup-format change. 100 Node and 136 browser tests pass locally; 
 | v0.1.0 | Basic Profile, Quick Capture, Vault, IndexedDB, backup, PWA | Merged (superseded by v0.1.1) | initial, #1 | Hotfix input/nav accepted; remaining v0.1.0 checks superseded by v0.1.1 rc.1 E211–E218 |
 | v0.1.1 | Career history, qualifications, Experience Portfolio, rich achievements, taxonomy/links, recovery, Check data | Device Testing | #4–#16 | rc.1 E211–E218 accepted; final F101–F102 pending |
 | v0.1.2 | P0 reliability: Data Health, controlled deletion, dashboard, a11y/perf, recovery certification | Final promotion In Review (not merged or deployed); all alpha.11 P0/device gates accepted | #18–#29 merged; separate final promotion candidate | A101–A106, U103–U104, DH101–DH104, RM101–RM105, T101–T104, X101–X105, D101–D105, AD101–AD105, AE101–AE104 (AE105 waived), RE101–RE105/E220 accepted; final F201–F204 pending |
-| v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth; CP-UX1 reading and scanning (DEC-036) | CP-013A accepted; CP-013B merged and deployed (alpha.2); CP-UX1 alpha.3 In Review | #32, #33 merged; CP-UX1 PR open | EB101/102/104/105 passed, EB103 not tested; PA101–106 not yet reported; UX101–UX109 pending |
+| v0.1.3 | Self-assessed L1–L4 proficiency + separate evidence breadth; CP-UX1 reading and scanning (DEC-036); CP-UX2 guided capture (DEC-037) | CP-013A accepted; CP-013B merged and deployed (alpha.2); CP-UX1 alpha.3 accepted; CP-UX2 alpha.4 In Review | #32, #33, #34 merged; CP-UX2 PR open | EB101/102/104/105 passed, EB103 not tested; PA101–106 not yet reported; UX101–UX109 passed; UX201–UX207 pending |
 | v0.1.4 | Source-linked Performance Review Studio + PDF | Planned | — | — |
 | v0.1.5 | CV Builder, two templates, variants + PDF | Planned | — | — |
 | v0.1.6 | Pasted job-description requirement matrix (deterministic) | Planned | — | — |
@@ -110,11 +118,14 @@ No schema or backup-format change. 100 Node and 136 browser tests pass locally; 
 | Platform | First-cycle integration qualification | v0.1.7 | P1 | Planned | 0.1.7 | — | — | — | — | After v0.1.6 |
 | Platform | Mobile navigation redesign (Growth/Studio) | DEC-015 | — | Not Started | — | — | — | — | Spec target differs from shipped 5-slot bar | Decide when Studio/Growth ship |
 | Platform | Optional cloud sync / accounts / AI / commercial | — | Later | Not Started | — | — | — | — | Separate threat model and approval | None until requested |
-| M03 Experience Portfolio | **UX-036** Experience tab as a role-grouped timeline (most recent role first, one row per experience, "Also" for multi-role, loose-achievement row) and a page per experience; objective shown as Goal / Expected Result (amends DEC-034) | CP-UX1, DEC-036 | P0 | In Review | 0.1.3-alpha.3 | CP-UX1 PR | timeline (9 Node); ux-reading timeline/page/keyboard; experience-portfolio, experience-container, removal, title-case-order updated | UX102–UX103 pending | Candidate drafts → Expected Result is step 3 | User review, merge, UX101–UX109 |
-| M02 Achievement Vault | **UX-037** Achievement read as a story (Result → What I Did → Context → Skills; rest under More Details); draft notice names what is missing; Vault opens on Recorded with Drafts/Archived segments, year headings, date · context rows; "achievements" counts are recorded only everywhere | CP-UX1, DEC-036 | P0 | In Review | 0.1.3-alpha.3 | CP-UX1 PR | ux-reading story/Vault; compatibility, ios-refinement, ui-polish, home-dashboard, release-qualification updated | UX104–UX105 pending | Archive/Delete one tap deeper | User review, merge |
-| M02 Achievement Vault | **UX-038** Achievement date as Month (default) / Year / Exact day; switching never invents a day or month | CP-UX1, DEC-036 | P0 | In Review | 0.1.3-alpha.3 | CP-UX1 PR | ux-reading dates; ios-refinement date geometry updated | UX106 pending | Guided Where → What → When capture is step 2 | User review, merge |
-| M01 Career Profile | **UX-039** Tap a record's name to edit it; Delete inside the editor (also for experiences) | CP-UX1, DEC-036 | P0 | In Review | 0.1.3-alpha.3 | CP-UX1 PR | ux-reading Profile; career-history, removal updated | UX107 pending | — | User review, merge |
-| M04 Competency Intelligence | **QA-040** #33 follow-ups: future assessment date refused; assessment dates formatted; skills with history show an archive-only note instead of a refused Delete | CP-013B follow-up | P1 | In Review | 0.1.3-alpha.3 | CP-UX1 PR | ux-reading #33 test | UX108 pending | — | User review, merge |
+| M03 Experience Portfolio | **UX-036** Experience tab as a role-grouped timeline (most recent role first, one row per experience, "Also" for multi-role, loose-achievement row) and a page per experience; objective shown as Goal / Expected Result (amends DEC-034) | CP-UX1, DEC-036 | P0 | Accepted | 0.1.3-alpha.3 | #34 | timeline (9 Node); ux-reading timeline/page/keyboard; experience-portfolio, experience-container, removal, title-case-order updated | UX102–UX103 passed 2026-10-15 | Candidate drafts → Expected Result is step 3 | — |
+| M02 Achievement Vault | **UX-037** Achievement read as a story (Result → What I Did → Context → Skills; rest under More Details); draft notice names what is missing; Vault opens on Recorded with Drafts/Archived segments, year headings, date · context rows; "achievements" counts are recorded only everywhere | CP-UX1, DEC-036 | P0 | Accepted | 0.1.3-alpha.3 | #34 | ux-reading story/Vault; compatibility, ios-refinement, ui-polish, home-dashboard, release-qualification updated | UX104–UX105 passed 2026-10-15 | Archive/Delete one tap deeper | — |
+| M02 Achievement Vault | **UX-038** Achievement date as Month (default) / Year / Exact day; switching never invents a day or month | CP-UX1, DEC-036 | P0 | Accepted | 0.1.3-alpha.3 | #34 | ux-reading dates; ios-refinement date geometry updated | UX106 passed 2026-10-15 | Guided Where → What → When capture is step 2 | — |
+| M01 Career Profile | **UX-039** Tap a record's name to edit it; Delete inside the editor (also for experiences) | CP-UX1, DEC-036 | P0 | Accepted | 0.1.3-alpha.3 | #34 | ux-reading Profile; career-history, removal updated | UX107 passed 2026-10-15 | — | — |
+| M04 Competency Intelligence | **QA-040** #33 follow-ups: future assessment date refused; assessment dates formatted; skills with history show an archive-only note instead of a refused Delete | CP-013B follow-up | P1 | Accepted | 0.1.3-alpha.3 | #34 | ux-reading #33 test | UX108 passed 2026-10-15 | — | — |
+| M02 Achievement Vault | **UX-041** Guided capture Where → What → When; Where chooses the primary experience and the role comes with it (by date across roles); new experience with its role; "Not part of an experience" with a role or none | CP-UX2, DEC-037 | P0 | In Review | 0.1.3-alpha.4 | CP-UX2 PR | timeline (+2 Node); ux-capture (7 browser); experience-container, experience-portfolio, compatibility, accessibility, ui-polish, title-case, ios-refinement updated | UX201–UX206 pending | Candidate drafts → Expected Result is step 3 | User review, merge |
+| M04 Competency Intelligence | **UX-042** Skills shown as chips suggested from the experience's recorded achievements; "Find another skill" | CP-UX2, DEC-037 | P0 | In Review | 0.1.3-alpha.4 | CP-UX2 PR | ux-capture chips/search | UX204 pending | — | User review, merge |
+| M02 Achievement Vault | **UX-043** Impact category removed from the capture form (stored values kept and shown); a step-2 draft gets no date; empty metric/evidence rows are not saved; keyboard reveal keeps label + field in view | CP-UX2, DEC-037 | P0 | In Review | 0.1.3-alpha.4 | CP-UX2 PR | ux-capture edit; ios-refinement draft-date, per-step geometry and keyboard | UX205–UX207 pending | Old rich-panel CSS left unused | User review, merge |
 
 ## Open user decisions
 
@@ -124,7 +135,7 @@ No schema or backup-format change. 100 Node and 136 browser tests pass locally; 
 4. v0.1.2 product choices: Data Health issue taxonomy and wording; unlink/reassign UX (done, DEC per CP-012B); dashboard summaries (proposed in DEC-035, PR #26); last-export wording kept as "generated on this device".
 5. Later: 32-skill rubric authoring, CV templates, job-fit rule dictionary, navigation redesign.
 6. ~~OQ-034 Achievement vs Experience~~: decided 2026-10-11, option B (DEC-034), implemented in PR #24.
-7. CP-UX1 (DEC-036): review and merge step 1 (alpha.3). Steps 2 (guided capture, impact category out of the form, automatic primary experience) and 3 (move candidate drafts to Expected Result, slimmer Home) follow as separate PRs.
+7. CP-UX redesign: step 1 (DEC-036) accepted; step 2 (DEC-037, alpha.4) in review; step 3 (move candidate drafts to Expected Result, slimmer Home) next as a separate PR.
 
 ## Update procedure (every PR)
 
