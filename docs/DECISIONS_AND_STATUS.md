@@ -10,7 +10,7 @@
 - v0.1.2 final was promoted in PR #30 (merged 2026-10-11). PR #31 (docs closing v0.1.2 after F201–F204) is open with merge conflicts. CP-013A (`0.1.3-alpha.1`, #32) accepted with EB103 not tested; CP-013B (`0.1.3-alpha.2`, #33) merged, PA101–PA106 not yet reported.
 - **CP-UX1 (`0.1.3-alpha.3`, DEC-036)** merged in PR #34 (main `3fd7cb4`, CI run 38693021202 success, Pages deployment of `3fd7cb4` succeeded). The user reported UX101–UX109 all passed on iPhone (2026-10-15).
 - **CP-UX2 (`0.1.3-alpha.4`, DEC-037)** guided capture is In Review on `feat/cp-ux2-guided-capture`. No schema or backup-format change.
-- **2026-10-16:** CP-UX2 merged (PR #35; UX201–UX207 unreported). CP-UX-Links (`0.1.3-alpha.5`) merged (PR #36, test repair #37) and **accepted UX301–UX307**. **CP-UX-Fluid (`0.1.3-alpha.6`, DEC-038)** is In Review on `feat/cp-ux-fluid`: motion and touch feedback, the recorded moment, tidy-ups and Home's Last 12 Months. No schema or backup-format change.
+- **2026-10-16:** CP-UX2 merged (PR #35; UX201–UX207 unreported). CP-UX-Links (`0.1.3-alpha.5`) merged (PR #36, test repair #37) and **accepted UX301–UX307**. **CP-UX-Fluid (`0.1.3-alpha.6`, DEC-038)** is In Review in PR #40 (`feat/cp-ux-fluid`): motion and touch feedback, the recorded moment, tidy-ups and Home's Last 12 Months. No schema or backup-format change.
 
 ### Earlier verified state (2026-10-10, updated at CP-012.3)
 
