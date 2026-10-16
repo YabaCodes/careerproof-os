@@ -39,6 +39,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **2026-10-12 CP-013A checkpoint:** Read-only evidence breadth implementation proposed as v0.1.3-alpha.1. Full 0.1.3 remains incomplete until separate L1–L4 proficiency persistence, history, migration and restoration gates are implemented and accepted.
 
+**2026-10-16 CP-UX-Fluid candidate (DEC-038, `0.1.3-alpha.6`):** A user-approved polish increment to existing P0 modules, not new P0/P1 scope: motion and touch feedback (off with Reduce Motion), a recorded moment after capture, tidy-ups (Home count wording, a one-row Skills toolbar, role headers) and Home's **Last 12 Months** — recorded achievements by the month they happened, counts only. It amends DEC-035 for that one factual trend view; targets, streaks, averages and scores remain out of scope. DEC-036 step 3 is unchanged. No schema or backup change.
+
 **2026-10-15 CP-UX2 candidate (DEC-037):** Step 1 (`0.1.3-alpha.3`, PR #34) is merged and accepted (UX101–UX109). Step 2 (`0.1.3-alpha.4`, guided capture) is in review. Step 3 follows. No schema or backup change.
 
 **2026-10-15 CP-UX1 (DEC-036):** After reviewing the user's own records, the user approved a three-step UX redesign of existing P0 modules. This is not new P0/P1 scope.
@@ -109,7 +111,7 @@ Module-level summary below; per-feature lifecycle status is in [MILESTONE_TRACKE
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |
 | M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
-| M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls; from 0.1.2-alpha.8 Home adds Complete Your Record and Achievements by Role (DEC-035) | Trends and advanced analytics later |
+| M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls; from 0.1.2-alpha.8 Home adds Complete Your Record and Achievements by Role (DEC-035); 0.1.3-alpha.6 (in review) adds Last 12 Months, a count of recorded achievements by the month they happened (DEC-038) | Advanced analytics later; no targets, streaks or scores |
 
 **v0.1.1 delivery history:** CP-011A (PR #4, alpha.1) → A.1–A.3 UI/iOS corrections (PRs #5–#8) → CP-011B with B.1/B.2 (PRs #9–#11) → CP-011C (PR #12) → CP-011D with D.1 (PRs #13–#14) → CP-011E rc.1 (PR #15) → final promotion (PR #16). All merged by the user. Per-feature status, PRs, test baselines and device-acceptance evidence are in the [milestone tracker](MILESTONE_TRACKER.md), which is the authoritative progress record and must be updated in every PR.
 

@@ -1,8 +1,18 @@
-# CareerProof OS — v0.1.3-alpha.5 (CP-UX-Links accepted)
+# CareerProof OS — v0.1.3-alpha.6 (CP-UX-Fluid in review)
 
 **Own your experience. Prove your impact. Shape your future.**
 
 CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.3-alpha.5` CP-UX-Links was merged in PR #36, its version-specific CI assertions were repaired in PR #37, and the subsequent `main` build/test/deployment passed.** The user confirmed **UX301–UX307 all PASS on physical iPhone (2026-10-16)** for context navigation among existing achievements, experiences, roles and skills. Earlier `v0.1.3-alpha.4` CP-UX2 was merged in PR #35, but its separate UX201–UX207 acceptance is unreported. Current progress is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+
+## v0.1.3-alpha.6 — Feel, the Recorded Moment and Last 12 Months (CP-UX-Fluid, in review)
+
+A presentation-only increment (DEC-038), **not merged, deployed or accepted** until the user merges it and reports UX401–UX408 on iPhone:
+- **Feel:** buttons, tabs, chips and rows respond under the finger; sheets slide up when they open; capture steps and screens move in the direction you are going; messages ease in. Reduce Motion turns all motion off.
+- **Recorded moment:** saving says which experience the achievement went into and which skills it adds an example to (drafts say what they still need), and the new achievement glows where it appears.
+- **Tidy-ups:** "1 achievement" on Home; one-row Skills toolbar (search, Filters, Add); role headers with Current beside the title.
+- **Home – Last 12 Months:** recorded achievements counted by the month they happened; tap a month to list it. Counts only — no targets, streaks or scores.
+
+Schema **3**, backup format **3** and every stored record are unchanged. See [release notes](docs/RELEASE_NOTES.md) and [acceptance tests](docs/ACCEPTANCE_TESTS.md).
 
 ## v0.1.3-alpha.5 — Context Navigation (CP-UX-Links)
 
