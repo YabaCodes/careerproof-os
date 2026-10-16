@@ -40,7 +40,7 @@ const close=page=>page.locator('.close-dialog').click();
 
 test('CP-012.3 titles and subtitles use Title Case on every screen and main dialog',async({page})=>{
   await seed(page);
-  expect(await expectTitleCase(page,'empty home')).toEqual(expect.arrayContaining(['CareerProof','Record the Work. Prove the Impact.','Capture Your First Achievement','Quick Capture']));
+  expect(await expectTitleCase(page,'empty home')).toEqual(expect.arrayContaining(['CareerProof','Record the Work. Prove the Impact.','Capture Your First Achievement','Quick Add']));
   await tab(page,'vault');
   expect(await expectTitleCase(page,'empty vault')).toEqual(expect.arrayContaining(['Your Record of Contributions and Results','Start Documenting Your Impact']));
 

@@ -16,22 +16,22 @@ const when = (start: PrecisionDate, end: PrecisionDate | null, current: boolean)
   `${formatPrecisionDate(start.value)} – ${current ? 'Present' : end ? formatPrecisionDate(end.value) : 'End not recorded'}`;
 
 /** "Complete Your Record": documentation gaps shared with Data Health. Empty string when there is nothing to show yet. */
-export function homeGapsSection(c: CareerCollections, today: string): string {
+export function homeGapsSection(c: CareerCollections, today: string, embedded = false): string {
   const gaps = homeGaps(c, today);
   const recorded = c.achievements.some(a => a.status === 'recorded');
-  if (!gaps.length && !recorded) return '';
+  if (!gaps.length && !recorded && !embedded) return '';
   const action = '<button class="text-action" data-action="open-data-health">Data Health ' + icon('arrow', 16) + '</button>';
   const body = gaps.length
     ? '<p class="home-gaps-note">Based on what you have recorded, not on your ability. Tap a record to complete it.</p>' +
       gaps.map(g => issueBlock(g, 'gap:' + g.code)).join('')
     : '<p class="home-gaps-done">' + icon('check', 18) + '<span>Nothing missing from your recorded achievements, experiences or credentials.</span></p>';
-  return sectionTitle('Complete Your Record', action) + '<section class="panel home-gaps" aria-label="Complete your record">' + body + '</section>';
+  return (embedded ? '' : sectionTitle('Complete Your Record', action)) + '<section class="panel home-gaps" aria-label="Complete your record">' + (embedded ? action : '') + body + '</section>';
 }
 
 /** "Achievements by Role": active achievements per role, most recent role first. Empty string without roles. */
-export function roleCoverageSection(c: CareerCollections): string {
+export function roleCoverageSection(c: CareerCollections, embedded = false): string {
   const { roles, withoutRole } = roleCoverage(c);
-  if (!roles.length) return '';
+  if (!roles.length) return embedded ? '<p class="home-gaps-note">Add a role in Profile to see achievements grouped by role.</p>' : '';
   const rows = roles.map(r => {
     // CP-UX1: "achievements" means recorded ones everywhere; drafts are counted on their own.
     const recorded = r.achievements - r.drafts;
@@ -50,7 +50,7 @@ export function roleCoverageSection(c: CareerCollections): string {
   const unassigned = withoutRole
     ? '<div class="role-row role-row-none"><span class="role-row-text"><strong>Not linked to a role</strong><span class="role-row-counts">' + plural(withoutRole, 'achievement') + '</span></span></div>'
     : '';
-  return sectionTitle('Achievements by Role') + '<section class="panel list-card role-coverage" aria-label="Achievements by role">' + rows + unassigned + '</section>';
+  return (embedded ? '' : sectionTitle('Achievements by Role')) + '<section class="panel list-card role-coverage" aria-label="Achievements by role">' + rows + unassigned + '</section>';
 }
 
 /* ---------- CP-UX-Fluid (DEC-038): the record over the last 12 months ---------- */

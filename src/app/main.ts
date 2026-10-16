@@ -18,6 +18,7 @@ import {icon} from '../ui/icons.js';
 import {escapeHtml} from '../ui/html.js';
 import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
+import { appendExpectedResult, type ExpectedResultReceipt } from '../domain/expectedResult.js';
 import {parseRichFields,metricRow,evidenceRow,ROLE_ONLY} from '../ui/achievementIntelligence.js';
 import {captureForm,captureFooter,showCaptureStep,syncWhere,filterWhere,filterSkills,addInlineExperience,switchOccurrencePrecision,hasWhereChoices,type CaptureStep,type Precision} from '../ui/captureFlow.js';
 import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency,defaultSkillScope,skillExampleSummary,skillFilterLabel,type SkillScope} from '../ui/competencyLibrary.js';
@@ -25,7 +26,7 @@ import {proficiencyAssessmentForm,readProficiencyForm} from '../ui/proficiencyAs
 import {dateBounds,precisionDateFromInput} from '../domain/dates.js';
 
 type Screen='home'|'vault'|'profile'|'portfolio'|'competencies';
-type Modal='capture'|'detail'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|'assessment'|'remove'|null;
+type Modal='capture'|'detail'|'expected'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|'assessment'|'remove'|null;
 const root=document.getElementById('app')!;
 let profile:Profile;
 let achievements:Achievement[]=[];
@@ -42,6 +43,8 @@ let timelineOpen:Set<string>|null=null;
 let screen:Screen='home';
 let modal:Modal=null;
 let selectedId:string|null=null;
+/** The one same-session conversion that can still be safely undone. */
+let expectedUndo:ExpectedResultReceipt|null=null;
 let editing=false;
 let isDirty=false;
 const dialogs=new DialogController();
@@ -207,7 +210,7 @@ function shell():string {
       <div class="sidebar-bottom"><button class="sidebar-settings" data-action="settings">${icon('settings',24)} Settings ${icon('chevron',16)}</button><div class="sidebar-version">CareerProof OS <span>v${APP_VERSION}</span></div></div>
     </aside>
     <div class="content-wrap">
-      <main class="page" id="main-content">${screen==='portfolio'&&experienceId&&careerCollections?experiencePageView(careerCollections,experienceId):pageHeader()+(screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?timelinePage(careerCollections,experienceQuery,timelineOpen):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope(),skillFiltersOpen):profileView())}</main>
+      <main class="page" id="main-content">${screen==='portfolio'&&experienceId&&careerCollections?experiencePageView(careerCollections,experienceId,expectedUndo?.experienceId===experienceId):pageHeader()+(screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?timelinePage(careerCollections,experienceQuery,timelineOpen):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope(),skillFiltersOpen):profileView())}</main>
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">${NAV.map(([id,label,glyph])=>navButton(id,label,glyph,true)).join('')}</nav>
     <div id="modal-layer">${modalView()}</div>${modal?'':toastView()}
@@ -262,24 +265,44 @@ function pickHomeMonth(key:string|null){
 function homeView():string {
   const stats=summarizeAchievements(achievements),next=nextAction(),age=exportAge();
   const projects=careerCollections?.projects??[];
-  const linkedProjects=new Set((careerCollections?.recordLinks??[]).filter(l=>l.linkType==='achievement-project').map(l=>l.targetId));
   const skills=careerCollections?skillExampleSummary(careerCollections):{withExamples:0,total:0};
   const recent=achievements.filter(a=>a.status!=='archived');
   const record=homeRecord();
-  const quick=(label:string,glyph:string,attrs:string)=>`<button class="quick-action" ${attrs}>${icon(glyph,19)}<span>${label}</span></button>`;
+  const metric=(label:string,value:number)=>'<div class="compact-metric"><strong>'+value+'</strong><span>'+label+'</span></div>';
+  const exportText=age.days===null?'No export generated on this device':
+    'Last export generated on this device: '+(age.days===0?'today':age.days===1?'yesterday':plural(age.days,'day')+' ago');
   return `<section class="hero-card next-card" aria-labelledby="next-title"><div class="metric-label">${next.label}</div><h2 id="next-title">${escape(next.title)}</h2><p>${escape(next.text)}</p><button id="next-action-button" class="button button-light" ${next.attrs}>${next.button}</button></section>
-  <section class="metric-grid" aria-label="Career record summary">
-    ${metricCard('Recorded',String(stats.recorded),(stats.recorded===1?'achievement':'achievements')+(stats.drafts?` · ${plural(stats.drafts,'draft')}`:''))}
-    ${metricCard('Experiences',String(projects.length),`${projects.filter(p=>linkedProjects.has(p.id)).length} with achievements`)}
-    ${metricCard('Skills',String(skills.withExamples),`of ${skills.total} have examples`)}
-    ${metricCard('Last export',age.days===null?'Never':age.days===0?'Today':`${plural(age.days,'day')} ago`,age.days===null?'no export from this device yet':'generated on this device',age.stale?'metric-warn':'')}
+  <section class="panel compact-dashboard" aria-label="Career record summary">
+    <div class="compact-stats">
+      ${metric('Recorded',stats.recorded)}
+      ${metric('Draft',stats.drafts)}
+      ${metric('Experiences',projects.length)}
+      ${metric('Skills Shown',skills.withExamples)}
+    </div>
+    <p class="compact-export">${icon('lock',14)} ${escape(exportText)}</p>
   </section>
   ${recordTimelineSection(record,homeMonthIn(record))}
   ${recent.length?`<div id="home-list">${homeList(record)}</div>`:''}
-  ${careerCollections?homeGapsSection(careerCollections,localDate())+roleCoverageSection(careerCollections):''}
-  <div class="section-title"><h2>Quick Capture</h2></div>
-  <div class="quick-grid">${quick('Achievement','trophy','data-action="capture"')}${quick('Experience','layers','data-action="add-project"')}${quick('Employer','briefcase','data-action="add-career" data-kind="employers"')}${quick('Credential','badge','data-action="add-career" data-kind="credentials"')}</div>
-  <p class="footer-note">${icon('lock',14)} Local-first: your records stay on this device. There is no account or sync, so export backups regularly.</p>`;
+  ${careerCollections?`<section class="home-record" aria-label="Your Record">
+    <h2>Your Record</h2>
+    <div class="panel home-record-card">
+      <details class="home-record-disclosure" data-keep-open="home-gaps">
+        <summary><span><strong>Complete Your Record</strong><small>Outcomes, evidence and missing details</small></span>${icon('chevron',17)}</summary>
+        <div class="home-record-content">${homeGapsSection(careerCollections,localDate(),true)}</div>
+      </details>
+      <details class="home-record-disclosure" data-keep-open="home-roles">
+        <summary><span><strong>Achievements by Role</strong><small>See contributions in each role</small></span>${icon('chevron',17)}</summary>
+        <div class="home-record-content">${roleCoverageSection(careerCollections,true)}</div>
+      </details>
+    </div>
+  </section>`:''}
+  <div class="section-title"><h2>Quick Add</h2></div>
+  <div class="compact-quick-add">
+    <button class="button button-outline" data-action="add-project">+ Experience</button>
+    <button class="button button-outline" data-action="add-career" data-kind="employers">+ Employer</button>
+    <button class="button button-outline" data-action="add-career" data-kind="credentials">+ Credential</button>
+  </div>
+  <p class="footer-note">${icon('lock',14)} Records stay on this device. Export and securely save a JSON backup regularly; there is no cloud sync.</p>`;
 }
 function emptyState(heading:string,body:string,button:string,action:string):string {return `<div class="empty-state"><div class="empty-illustration">${icon('vault',27)}</div><h3>${heading}</h3><p>${body}</p><button class="button button-primary" data-action="${action}">${icon('plus',17)} ${button}</button></div>`;}
 /** Every filter except status, so the Recorded / Drafts / Archived counts reflect the same search. */
@@ -351,6 +374,7 @@ function modalView():string {
   let content='';
   if(modal==='capture')content=achievementForm();
   if(modal==='detail')content=achievementDetail();
+  if(modal==='expected')content=expectedResultForm();
   if(modal==='profile')content=profileForm();
   if(modal==='career'&&careerCollections){
     const record=careerCollections[careerKind].find(r=>r.id===selectedId) as CareerRecord|undefined;
@@ -418,6 +442,86 @@ function achievementDetail():string {
   const story=achievementStory(a,careerCollections);
   return dialogHeader(escape(story.title),escape(story.subtitle))+story.body+story.footer;
 }
+/** CP-UX3: a plan is moved only by explicit user action, never inferred. */
+function expectedResultForm():string {
+  const draft=achievements.find(a=>a.id===selectedId);
+  if(!draft||draft.status!=='draft'||!careerCollections)
+    return dialogHeader('Draft Unavailable','Only an active Draft can become an Expected Result.')+
+      '<div class="modal-body">Reopen the Draft from Vault and try again.</div>';
+  const primary=careerCollections.recordLinks.find(l=>l.linkType==='achievement-project'&&l.sourceId===draft.id&&l.isPrimary)?.targetId??'';
+  const selected=careerCollections.projects.some(p=>p.id===primary)?primary:'';
+  const options=careerCollections.projects.map(p=>
+    `<option value="${escape(p.id)}" ${p.id===selected?'selected':''}>${escape(p.name)} · ${escape(p.status)}</option>`).join('');
+  return dialogHeader('Make It an Expected Result','This is planned work, not an achievement yet.')+
+    `<form id="expected-form" class="modal-body form-grid" novalidate>
+      <div id="form-error" class="form-error" role="alert" hidden></div>
+      ${options?`<div class="field"><label for="expected-experience">Experience</label>
+        <select id="expected-experience" name="experienceId" required><option value="">Choose an experience</option>${options}</select></div>`:
+        '<p>No experiences are recorded yet. Create one before moving the Draft.</p>'}
+      <div class="field"><label for="expected-text">Expected Result to add</label>
+        <textarea id="expected-text" name="expectedText" rows="4" maxlength="6000" required>${escape(draft.title)}</textarea>
+        <p class="field-hint">Edit this into a future-oriented result; do not describe unfinished work as achieved.</p></div>
+      <div class="expected-preview-wrap"><strong>Expected Result after the move</strong>
+        <p id="expected-preview" class="expected-preview" aria-live="polite"></p></div>
+      <label id="expected-completed-row" class="career-checkbox" hidden>
+        <input type="checkbox" name="allowCompleted"/> I understand this is a Goal on a completed Experience.</label>
+      <p id="expected-privacy-note" class="expected-warning" hidden></p>
+      <p class="form-guidance">The existing result stays intact. The Draft will be archived, not deleted.
+        You can restore the Draft from Vault later; restoring it will not remove the Expected Result.</p>
+    </form>
+    <div class="modal-footer"><button class="button button-outline" data-action="close">Cancel</button>
+      <button class="button button-primary" data-action="${options?'save-expected':'expected-create-experience'}">
+        ${options?'Move to Expected Result':'Create Experience'}</button></div>`;
+}
+/** A live read-only preview; validation runs again transactionally at Save. */
+function syncExpectedPreview(){
+  const form=document.getElementById('expected-form') as HTMLFormElement|null;
+  if(!form||!careerCollections)return;
+  const target=(form.elements.namedItem('experienceId') as HTMLSelectElement|null)?.value??'';
+  const project=careerCollections.projects.find(p=>p.id===target);
+  const text=(form.elements.namedItem('expectedText') as HTMLTextAreaElement|null)?.value??'';
+  const preview=document.getElementById('expected-preview');
+  if(preview)try{preview.textContent=project?appendExpectedResult(project.objective,text):
+    'Choose an Experience to see what will be added.';}catch(e){preview.textContent=errorMessage(e);}
+  const completed=document.getElementById('expected-completed-row');
+  if(completed)completed.hidden=project?.status!=='completed';
+  const draft=achievements.find(a=>a.id===selectedId);
+  const unsafe=draft?.confidentiality==='confidential'&&project&&project.confidentiality!=='confidential';
+  const warning=document.getElementById('expected-privacy-note');
+  if(warning){warning.hidden=!unsafe;warning.textContent=unsafe?
+    'This Draft is Confidential. Edit this Experience and mark it Confidential before proceeding.':'';}
+}
+async function saveExpectedResult(){
+  if(saving||!careerCollections)return;
+  const form=document.getElementById('expected-form') as HTMLFormElement|null;
+  const draft=achievements.find(a=>a.id===selectedId);
+  if(!form||!draft)return;
+  const values=new FormData(form);
+  const project=careerCollections.projects.find(p=>p.id===values.get('experienceId'));
+  if(!project)return showError('Choose an Experience before moving this Draft.');
+  setSaving(true);
+  try {
+    const receipt=await database.moveDraftToExpectedResult({
+      draftId:draft.id,draftRevision:draft.revision,experienceId:project.id,experienceRevision:project.revision,
+      text:String(values.get('expectedText')??''),allowCompleted:values.get('allowCompleted')!==null
+    });
+    achievements=await listAchievements();await loadCareerCollections();
+    expectedUndo=receipt;
+    closeModal(true);openExperience(receipt.experienceId);
+    notify('Moved to Expected Result.','success','The Draft is archived; Undo is available on the Experience page.');
+  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+}
+async function undoExpectedResult(){
+  if(saving||!expectedUndo)return;
+  const receipt=expectedUndo;
+  saving=true;
+  try{await database.undoDraftToExpectedResult(receipt);
+    expectedUndo=null;achievements=await listAchievements();await loadCareerCollections();render();
+    notify('Move undone.','success','The previous Expected Result and the active Draft were restored.');
+  }catch(err){expectedUndo=null;render();notify(errorMessage(err),'error');}
+  finally{saving=false;}
+}
+
 function profileForm():string {
   return `${dialogHeader('Edit Career Profile','Your professional introduction and contact details.')}
   <form id="profile-form" class="modal-body form-grid" novalidate><div id="form-error" class="form-error" role="alert" hidden></div>
@@ -484,6 +588,7 @@ function render(preserveFocus=false):void {const focusId=preserveFocus?(document
   root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;lastRenderedExperience=experienceId;lastRenderedModal=modal;dialogs.update(Boolean(modal));
   const main=document.getElementById('main-content');
   if(opening){modalOpenedAt=Date.now();enterSheet(root);}
+  if(modal==='expected')syncExpectedPreview();
   if(moved)enterScreen(main,move);
   if(main)animateBars(main,bars,!bars);
   if(pendingGlow&&!modal&&main){glowRecord(main,pendingGlow);pendingGlow=null;}syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}if(modal==='capture'){const form=captureFormEl();if(form&&careerCollections)syncWhere(form,careerCollections);}
@@ -634,6 +739,7 @@ function refreshTimeline(){
 /** CP-UX1: open one experience as its own page (#/portfolio/<id>), or go back to the timeline. */
 function openExperience(id:string|null){
   if(modal)closeModal(true);
+  if(expectedUndo&&id!==expectedUndo.experienceId)expectedUndo=null;
   screen='portfolio';experienceId=id;location.hash=id?`/portfolio/${encodeURIComponent(id)}`:'/portfolio';render();window.scrollTo(0,0);
   const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
 }
@@ -709,7 +815,7 @@ async function doIntegrityCheck(){
 }
 async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;if(!modal||modal==='settings')render(true);notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
 async function doFileRestore(file:File){try{pendingBackup=await parseBackupFile(file);openModal('restore');}catch(err){notify(`Cannot restore: ${errorMessage(err)}`,'error');}}
-async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;setSaving(true);try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();await loadCareerCollections();theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();dialogs.restoreFocus();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{setSaving(false);}}
+async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;setSaving(true);try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();await loadCareerCollections();expectedUndo=null;theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();dialogs.restoreFocus();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{setSaving(false);}}
 async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;try{
   const isArchived=a.status==='archived';await saveAchievement({...a,revision:a.revision,status:isArchived?a.preArchiveStatus??'draft':'archived',preArchiveStatus:isArchived?null:a.status as 'draft'|'recorded'});
   achievements=await listAchievements();closeModal(true);notify(isArchived?'Achievement restored.':'Achievement archived.');
@@ -717,7 +823,7 @@ async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);i
 async function deleteCurrent(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;if(!window.confirm(`Permanently delete "${a.title}"? This cannot be undone.`))return;
   try{await removeAchievement(a.id,a.revision);achievements=await listAchievements();closeModal(true);notify('Achievement deleted.');}catch(err){notify(errorMessage(err),'error');}
 }
-function navigate(to:Screen){if(modal)closeModal(true);if(to!==screen)homeMonth=null;screen=to;experienceId=null;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
+function navigate(to:Screen){if(modal)closeModal(true);expectedUndo=null;if(to!==screen)homeMonth=null;screen=to;experienceId=null;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
 function focusables():HTMLElement[]{return Array.from(document.querySelectorAll<HTMLElement>('.modal button:not([disabled]),.modal input:not([disabled]):not([type="hidden"]),.modal textarea:not([disabled]),.modal select:not([disabled])')).filter(x=>x.offsetParent!==null);}
 function runAction(node:HTMLElement){
   const action=node.dataset.action;switch(action){
@@ -791,6 +897,10 @@ function runAction(node:HTMLElement){
     case 'home-month':if(node.dataset.month)pickHomeMonth(node.dataset.month);break;
     case 'home-month-clear':pickHomeMonth(null);break;
     case 'detail':openModal('detail',node.dataset.id??null);break;
+    case 'draft-to-expected':openModal('expected',node.dataset.id??null);break;
+    case 'save-expected':void saveExpectedResult();break;
+    case 'undo-expected':void undoExpectedResult();break;
+    case 'expected-create-experience':openModal('project');break;
     case 'edit-achievement':openModal('capture',selectedId,true);break;
     case 'save-achievement':void saveAchievementForm(node.dataset.status as 'draft'|'recorded');break;
     case 'save-profile':void saveProfileForm();break;
@@ -919,6 +1029,9 @@ document.addEventListener('pointermove',e=>{
   if(month?.dataset.month&&month.dataset.month!==homeMonth)pickHomeMonth(month.dataset.month);
 });
 for(const type of ['pointerup','pointercancel'])document.addEventListener(type,()=>{monthScrub=null;});
+// CP-UX3: update the preview without rerendering the sheet or losing text/keyboard focus.
+document.addEventListener('input',e=>{if(e.target instanceof Element&&e.target.closest('#expected-form')){isDirty=true;syncExpectedPreview();}});
+document.addEventListener('change',e=>{if(e.target instanceof Element&&e.target.closest('#expected-form')){isDirty=true;syncExpectedPreview();}});
 window.addEventListener('hashchange',()=>{const next=currentNav(),exp=hashExperience();if(next===screen&&exp===experienceId)return;screen=next;experienceId=exp;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof Couldn't Open Your Local Database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{

@@ -24,7 +24,8 @@ const gaps=page=>page.locator('.home-gaps details[data-code]');
 
 test('CP-012C Complete Your Record lists documentation gaps that open their records and update after an edit',async({page})=>{
   await seed(page,world());
-  await expect(page.locator('.section-title h2',{hasText:'Complete Your Record'})).toBeVisible();
+  await expect(page.locator('.home-record > h2')).toHaveText('Your Record');
+  await page.locator('.home-record-disclosure').first().locator(':scope > summary').click();
   expect(await gaps(page).evaluateAll(n=>n.map(d=>d.dataset.code))).toEqual(['achievement-no-outcome','achievement-no-support','achievement-no-skill']);
   await expect(gaps(page).first().locator('summary')).toHaveText('1 recorded achievement has no stated outcome');
   await expect(page.locator('.home-gaps')).not.toContainText('draft'); // drafts stay in the next action and Data Health
@@ -56,6 +57,7 @@ test('CP-012C Complete Your Record lists documentation gaps that open their reco
 
 test('CP-012C Achievements by Role counts active records per role, most recent first, and opens the filtered Vault',async({page})=>{
   await seed(page,world());
+  await page.locator('.home-record-disclosure').last().locator(':scope > summary').click();
   const rows=page.locator('.role-coverage .role-row');
   await expect(rows.locator('strong')).toHaveText(['Synthetic Engineer','Synthetic Process Engineer','Synthetic Intern']);
   await expect(rows.nth(0)).toContainText('2 achievements · 1 draft · 1 experience'); // CP-UX1: recorded and drafts counted apart
@@ -81,7 +83,7 @@ test('CP-012C Achievements by Role counts active records per role, most recent f
 test('CP-012C empty and complete records: no empty sections, and a plain statement when nothing is missing',async({page})=>{
   await page.setViewportSize({width:320,height:700});
   await seed(page);
-  await expect(page.locator('.home-gaps')).toHaveCount(0);
+  await expect(page.locator('.home-record-disclosure')).toHaveCount(2);
   await expect(page.locator('.role-coverage')).toHaveCount(0);
   await seed(page,fullCollections());
   await expect(page.locator('.home-gaps-done')).toHaveText('Nothing missing from your recorded achievements, experiences or credentials.');

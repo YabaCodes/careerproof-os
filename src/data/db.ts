@@ -4,6 +4,7 @@ import { inlineExperience, type InlineExperienceDraft } from '../domain/experien
 import { achievementView, migrateLegacyAchievement, migrateLegacyProfile, validateCollections, isPreferences, validTime, ConflictError, ValidationError } from '../domain/validation.js';
 import { precisionDateFromInput } from '../domain/dates.js';
 import { builtInTaxonomy } from '../domain/taxonomy.js';
+import { appendExpectedResult, ensureExpectedMove, type ExpectedResultReceipt } from '../domain/expectedResult.js';
 const DB_NAME = 'careerproof-local';
 const GENERATION = 'datasetGeneration', REVISION = 'sourceDataRevision';
 function req<T>(request: IDBRequest<T>): Promise<T> {
@@ -165,6 +166,39 @@ export class CareerDatabase {
       validateCollections(data.collections);
       tx.objectStore('proficiencyAssessments').put(record);
       return record;
+    });
+  }
+  /** CP-UX3: archive a Draft and append its proposed goal in ONE validated transaction. */
+  async moveDraftToExpectedResult(input:{
+    draftId:string; draftRevision:number; experienceId:string; experienceRevision:number;
+    text:string; allowCompleted:boolean;
+  }):Promise<ExpectedResultReceipt>{
+    return this.write((tx,data)=>{
+      const draft=data.collections.achievements.find(a=>a.id===input.draftId);
+      const project=data.collections.projects.find(p=>p.id===input.experienceId);
+      if(!draft||!project||draft.revision!==input.draftRevision||project.revision!==input.experienceRevision)
+        throw new ConflictError('The draft or experience changed. Reopen the conversion to review the latest records.');
+      ensureExpectedMove(draft,project,input.allowCompleted);
+      const previousObjective=project.objective;
+      const appendedObjective=appendExpectedResult(previousObjective,input.text);
+      const updatedProject=this.upsert(tx,data,'projects',{...project,objective:appendedObjective},project.revision);
+      const archived=this.upsert(tx,data,'achievements',{...draft,status:'archived',preArchiveStatus:'draft'},draft.revision);
+      return {draftId:draft.id,experienceId:project.id,draftRevision:archived.revision,
+        experienceRevision:updatedProject.revision,previousObjective,appendedObjective};
+    });
+  }
+  /** Same-session Undo: no intervening change may be overwritten. */
+  async undoDraftToExpectedResult(receipt:ExpectedResultReceipt):Promise<void>{
+    await this.write((tx,data)=>{
+      const draft=data.collections.achievements.find(a=>a.id===receipt.draftId);
+      const project=data.collections.projects.find(p=>p.id===receipt.experienceId);
+      if(!draft||!project||draft.revision!==receipt.draftRevision||
+        project.revision!==receipt.experienceRevision||
+        draft.status!=='archived'||draft.preArchiveStatus!=='draft'||
+        project.objective!==receipt.appendedObjective)
+        throw new ConflictError('The draft or experience has changed since the move. Undo was cancelled to protect newer edits.');
+      this.upsert(tx,data,'projects',{...project,objective:receipt.previousObjective},project.revision);
+      this.upsert(tx,data,'achievements',{...draft,status:'draft',preArchiveStatus:null},draft.revision);
     });
   }
   async saveProfile(input:ProfileWrite):Promise<Profile> {

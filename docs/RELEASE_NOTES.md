@@ -1,3 +1,14 @@
+## v0.1.3-alpha.7 — CP-UX3: Slim Home and Plans as Expected Results (Review Candidate)
+
+**Status:** Implementation PR for review; **not merged, deployed or physically accepted**. User authorized Redesign Step 3 after reporting the preceding app test was okay; that informal confirmation does not separately establish every UX401–UX408 result.
+
+- **Home:** one compact row with Recorded, Draft, Experiences and Skills Shown; accurate generated-export status below. Last 12 Months and Recent keep the existing alpha.6 interaction. Complete Your Record and Achievements by Role become two expandable rows under **Your Record**, retaining the existing Data Health and role-filter drilldowns. Quick Add has three compact actions (Experience, Employer, Credential); header + still creates an Achievement. Five destination tabs remain Home / Vault / Experience / Skills / Profile; Studio is deferred until usable in v0.1.4.
+- **Plans as Expected Results:** an active Draft explicitly offers "Hasn't happened yet?" and a user-editable preview on a chosen Experience. Conversion appends text below the existing `projects.objective`, archives (never deletes) the Draft, and preserves its links/metrics/evidence. Current Experience revision and Draft revision are checked in the same IndexedDB transaction; duplicate paragraphs, overlength text, stale data and status conflicts abort without partial updates. Completed Experiences require confirmation. Confidential Drafts require a Confidential Experience, avoiding silent privacy downgrades.
+- **Undo:** after conversion, the Experience shows a same-session Undo that atomically restores the exact former objective and active Draft status only while both saved revisions remain unchanged. No Undo is promised after reload or after newer edits.
+- **Data:** **no new fields or stores**; database schema **3**, backup format **3**, and proficiency history are unchanged. Conversion intentionally updates one Experience and one Draft in a single transaction, unlike presentation-only Step 1/2.
+- **Testing:** Node integration and Playwright mobile cases introduced/updated for atomicity, stale/retry protection, archive/Undo, confidentiality, responsive Home, original drilldowns, offline-shell completeness and backup compatibility. Real iPhone UX301-S3 through UX309-S3 are still required after review/merge/deployment. Automated outcome is reported in the PR/CI, not presumed here.
+- **Next:** v0.1.4 Studio remains a separately gated migration/recovery project. No review/CV document stores or PDF functionality in alpha.7.
+
 ## v0.1.3-alpha.6 — CP-UX-Fluid: feel, the recorded moment and the record timeline (review candidate)
 
 **Status:** PR open, CI result stated in the PR; **not merged, deployed or accepted**. A user-approved increment (DEC-038) on top of `0.1.3-alpha.5` (CP-UX-Links, accepted UX301–UX307). Presentation only: no record, schema, backup-format or taxonomy change.

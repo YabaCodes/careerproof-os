@@ -55,6 +55,8 @@ export function achievementStory(a: AchievementView, c: CareerCollections): Stor
   const notice = a.status === 'draft'
     ? `<p class="story-notice">${icon('info', 16)}<span>Draft — not counted yet. ${missing.length ? `Add ${missing.join(' and ')}, then record it.` : 'Open Edit and record it when it is ready.'}</span></p>`
     : a.status === 'archived' ? `<p class="story-notice">${icon('archive', 16)}<span>Archived — kept, but left out of lists and counts.</span></p>` : '';
+  const planAction = a.status === 'draft'
+    ? `<button type="button" class="expected-action" data-action="draft-to-expected" data-id="${esc(a.id)}">Hasn't happened yet? Make it an Experience's Expected Result ${icon('arrow',16)}</button>` : '';
   const result = `<section class="story-result" aria-labelledby="story-result-title"><h3 id="story-result-title">Result</h3>`
     + (a.outcome.trim() ? `<p>${esc(a.outcome)}</p>` : '<p class="is-missing">No result stated yet</p>')
     + (metrics.length ? `<ul class="story-metrics">${metrics.map(metricLine).join('')}</ul>` : '') + '</section>';
@@ -70,7 +72,7 @@ export function achievementStory(a: AchievementView, c: CareerCollections): Stor
     `<div class="story-actions"><button type="button" class="button button-outline" data-action="toggle-archive">${icon(a.status === 'archived' ? 'refresh' : 'archive', 16)} ${a.status === 'archived' ? 'Restore' : 'Archive'}</button>`
       + `<button type="button" class="button button-danger-soft" data-action="delete-achievement">${icon('trash', 16)} Delete</button></div>`
   ].join('');
-  const body = `<div class="modal-body story">${notice}${result}`
+  const body = `<div class="modal-body story">${notice}${planAction}${result}`
     + section('What I Did', a.contribution.trim() ? para(a.contribution) : '<p class="readable-text is-missing">Not added yet</p>')
     + section('Context', context)
     + (skills.length ? `<section class="story-section"><h3>Skills Shown</h3><div class="chip-row">${skills.map(s => `<button type="button" class="chip chip-action" data-action="open-skill" data-id="${esc(s.id)}" aria-label="View skill ${esc(s.name)}">${esc(s.name)} ${icon('arrow',14)}</button>`).join('')}</div></section>` : '')

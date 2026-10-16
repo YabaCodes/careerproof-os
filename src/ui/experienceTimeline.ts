@@ -86,7 +86,7 @@ export function timelinePage(c: CareerCollections, query: string, openKeys: Read
 const statusTag = (s: 'draft' | 'recorded' | 'archived') => s === 'recorded' ? '' : `<span class="status-tag status-${s}">${s === 'draft' ? 'Draft' : 'Archived'}</span>`;
 
 /** One experience: what it is, its goal, its achievements and the skills they show. */
-export function experiencePageView(c: CareerCollections, projectId: string): string {
+export function experiencePageView(c: CareerCollections, projectId: string, canUndoExpected = false): string {
   const p = c.projects.find(x => x.id === projectId);
   if (!p) return `<div class="experience-page"><div class="page-topbar"><button type="button" class="back-link" data-action="close-experience">${icon('back', 20)}Experience</button></div><p class="timeline-empty">This experience no longer exists.</p></div>`;
   const employer = c.employers.find(e => e.id === p.employerId)?.name ?? '';
@@ -111,6 +111,7 @@ export function experiencePageView(c: CareerCollections, projectId: string): str
     + `<header class="experience-head"><div class="pill-row"><span class="pill-outline">${esc(TYPE[p.experienceType])}</span><span class="pill-status ${ongoing ? 'is-live' : ''}">${esc(STATUS[p.status])}</span></div>`
     + `<h1 id="experience-title">${esc(p.name)}</h1>${sub ? `<p class="experience-sub">${esc(sub)}</p>` : ''}`
     + (p.scope.trim() ? `<p class="experience-context">${esc(p.scope)}</p>` : '') + '</header>'
+    + (canUndoExpected ? `<div class="expected-undo" role="status"><span><strong>Moved to Expected Result.</strong> The Draft is archived. Undo is available in this session.</span><button class="button button-outline" data-action="undo-expected">Undo</button></div>` : '')
     + goal
     + `<section class="experience-achievements" aria-labelledby="experience-achievements-title"><div class="section-title"><h2 id="experience-achievements-title">Achievements · ${roll.items.length}</h2>`
     + `<button type="button" class="text-action" data-action="project-capture" data-id="${esc(p.id)}">${icon('plus', 16)} Add</button></div>`

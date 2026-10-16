@@ -1,3 +1,21 @@
+## CP-UX3 — Redesign Step 3, v0.1.3-alpha.7 (installed-iPhone gate)
+
+**Status: PENDING until merged, deployed and explicitly user-accepted.** Do not uninstall the Home Screen PWA or clear storage. Export a secure current JSON backup before testing. Use disposable synthetic records for any destructive test; never replace real career data solely for testing. The conversion changes two existing records, although **schema 3 and backup format 3 remain unchanged**.
+
+- [ ] **UX301-S3:** Home at 320/375/390/430px: one row with correct **Recorded / Draft / Experiences / Skills Shown** counts, legible typography and no sideways page overflow; honest last-generated-export line.
+- [ ] **UX302-S3:** Header + creates an Achievement, Settings works, all five tabs (Home, Vault, Experience, Skills, Profile) remain functional. Quick Add offers Experience, Employer and Credential.
+- [ ] **UX303-S3:** Last 12 Months remains tappable and swipeable, month list replaces Recent, and returning to Recent works; drafts, archived and year-only dates follow original rules. Reduce Motion works.
+- [ ] **UX304-S3:** Expand Your Record → Complete Your Record, open a gap and Data Health; expand Achievements by Role and reach the role-filtered Vault. Collapsing/reopening does not remove content.
+- [ ] **UX305-S3:** Open a synthetic Draft → Hasn't happened yet?; choose a linked Experience with an existing objective, edit expected text; confirm old objective survives with new paragraph appended; Draft appears in Vault → Archived with its original role/skills/metrics/evidence.
+- [ ] **UX306-S3:** From resulting Experience use Undo before editing anything else; old objective returns exactly and Draft returns as active Draft. Attempting repeated conversion cannot duplicate paragraph.
+- [ ] **UX307-S3:** Stale source edit, concurrent tab edit, repeated press, blank/overlength text and failed transaction must not partially archive/appended anything; show a clear error. Synthetic tests plus unit/integration failure injection qualify destructive conditions; do not force storage quota failures on personal data.
+- [ ] **UX308-S3:** Convert a synthetic Draft again, reload installed app offline, verify objective and Archived Draft persist; Undo from before reload is unavailable; Settings / exported JSON still show format 3 and 13 stores.
+- [ ] **UX309-S3:** Confidential synthetic Draft to standard-private Experience is blocked until target Experience is explicitly marked Confidential; completed Experience requires acknowledgement. Dark/light contrast, tap targets, keyboard and sheet/scroll safe areas verified.
+
+**No item is automatically PASS solely from automated Chromium or GitHub CI.** Report individual results and any limitations before acceptance.
+
+---
+
 ## CP-UX-Fluid — v0.1.3-alpha.6 feel, recorded moment and record timeline: physical iPhone checks (pending)
 
 **Status:** review candidate (DEC-038). Run on the installed iPhone app after the user merges and the Pages deployment finishes (close and reopen the app, then Restart app when offered). Use your own records or a few synthetic ones; nothing here changes stored data. Report each as PASS or FAIL with a note.

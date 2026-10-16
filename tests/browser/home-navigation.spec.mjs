@@ -13,7 +13,7 @@ test('CP-012.2 Home next action follows first achievement → draft → backup �
   // Empty record: start with the first achievement.
   await seed(page);
   await expect(next(page)).toContainText('Capture Your First Achievement');
-  await expect(page.locator('.metric-card').filter({hasText:'Last export'})).toContainText('Never');
+  await expect(page.locator('.compact-export')).toContainText('No export generated');
   await next(page).locator('[data-action=capture]').click();
   await expect(page.getByRole('dialog',{name:'Capture an achievement'})).toBeVisible();
   await page.locator('.close-dialog').click();
@@ -30,17 +30,17 @@ test('CP-012.2 Home next action follows first achievement → draft → backup �
   // Without drafts and without an export, the backup comes next; exporting clears it.
   await seed(page,fullCollections());
   await expect(next(page)).toContainText('Export a Backup');
-  await expect(page.locator('.metric-card.metric-warn')).toContainText('Never');
+  await expect(page.locator('.compact-export')).toContainText('No export generated');
   const download=page.waitForEvent('download');await next(page).locator('[data-action=export]').click();await download;
-  await expect(page.locator('.metric-card').filter({hasText:'Last export'})).toContainText('Today');
+  await expect(page.locator('.compact-export')).toContainText('today');
   await page.reload();
-  await expect(page.locator('.metric-card.metric-warn')).toHaveCount(0);
+  await expect(page.locator('.compact-export')).toHaveCount(1);
   await expect(next(page)).toContainText('Capture a Recent Win'); // the fixture profile has a headline
 
   // Truthful counts and correct plurals.
-  await expect(page.locator('.metric-card').filter({hasText:'Recorded'})).toContainText('1');
-  await expect(page.locator('.metric-card').filter({hasText:'Experiences'})).toContainText('1 with achievements');
-  await expect(page.locator('.metric-card').filter({hasText:'Skills'})).toContainText('of 33 have examples');
+  await expect(page.locator('.compact-metric').nth(0)).toContainText('1');
+  await expect(page.locator('.compact-metric').nth(2)).toContainText('1');
+  await expect(page.locator('.compact-metric').nth(3)).toContainText('1');
 });
 
 test('CP-012.2 five tabs open their own screens; Settings and capture live in the header',async({page})=>{
