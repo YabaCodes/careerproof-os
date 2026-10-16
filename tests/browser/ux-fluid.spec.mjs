@@ -240,7 +240,8 @@ for(const width of [320,390])test(`CP-UX-Fluid tidy-ups at ${width}px: singular 
   c.employers[0].name='Synthetic Advanced Manufacturing Company';
   await seed(page,c);
   // "1 achievement", not "1 achievements".
-  await expect(page.locator('.metric-card',{hasText:'Recorded'}).locator('.metric-sub')).toHaveText('achievement');
+  await expect(page.locator('.compact-metric').first()).toContainText('Recorded');
+  await expect(page.locator('.compact-metric').first().locator('strong')).toHaveText('1');
 
   await page.locator('.mobile-nav-item[data-screen=competencies]').click();
   const search=page.locator('#competency-search'),filters=page.locator('#skill-filter-toggle'),add=page.locator('.toolbar-add');
