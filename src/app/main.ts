@@ -4,12 +4,14 @@ import { initialize, getProfile, saveProfile, listAchievements, getAchievement, 
 import { careerSections, careerForm, readCareerForm, syncCareerDisclosures, toggleCareerDisclosure, type CareerKind, type CareerRecord } from '../ui/careerHistory.js';
 import { portfolioForm,readPortfolioForm,updatePortfolioRoleChoices } from '../ui/experiencePortfolio.js';
 import { timelinePage,timelineGroups,experiencePageView } from '../ui/experienceTimeline.js';
-import { achievementRow,achievementStory } from '../ui/achievementStory.js';
+import { achievementRow,achievementStory,savedMessage } from '../ui/achievementStory.js';
 import { achievementContexts,achievementYear,roleForExperience } from '../domain/timeline.js';
 import { compareRolesByRecency } from '../domain/chronology.js';
 import { createBackup, downloadBackup, parseBackupFile, restoreBackup, inspectDataHealth, type PreparedBackup } from '../data/backup.js';
 import { dataHealthReport } from '../ui/dataHealth.js';
-import { homeGapsSection, roleCoverageSection } from '../ui/homeDashboard.js';
+import { homeGapsSection, roleCoverageSection, recordTimelineSection, monthListTitle, monthEmpty } from '../ui/homeDashboard.js';
+import { recordByMonth } from '../domain/dashboard.js';
+import { motionAllowed, enableTouchFeedback, enterSheet, enterScreen, slideStep, snapshotBars, animateBars, glowRecord, type ScreenMove } from '../ui/motion.js';
 import { removalImpact, type RemovableKind } from '../domain/removal.js';
 import { removalContent, defaultRemovalChoice, removalReady, type RemovalChoice } from '../ui/removal.js';
 import {icon} from '../ui/icons.js';
@@ -18,7 +20,7 @@ import { resolveActionTarget } from '../ui/actionRouting.js';
 import { DialogController } from '../ui/dialog.js';
 import {parseRichFields,metricRow,evidenceRow,ROLE_ONLY} from '../ui/achievementIntelligence.js';
 import {captureForm,captureFooter,showCaptureStep,syncWhere,filterWhere,filterSkills,addInlineExperience,switchOccurrencePrecision,hasWhereChoices,type CaptureStep,type Precision} from '../ui/captureFlow.js';
-import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency,defaultSkillScope,skillExampleSummary,type SkillScope} from '../ui/competencyLibrary.js';
+import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency,defaultSkillScope,skillExampleSummary,skillFilterLabel,type SkillScope} from '../ui/competencyLibrary.js';
 import {proficiencyAssessmentForm,readProficiencyForm} from '../ui/proficiencyAssessment.js';
 import {dateBounds,precisionDateFromInput} from '../domain/dates.js';
 
@@ -57,6 +59,11 @@ let skillCategory='';
 let skillShowArchived=false;
 let skillScope:SkillScope|null=null;
 let vaultFiltersOpen=false;
+let skillFiltersOpen=false;
+/** CP-UX-Fluid (DEC-038): the month picked on Home's record timeline (YYYY-MM), or null for Recent. */
+let homeMonth:string|null=null;
+/** The achievement to highlight once the screen behind a closing sheet is drawn. */
+let pendingGlow:string|null=null;
 let removal:({kind:RemovableKind;id:string}&RemovalChoice)|null=null;
 let sortOrder='recent';
 let theme=localStorage.getItem('careerproof-theme')||'system';
@@ -70,6 +77,7 @@ let pwaHadController=false;
 let toastTimer:number|undefined;
 let toastMessage='';
 let toastKind:'success'|'error'='success';
+let toastDetail='';
 const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships',proficiencyAssessments:'Proficiency assessments'};
 
 const escape=escapeHtml;
@@ -199,7 +207,7 @@ function shell():string {
       <div class="sidebar-bottom"><button class="sidebar-settings" data-action="settings">${icon('settings',24)} Settings ${icon('chevron',16)}</button><div class="sidebar-version">CareerProof OS <span>v${APP_VERSION}</span></div></div>
     </aside>
     <div class="content-wrap">
-      <main class="page" id="main-content">${screen==='portfolio'&&experienceId&&careerCollections?experiencePageView(careerCollections,experienceId):pageHeader()+(screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?timelinePage(careerCollections,experienceQuery,timelineOpen):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope()):profileView())}</main>
+      <main class="page" id="main-content">${screen==='portfolio'&&experienceId&&careerCollections?experiencePageView(careerCollections,experienceId):pageHeader()+(screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?timelinePage(careerCollections,experienceQuery,timelineOpen):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope(),skillFiltersOpen):profileView())}</main>
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">${NAV.map(([id,label,glyph])=>navButton(id,label,glyph,true)).join('')}</nav>
     <div id="modal-layer">${modalView()}</div>${modal?'':toastView()}
@@ -224,21 +232,50 @@ function nextAction():{label:string;title:string;text:string;button:string;attrs
   if(!profile.headline)return {label:'Next action',title:'Add Your Professional Headline',text:'A one-line headline helps every record make sense later.',button:'Edit profile',attrs:'data-action="edit-profile"'};
   return {label:'Next action',title:'Capture a Recent Win',text:'Record it while the details are fresh, then link it to an experience or skill.',button:'New achievement',attrs:'data-action="capture"'};
 }
+function homeRecord(){return recordByMonth(achievements,localDate());}
+/** The picked month, if it is still inside the window. */
+function homeMonthIn(record:ReturnType<typeof homeRecord>):string|null{return homeMonth&&record.months.some(m=>m.key===homeMonth)?homeMonth:null;}
+/** Home's list: Recent, or the achievements of the month picked on the timeline (DEC-038). */
+function homeList(record=homeRecord()):string{
+  const ctx=contexts(),month=record.months.find(m=>m.key===homeMonthIn(record));
+  if(month){
+    const rows=month.ids.map(id=>achievements.find(a=>a.id===id)).filter((a):a is Achievement=>Boolean(a));
+    return monthListTitle(record,month)+(rows.length?`<section class="panel list-card" aria-labelledby="home-list-title"><div class="achievement-list">${rows.map(a=>smallAchievement(a,ctx)).join('')}</div></section>`:monthEmpty(month));
+  }
+  const recent=achievements.filter(a=>a.status!=='archived').sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)).slice(0,4);
+  return `<div class="section-title"><h2 id="home-list-title">Recent</h2><button class="text-action" data-action="nav" data-screen="vault">View all ${icon('arrow',16)}</button></div><section class="panel list-card" aria-labelledby="home-list-title"><div class="achievement-list">${recent.map(a=>smallAchievement(a,ctx)).join('')}</div></section>`;
+}
+/** Pick a month (or none) without redrawing the screen: the bars keep their place and only the list changes. */
+function pickHomeMonth(key:string|null){
+  const record=homeRecord();
+  homeMonth=key&&record.months.some(m=>m.key===key)?key:null;
+  document.querySelectorAll<HTMLElement>('.record-month').forEach(b=>{const on=b.dataset.month===homeMonth;b.classList.toggle('is-selected',on);b.setAttribute('aria-pressed',String(on));});
+  const list=document.getElementById('home-list');if(!list)return;
+  // The list is replaced; keep keyboard focus on the control that was used.
+  const active=document.activeElement as HTMLElement|null,wasStep=active?.classList.contains('month-step')?active.dataset.step:null,inList=Boolean(active&&list.contains(active));
+  list.innerHTML=homeList(record);
+  if(!inList)return;
+  const step=wasStep?list.querySelector<HTMLButtonElement>(`.month-step[data-step="${wasStep}"]:not(:disabled)`):null;
+  const heading=list.querySelector<HTMLElement>('#home-list-title');
+  if(step)step.focus({preventScroll:true});else if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
+}
 function homeView():string {
   const stats=summarizeAchievements(achievements),next=nextAction(),age=exportAge();
   const projects=careerCollections?.projects??[];
   const linkedProjects=new Set((careerCollections?.recordLinks??[]).filter(l=>l.linkType==='achievement-project').map(l=>l.targetId));
   const skills=careerCollections?skillExampleSummary(careerCollections):{withExamples:0,total:0};
-  const recent=achievements.filter(a=>a.status!=='archived').sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)).slice(0,4);
+  const recent=achievements.filter(a=>a.status!=='archived');
+  const record=homeRecord();
   const quick=(label:string,glyph:string,attrs:string)=>`<button class="quick-action" ${attrs}>${icon(glyph,19)}<span>${label}</span></button>`;
   return `<section class="hero-card next-card" aria-labelledby="next-title"><div class="metric-label">${next.label}</div><h2 id="next-title">${escape(next.title)}</h2><p>${escape(next.text)}</p><button id="next-action-button" class="button button-light" ${next.attrs}>${next.button}</button></section>
   <section class="metric-grid" aria-label="Career record summary">
-    ${metricCard('Recorded',String(stats.recorded),stats.drafts?`achievements · ${plural(stats.drafts,'draft')}`:'achievements')}
+    ${metricCard('Recorded',String(stats.recorded),(stats.recorded===1?'achievement':'achievements')+(stats.drafts?` · ${plural(stats.drafts,'draft')}`:''))}
     ${metricCard('Experiences',String(projects.length),`${projects.filter(p=>linkedProjects.has(p.id)).length} with achievements`)}
     ${metricCard('Skills',String(skills.withExamples),`of ${skills.total} have examples`)}
     ${metricCard('Last export',age.days===null?'Never':age.days===0?'Today':`${plural(age.days,'day')} ago`,age.days===null?'no export from this device yet':'generated on this device',age.stale?'metric-warn':'')}
   </section>
-  ${recent.length?`<div class="section-title"><h2>Recent</h2><button class="text-action" data-action="nav" data-screen="vault">View all ${icon('arrow',16)}</button></div><section class="panel list-card"><div class="achievement-list">${(ctx=>recent.map(a=>smallAchievement(a,ctx)).join(''))(contexts())}</div></section>`:''}
+  ${recordTimelineSection(record,homeMonthIn(record))}
+  ${recent.length?`<div id="home-list">${homeList(record)}</div>`:''}
   ${careerCollections?homeGapsSection(careerCollections,localDate())+roleCoverageSection(careerCollections):''}
   <div class="section-title"><h2>Quick Capture</h2></div>
   <div class="quick-grid">${quick('Achievement','trophy','data-action="capture"')}${quick('Experience','layers','data-action="add-project"')}${quick('Employer','briefcase','data-action="add-career" data-kind="employers"')}${quick('Credential','badge','data-action="add-career" data-kind="credentials"')}</div>
@@ -356,8 +393,10 @@ function openCapture(projectId:string|null){
 function captureFormEl():HTMLFormElement|null{return document.getElementById('achievement-form') as HTMLFormElement|null;}
 function goToCaptureStep(step:CaptureStep){
   const form=captureFormEl();if(!form||!careerCollections)return;
+  const forward=step>Number(form.dataset.step??'1');
   captureStep=step;syncWhere(form,careerCollections);
   const heading=showCaptureStep(form,step);
+  slideStep(form.querySelector<HTMLElement>(`.capture-step[data-step="${step}"]`),forward);
   const description=document.getElementById('dialog-description');if(description)description.textContent=stepText(step);
   heading?.focus({preventScroll:true});
 }
@@ -430,15 +469,30 @@ function restoreView():string {
   return `${dialogHeader('Restore Career Data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This Replaces Your Current Data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.sourceFormat===2?'<p><strong>Older format-2 backup:</strong> this file predates proficiency history. Restoring it replaces local data and removes any newer self-assessments. Export your current data first.</p>':''}${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System. Any proficiency assessments will also be removed.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
 }
 let lastRenderedScreen:Screen|null=null;
+let lastRenderedExperience:string|null=null;
+let lastRenderedModal:Modal=null;
+let modalOpenedAt=0;
 /** Keep expanded Experience cards and skill entries open when the same screen redraws (e.g. after a dialog closes). */
 // Expanded cards (any details[data-keep-open]) stay open when the same screen re-renders, e.g. after a dialog closes.
 function openDisclosureKeys():string[]{return lastRenderedScreen===screen?[...root.querySelectorAll<HTMLDetailsElement>('details[open][data-keep-open]')].map(d=>d.dataset.keepOpen??''):[];}
 function restoreDisclosures(keys:string[]){if(!keys.length)return;const all=[...root.querySelectorAll<HTMLDetailsElement>('details[data-keep-open]')];for(const key of keys){const el=all.find(d=>d.dataset.keepOpen===key);if(el)el.open=true;}}
-function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';const openKeys=openDisclosureKeys();root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;dialogs.update(Boolean(modal));syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}if(modal==='capture'){const form=captureFormEl();if(form&&careerCollections)syncWhere(form,careerCollections);}
+function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';const openKeys=openDisclosureKeys();
+  // CP-UX-Fluid (DEC-038): motion follows changes, not redraws.
+  const firstRender=lastRenderedScreen===null,moved=!firstRender&&(lastRenderedScreen!==screen||lastRenderedExperience!==experienceId);
+  const bars=firstRender||moved?null:snapshotBars(root),opening=Boolean(modal)&&!lastRenderedModal;
+  const move:ScreenMove=experienceId&&experienceId!==lastRenderedExperience?'forward':!experienceId&&lastRenderedExperience&&screen==='portfolio'?'back':'tab';
+  root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;lastRenderedExperience=experienceId;lastRenderedModal=modal;dialogs.update(Boolean(modal));
+  const main=document.getElementById('main-content');
+  if(opening){modalOpenedAt=Date.now();enterSheet(root);}
+  if(moved)enterScreen(main,move);
+  if(main)animateBars(main,bars,!bars);
+  if(pendingGlow&&!modal&&main){glowRecord(main,pendingGlow);pendingGlow=null;}syncCareerDisclosures(root);if(modal==='project'){const form=document.getElementById('portfolio-form') as HTMLFormElement|null;if(form)updatePortfolioRoleChoices(form);}if(modal==='capture'){const form=captureFormEl();if(form&&careerCollections)syncWhere(form,careerCollections);}
   if(focusId){document.getElementById(focusId)?.focus({preventScroll:true});}else if(modal){dialogs.focusFirst();}
 }
-function toastView(inDialog=false):string{return `<div id="toast" role="status" aria-live="polite" class="toast ${inDialog?'toast-in-dialog':''} ${toastMessage?'visible':''} toast-${toastKind}">${toastMessage?`${icon(toastKind==='success'?'check':'alert',20)}<span>${escape(toastMessage)}</span>`:''}</div>`;}
-function notify(message:string,kind:'success'|'error'='success'){toastMessage=message;toastKind=kind;window.clearTimeout(toastTimer);const el=document.getElementById('toast');if(el){el.innerHTML=`${icon(kind==='success'?'check':'alert',20)}<span>${escape(message)}</span>`;el.classList.add('visible');el.classList.toggle('toast-error',kind==='error');el.classList.toggle('toast-success',kind==='success');}toastTimer=window.setTimeout(()=>{toastMessage='';document.getElementById('toast')?.classList.remove('visible');},kind==='error'?10000:5000);}
+function toastBody():string{return toastMessage?`${icon(toastKind==='success'?'check':'alert',20)}${toastDetail?`<span class="toast-text"><strong>${escape(toastMessage)}</strong><small>${escape(toastDetail)}</small></span>`:`<span>${escape(toastMessage)}</span>`}`:'';}
+function toastView(inDialog=false):string{return `<div id="toast" role="status" aria-live="polite" class="toast ${inDialog?'toast-in-dialog':''} ${toastMessage?'visible':''} toast-${toastKind}">${toastBody()}</div>`;}
+/** A short message; `detail` adds a second, quieter line (CP-UX-Fluid). The toast eases in when it appears, not on later redraws. */
+function notify(message:string,kind:'success'|'error'='success',detail=''){toastMessage=message;toastKind=kind;toastDetail=detail;window.clearTimeout(toastTimer);const el=document.getElementById('toast');if(el){el.innerHTML=toastBody();el.classList.add('visible');el.classList.toggle('toast-error',kind==='error');el.classList.toggle('toast-success',kind==='success');if(motionAllowed()&&!el.classList.contains('toast-in-dialog')){el.classList.remove('toast-enter');void el.offsetWidth;el.classList.add('toast-enter');}}toastTimer=window.setTimeout(()=>{toastMessage='';toastDetail='';document.getElementById('toast')?.classList.remove('visible');},kind==='error'?10000:detail?6500:5000);}
 function openModal(kind:Modal,id:string|null=null,edit=false){if(!modal)dialogs.rememberInvoker();modal=kind;selectedId=id;editing=edit;isDirty=false;render();}
 function closeModal(force=false){if(saving&&!force)return;if(!force&&isDirty&& !window.confirm('You have unsaved changes. Discard them?'))return;modal=null;selectedId=null;editing=false;pendingBackup=null;isDirty=false;captureProjectId=null;removal=null;render();dialogs.restoreFocus();}
 function showError(message:string){
@@ -478,7 +532,12 @@ async function saveAchievementForm(status:'draft'|'recorded'){
       roleId,situation:rich.situation,actions:rich.actions,notes:rich.notes,
       confidentiality:rich.confidentiality
     },rich.projectIds,rich.primaryProjectId,rich.competencyIds,rich.metrics,rich.references,rich.newExperiences);
-    achievements=await listAchievements();await loadCareerCollections();closeModal(true);notify(existing?'Achievement updated.':status==='draft'?'Draft saved.':'Achievement saved.');
+    achievements=await listAchievements();await loadCareerCollections();
+    // CP-UX-Fluid: say what the save did, then light up the record where it now appears.
+    const saved=achievements.find(a=>a.id===record.id)??record;
+    const message=savedMessage(careerCollections!,saved,existing?.status??null);
+    if(homeMonth&&saved.occurredStart?.value.slice(0,7)!==homeMonth)homeMonth=null;
+    pendingGlow=saved.id;closeModal(true);notify(message.title+'.','success',message.detail);
   }catch(err){failCapture(errorMessage(err));}finally{setSaving(false);}
 }
 function failCapture(message:string){const step=captureStepFor(message);if(step&&step!==captureStep)goToCaptureStep(step);showError(message);}
@@ -566,6 +625,7 @@ function currentSkillScope():SkillScope{return skillScope??(careerCollections?de
 function refreshCompetencies(){
   const target=document.querySelector<HTMLElement>('.skill-groups');
   if(target&&careerCollections)target.innerHTML=competencyGroups(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope());
+  const toggle=document.getElementById('skill-filter-toggle');if(toggle)toggle.innerHTML=skillFilterLabel(skillCategory,skillShowArchived);
 }
 function refreshTimeline(){
   const target=document.getElementById('timeline-groups');
@@ -657,7 +717,7 @@ async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);i
 async function deleteCurrent(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;if(!window.confirm(`Permanently delete "${a.title}"? This cannot be undone.`))return;
   try{await removeAchievement(a.id,a.revision);achievements=await listAchievements();closeModal(true);notify('Achievement deleted.');}catch(err){notify(errorMessage(err),'error');}
 }
-function navigate(to:Screen){if(modal)closeModal(true);screen=to;experienceId=null;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
+function navigate(to:Screen){if(modal)closeModal(true);if(to!==screen)homeMonth=null;screen=to;experienceId=null;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
 function focusables():HTMLElement[]{return Array.from(document.querySelectorAll<HTMLElement>('.modal button:not([disabled]),.modal input:not([disabled]):not([type="hidden"]),.modal textarea:not([disabled]),.modal select:not([disabled])')).filter(x=>x.offsetParent!==null);}
 function runAction(node:HTMLElement){
   const action=node.dataset.action;switch(action){
@@ -725,7 +785,11 @@ function runAction(node:HTMLElement){
       window.location.reload();
       break;
     case 'close':closeModal();break;
-    case 'backdrop':if(node.classList.contains('modal-backdrop'))closeModal();break;
+    // Only a direct tap on the dimmed page closes a sheet — and not while the sheet is still rising,
+    // when the dimmed area briefly covers where the sheet is about to be.
+    case 'backdrop':if(node.classList.contains('modal-backdrop')&&!(node.classList.contains('is-entering')&&Date.now()-modalOpenedAt<450))closeModal();break;
+    case 'home-month':if(node.dataset.month)pickHomeMonth(node.dataset.month);break;
+    case 'home-month-clear':pickHomeMonth(null);break;
     case 'detail':openModal('detail',node.dataset.id??null);break;
     case 'edit-achievement':openModal('capture',selectedId,true);break;
     case 'save-achievement':void saveAchievementForm(node.dataset.status as 'draft'|'recorded');break;
@@ -765,6 +829,12 @@ function runAction(node:HTMLElement){
       node.setAttribute('aria-pressed',String(skillShowArchived));
       refreshCompetencies();
       break;
+    case 'toggle-skill-filters':{
+      skillFiltersOpen=!skillFiltersOpen;
+      const panel=document.getElementById('skill-filters');if(panel)panel.hidden=!skillFiltersOpen;
+      node.setAttribute('aria-expanded',String(skillFiltersOpen));
+      break;
+    }
     case 'skill-scope':
       skillScope=node.dataset.scope==='linked'?'linked':'all';
       document.querySelectorAll<HTMLElement>('[data-action="skill-scope"]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.scope===skillScope)));
@@ -837,10 +907,22 @@ document.addEventListener('toggle',e=>{
   const key=d.dataset.keepOpen??'';if(d.open)timelineOpen.add(key);else timelineOpen.delete(key);
 },true);
 window.addEventListener('resize',()=>syncCareerDisclosures(root),{passive:true});
+// CP-UX-Fluid: on Home's timeline a finger can slide across the months, like a chart in Health.
+// A tap still lands as a click on its month; sliding picks whichever month is under the finger.
+// Scrolling the page past the chart never picks a month: sliding must start sideways.
+let monthScrub:{id:number;x:number;y:number;sliding:boolean}|null=null;
+document.addEventListener('pointerdown',e=>{monthScrub=e.target instanceof Element&&e.target.closest('.record-chart')?{id:e.pointerId,x:e.clientX,y:e.clientY,sliding:false}:null;});
+document.addEventListener('pointermove',e=>{
+  if(!monthScrub||monthScrub.id!==e.pointerId)return;
+  if(!monthScrub.sliding){const dx=Math.abs(e.clientX-monthScrub.x),dy=Math.abs(e.clientY-monthScrub.y);if(dx<10||dx<dy)return;monthScrub.sliding=true;}
+  const month=document.elementFromPoint(e.clientX,e.clientY)?.closest<HTMLElement>('.record-month');
+  if(month?.dataset.month&&month.dataset.month!==homeMonth)pickHomeMonth(month.dataset.month);
+});
+for(const type of ['pointerup','pointercancel'])document.addEventListener(type,()=>{monthScrub=null;});
 window.addEventListener('hashchange',()=>{const next=currentNav(),exp=hashExperience();if(next===screen&&exp===experienceId)return;screen=next;experienceId=exp;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof Couldn't Open Your Local Database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{
-  dialogs.trackViewport();
+  dialogs.trackViewport();enableTouchFeedback();
   applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);await loadCareerCollections();screen=currentNav();experienceId=hashExperience();render();
   configurePwaUpdates();
 }catch(err){renderStartupError(err);}}

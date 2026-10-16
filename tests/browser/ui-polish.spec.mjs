@@ -231,7 +231,7 @@ test('pending achievement save exposes busy state and prevents duplicate button 
   await expect(page.locator('.close-dialog')).toBeDisabled();
   await page.evaluate(()=>syntheticReleaseSave());
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.locator('#toast')).toContainText('Achievement saved');
+  await expect(page.locator('#toast')).toContainText('Achievement recorded');
   const count=await page.evaluate(async()=>{const {database}=await import('/app/data/db.js');return (await database.readSnapshot()).collections.achievements.length;});
   expect(count).toBe(1);
 });

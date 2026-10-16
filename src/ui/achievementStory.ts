@@ -78,3 +78,29 @@ export function achievementStory(a: AchievementView, c: CareerCollections): Stor
   const footer = `<div class="modal-footer"><button type="button" class="button button-primary" data-action="edit-achievement">${icon('edit', 16)} Edit</button></div>`;
   return { title: a.title, subtitle, body, footer };
 }
+
+/** "A", "A and B", "A, B and 2 more" */
+function nameList(names: string[]): string {
+  if (names.length <= 2) return names.join(' and ');
+  return `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`;
+}
+/**
+ * CP-UX-Fluid (DEC-038): what a save just did, in the app's words. A newly
+ * recorded achievement names the experience (or role) it sits in and the skills
+ * it now gives an example of; a draft says what it still needs. Facts from the
+ * saved links only; nothing is scored.
+ */
+export function savedMessage(c: CareerCollections, a: AchievementView, before: AchievementView['status'] | null): { title: string; detail: string } {
+  if (a.status === 'draft') {
+    const missing = [a.contribution.trim() ? '' : 'what you did', a.occurredStart ? '' : 'a date'].filter(Boolean);
+    return { title: before ? 'Draft updated' : 'Draft saved', detail: missing.length ? `Add ${missing.join(' and ')} to record it.` : 'Record it when it is ready.' };
+  }
+  if (a.status !== 'recorded' || before === 'recorded') return { title: 'Achievement updated', detail: '' };
+  const primary = c.recordLinks.find(l => l.linkType === 'achievement-project' && l.sourceId === a.id && l.isPrimary)?.targetId;
+  const experience = primary ? c.projects.find(p => p.id === primary)?.name ?? '' : '';
+  const role = !experience && a.roleId ? c.roles.find(r => r.id === a.roleId)?.title ?? '' : '';
+  const skills = c.recordLinks.filter(l => l.linkType === 'achievement-competency' && l.sourceId === a.id)
+    .map(l => c.competencies.find(s => s.id === l.targetId)?.name ?? '').filter(Boolean);
+  const parts = [experience ? `In ${experience}` : role ? `As ${role}` : '', skills.length ? `Adds an example to ${nameList(skills)}` : ''].filter(Boolean);
+  return { title: 'Achievement recorded', detail: parts.join(' · ') };
+}

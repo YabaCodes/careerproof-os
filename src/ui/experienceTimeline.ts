@@ -39,7 +39,7 @@ function experienceRow(x: TimelineExperience): string {
   ].filter(Boolean);
   return `<button type="button" class="experience-row" data-action="open-experience" data-id="${esc(p.id)}">`
     + `<span class="experience-row-text"><strong>${esc(p.name)}</strong>`
-    + `<span class="experience-row-meta">${x.ongoing ? '<span class="live-dot" aria-hidden="true"></span>' : ''}${esc(parts.join(' · '))}</span>`
+    + `<span class="experience-row-meta">${x.ongoing ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${parts.map(t => `<span class="nowrap">${esc(t)}</span>`).join(' · ')}</span></span>`
     + (x.alsoRoles.length ? `<span class="experience-row-also">Also: ${esc(x.alsoRoles.join(', '))}</span>` : '')
     + `</span><span class="row-arrow">${icon('chevron', 17)}</span></button>`;
 }
@@ -59,13 +59,14 @@ export function timelineGroups(c: CareerCollections, query = '', openKeys: Reado
   if (!groups.length) return q ? '<p class="timeline-empty">No experiences match your search.</p>' : '';
   return groups.map((g, i) => {
     const count = g.role ? plural(g.experiences.length, 'experience') : '';
-    const sub = [g.employer, roleRange(g), count].filter(Boolean).join(' · ');
+    // CP-UX-Fluid: the line breaks between its parts, never inside a date range or a count.
+    const sub = [g.employer ? esc(g.employer) : '', ...[roleRange(g), count].filter(Boolean).map(t => `<span class="nowrap">${esc(t)}</span>`)].filter(Boolean).join(' · ');
     const rows = g.experiences.map(experienceRow).join('')
       + (g.looseAchievements && g.role ? `<button type="button" class="experience-row experience-row-loose" data-action="role-achievements" data-id="${esc(g.role.id)}"><span class="experience-row-text"><strong>${esc(plural(g.looseAchievements, 'achievement'))} not in an experience</strong><span class="experience-row-meta">Open them in the Vault</span></span><span class="row-arrow">${icon('chevron', 17)}</span></button>` : '');
     const open = q || (openKeys ? openKeys.has(g.key) : i < 2) ? ' open' : '';
     return `<details class="role-group" data-keep-open="${esc(g.key)}"${open}><summary>`
-      + `<span class="role-group-text"><h2>${esc(g.title)}</h2>${sub ? `<span class="role-group-sub">${esc(sub)}</span>` : ''}</span>`
-      + (g.current ? '<span class="role-current">Current</span>' : '')
+      + `<span class="role-group-text"><span class="role-group-title"><h2>${esc(g.title)}</h2>${g.current ? '<span class="role-current">Current</span>' : ''}</span>`
+      + `${sub ? `<span class="role-group-sub">${sub}</span>` : ''}</span>`
       + `<span class="role-group-chevron" aria-hidden="true">${icon('chevron', 17)}</span></summary>`
       + `<div class="panel list-card role-group-body">${rows || '<p class="timeline-empty">Nothing recorded for this role yet.</p>'}</div></details>`;
   }).join('');

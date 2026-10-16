@@ -60,17 +60,28 @@ export function competencyGroups(c:CareerCollections,query:string,category:strin
   }).join('');
   return groups||'<div class="panel"><p class="career-empty">'+(scope==='linked'&&!query?'No skills have linked examples yet. Link a skill from an achievement\'s More details, or choose All.':'No competencies match your search.')+'</p></div>';
 }
-export function competencyPage(c:CareerCollections,query:string,category:string,showArchived=false,scope:SkillScope='all'):string{
+/** "Filters" with how many are on (category, archived shown). */
+export function skillFilterLabel(category:string,showArchived:boolean):string{
+  const n=(category?1:0)+(showArchived?1:0);
+  return icon('filter',17)+'<span>Filters'+(n?' · '+n:'')+'</span>';
+}
+/**
+ * The Skills tab. CP-UX-Fluid (DEC-038): search, Filters and Add share one row,
+ * like the Vault and Experience; Category and Show archived sit under Filters.
+ */
+export function competencyPage(c:CareerCollections,query:string,category:string,showArchived=false,scope:SkillScope='all',filtersOpen=false):string{
   const categories=[...c.competencyCategories].sort((a,b)=>a.sortOrder-b.sortOrder);
   const summary=skillExampleSummary(c);
   const segment=(value:SkillScope,label:string)=>'<button type="button" class="segment" data-action="skill-scope" data-scope="'+value+'" aria-pressed="'+(scope===value)+'">'+label+'</button>';
   return '<div class="competency-page">'+
     '<div class="segmented" role="group" aria-label="Which skills to show">'+segment('linked','With examples · '+summary.withExamples)+segment('all','All · '+summary.total)+'</div>'+
-    '<section class="panel skill-toolbar"><div class="field"><label for="competency-search">Search competencies</label><input id="competency-search" value="'+esc(query)+'" placeholder="Search skills"/></div>'+
+    '<div class="list-toolbar skill-toolbar"><label class="search-field">'+icon('search',19)+'<input id="competency-search" type="search" value="'+esc(query)+'" placeholder="Search skills" autocomplete="off" aria-label="Search skills"/></label>'+
+    '<button type="button" id="skill-filter-toggle" class="button button-outline filter-toggle" data-action="toggle-skill-filters" aria-expanded="'+filtersOpen+'" aria-controls="skill-filters">'+skillFilterLabel(category,showArchived)+'</button>'+
+    '<button type="button" class="button button-outline toolbar-add" data-action="add-competency" aria-label="Add custom skill" title="Add custom skill">'+icon('plus',17)+'<span>Add</span></button></div>'+
+    '<div id="skill-filters" class="panel skill-filters" '+(filtersOpen?'':'hidden')+'>'+
     '<div class="field"><label for="competency-category">Category</label><select id="competency-category"><option value="">All categories</option>'+
     categories.map(cat=>'<option value="'+esc(cat.id)+'" '+(category===cat.id?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></div>'+
-    '<button type="button" id="competency-archived" class="button button-outline skill-archived-toggle" data-action="toggle-archived-skills" aria-pressed="'+showArchived+'">Show archived</button>'+
-    '<button class="button button-outline" data-action="add-competency">'+icon('plus',17)+' Custom skill</button></section>'+
+    '<button type="button" id="competency-archived" class="button button-outline skill-archived-toggle" data-action="toggle-archived-skills" aria-pressed="'+showArchived+'">Show archived</button></div>'+
     '<div class="skill-groups">'+competencyGroups(c,query,category,showArchived,scope)+'</div>'+
     '<p class="footer-note">Linked examples show where you recorded using a skill. They are not a proficiency rating or independent verification.</p></div>';
 }

@@ -5,7 +5,7 @@
  * describe documentation only: no scores, ratings, targets or streaks. Pure
  * functions; the gap wording comes from the same rules as Data Health.
  */
-import type { CareerCollections, PrecisionDate } from './models.js';
+import type { Achievement, CareerCollections, PrecisionDate } from './models.js';
 import { compareRolesByRecency } from './chronology.js';
 import { completenessIssues, type HealthIssue } from './dataHealth.js';
 
@@ -58,4 +58,49 @@ export function roleCoverage(c: CareerCollections): { roles: RoleCoverage[]; wit
     experiences: experienceCounts.get(r.id) ?? 0
   }));
   return { roles, withoutRole };
+}
+
+/** CP-UX-Fluid (DEC-038): one month of the Home record timeline. */
+export interface RecordMonth {
+  /** YYYY-MM */
+  key: string;
+  count: number;
+  /** The month's recorded achievements, latest date first. */
+  ids: string[];
+}
+export interface MonthlyRecord {
+  months: RecordMonth[];
+  total: number;
+  /** Recorded achievements dated only by a year that the window touches; they cannot be placed in a month. */
+  yearOnly: number;
+  /** The calendar years the window touches, e.g. ['2025','2026']. */
+  years: string[];
+}
+const monthKey = (year: number, monthIndex: number) => {
+  const d = new Date(Date.UTC(year, monthIndex, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+};
+/**
+ * Recorded achievements counted by the month they happened, for the `span`
+ * months ending with the month of `today` (YYYY-MM-DD). Drafts, archived
+ * entries and undated records are left out; a month- or day-precision date
+ * places an achievement in its month, a year-only date cannot and is counted
+ * separately. Counts only: no targets, streaks, averages or scores (DEC-038).
+ */
+export function recordByMonth(achievements: readonly Pick<Achievement, 'id' | 'status' | 'occurredStart' | 'updatedAt'>[], today: string, span = 12): MonthlyRecord {
+  const [year, month] = today.split('-').map(Number);
+  const keys = Array.from({ length: span }, (_, i) => monthKey(year!, month! - 1 - (span - 1 - i)));
+  const byMonth = new Map(keys.map(k => [k, [] as Pick<Achievement, 'id' | 'occurredStart' | 'updatedAt'>[]]));
+  const years = [...new Set(keys.map(k => k.slice(0, 4)))];
+  let yearOnly = 0;
+  for (const a of achievements) {
+    if (a.status !== 'recorded' || !a.occurredStart) continue;
+    if (a.occurredStart.precision === 'year') { if (years.includes(a.occurredStart.value)) yearOnly++; continue; }
+    byMonth.get(a.occurredStart.value.slice(0, 7))?.push(a);
+  }
+  const months = keys.map(key => {
+    const list = byMonth.get(key)!.sort((a, b) => b.occurredStart!.value.localeCompare(a.occurredStart!.value) || b.updatedAt.localeCompare(a.updatedAt) || a.id.localeCompare(b.id));
+    return { key, count: list.length, ids: list.map(a => a.id) };
+  });
+  return { months, total: months.reduce((sum, m) => sum + m.count, 0), yearOnly, years };
 }
