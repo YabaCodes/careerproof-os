@@ -192,7 +192,14 @@ test('CP-UX-Fluid motion follows changes, not redraws, and Reduce Motion turns i
   await expect(page.locator('.record-chart')).toBeAttached();
   expect((await motion(page)).filter(m=>m.target==='record-fill').map(m=>m.from)).toEqual(['0%','0%','0%']);
   const states=()=>page.locator('.record-fill').evaluateAll(n=>n.flatMap(el=>el.getAnimations().map(a=>a.playState)));
-  expect(await states()).toEqual(['paused','paused','paused']);
+  // CP-UX3's shorter Home can bring the chart into view without scrolling.
+  // If visible already, the bars should be running; otherwise they stay paused
+  // until the card comes into view.
+  const chartVisible=await page.locator('.record-card').evaluate(el=>{
+    const rect=el.getBoundingClientRect();return rect.top<innerHeight&&rect.bottom>0;
+  });
+  if(chartVisible)expect((await states()).every(s=>s!=='paused')).toBe(true);
+  else expect(await states()).toEqual(['paused','paused','paused']);
   await page.locator('.record-card').scrollIntoViewIfNeeded();
   await expect.poll(async()=>(await states()).includes('paused')).toBe(false);
 
@@ -211,7 +218,7 @@ test.describe('with a mouse',()=>{
 test.use({isMobile:false,hasTouch:false});
 test('CP-UX-Fluid buttons give under a press; a tap that opens a sheet cannot also close it',async({page})=>{
   await seed(page,world());
-  const quick=page.locator('.quick-action').first();
+  const quick=page.locator('.compact-quick-add .button').first();
   await quick.scrollIntoViewIfNeeded();
   const box=await quick.boundingBox();
   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
