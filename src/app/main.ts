@@ -262,26 +262,45 @@ function pickHomeMonth(key:string|null){
 function homeView():string {
   const stats=summarizeAchievements(achievements),next=nextAction(),age=exportAge();
   const projects=careerCollections?.projects??[];
-  const linkedProjects=new Set((careerCollections?.recordLinks??[]).filter(l=>l.linkType==='achievement-project').map(l=>l.targetId));
   const skills=careerCollections?skillExampleSummary(careerCollections):{withExamples:0,total:0};
   const recent=achievements.filter(a=>a.status!=='archived');
   const record=homeRecord();
-  const quick=(label:string,glyph:string,attrs:string)=>`<button class="quick-action" ${attrs}>${icon(glyph,19)}<span>${label}</span></button>`;
+  const metric=(label:string,value:number)=>'<div class="compact-metric"><strong>'+value+'</strong><span>'+label+'</span></div>';
+  const exportText=age.days===null?'No export generated on this device':
+    'Last export generated on this device: '+(age.days===0?'today':age.days===1?'yesterday':plural(age.days,'day')+' ago');
   return `<section class="hero-card next-card" aria-labelledby="next-title"><div class="metric-label">${next.label}</div><h2 id="next-title">${escape(next.title)}</h2><p>${escape(next.text)}</p><button id="next-action-button" class="button button-light" ${next.attrs}>${next.button}</button></section>
-  <section class="metric-grid" aria-label="Career record summary">
-    ${metricCard('Recorded',String(stats.recorded),(stats.recorded===1?'achievement':'achievements')+(stats.drafts?` · ${plural(stats.drafts,'draft')}`:''))}
-    ${metricCard('Experiences',String(projects.length),`${projects.filter(p=>linkedProjects.has(p.id)).length} with achievements`)}
-    ${metricCard('Skills',String(skills.withExamples),`of ${skills.total} have examples`)}
-    ${metricCard('Last export',age.days===null?'Never':age.days===0?'Today':`${plural(age.days,'day')} ago`,age.days===null?'no export from this device yet':'generated on this device',age.stale?'metric-warn':'')}
+  <section class="panel compact-dashboard" aria-label="Career record summary">
+    <div class="compact-stats">
+      ${metric('Recorded',stats.recorded)}
+      ${metric('Draft',stats.drafts)}
+      ${metric('Experiences',projects.length)}
+      ${metric('Skills Shown',skills.withExamples)}
+    </div>
+    <p class="compact-export">${icon('lock',14)} ${escape(exportText)}</p>
   </section>
   ${recordTimelineSection(record,homeMonthIn(record))}
   ${recent.length?`<div id="home-list">${homeList(record)}</div>`:''}
-  ${careerCollections?homeGapsSection(careerCollections,localDate())+roleCoverageSection(careerCollections):''}
-  <div class="section-title"><h2>Quick Capture</h2></div>
-  <div class="quick-grid">${quick('Achievement','trophy','data-action="capture"')}${quick('Experience','layers','data-action="add-project"')}${quick('Employer','briefcase','data-action="add-career" data-kind="employers"')}${quick('Credential','badge','data-action="add-career" data-kind="credentials"')}</div>
-  <p class="footer-note">${icon('lock',14)} Local-first: your records stay on this device. There is no account or sync, so export backups regularly.</p>`;
+  ${careerCollections?`<section class="home-record" aria-label="Your Record">
+    <h2>Your Record</h2>
+    <div class="panel home-record-card">
+      <details class="home-record-disclosure" data-keep-open="home-gaps">
+        <summary><span><strong>Complete Your Record</strong><small>Outcomes, evidence and missing details</small></span>${icon('chevron',17)}</summary>
+        <div class="home-record-content">${homeGapsSection(careerCollections,localDate(),true)}</div>
+      </details>
+      <details class="home-record-disclosure" data-keep-open="home-roles">
+        <summary><span><strong>Achievements by Role</strong><small>See contributions in each role</small></span>${icon('chevron',17)}</summary>
+        <div class="home-record-content">${roleCoverageSection(careerCollections,true)}</div>
+      </details>
+    </div>
+  </section>`:''}
+  <div class="section-title"><h2>Quick Add</h2></div>
+  <div class="compact-quick-add">
+    <button class="button button-outline" data-action="add-project">+ Experience</button>
+    <button class="button button-outline" data-action="add-career" data-kind="employers">+ Employer</button>
+    <button class="button button-outline" data-action="add-career" data-kind="credentials">+ Credential</button>
+  </div>
+  <p class="footer-note">${icon('lock',14)} Records stay on this device. Export and securely save a JSON backup regularly; there is no cloud sync.</p>`;
 }
-function emptyState(heading:string,body:string,button:string,action:string):string {return `<div class="empty-state"><div class="empty-illustration">${icon('vault',27)}</div><h3>${heading}</h3><p>${body}</p><button class="button button-primary" data-action="${action}">${icon('plus',17)} ${button}</button></div>`;}
 /** Every filter except status, so the Recorded / Drafts / Archived counts reflect the same search. */
 function matchesFilters(a:Achievement):boolean{
   const q=searchText.trim().toLocaleLowerCase();
