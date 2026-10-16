@@ -32,9 +32,9 @@ test('CP-012.2 Home next action follows first achievement → draft → backup �
   await expect(next(page)).toContainText('Export a Backup');
   await expect(page.locator('.compact-export')).toContainText('No export generated');
   const download=page.waitForEvent('download');await next(page).locator('[data-action=export]').click();await download;
-  await expect(page.locator('.metric-card').filter({hasText:'Last export'})).toContainText('today');
+  await expect(page.locator('.compact-export')).toContainText('today');
   await page.reload();
-  await expect(page.locator('.metric-card.metric-warn')).toHaveCount(0);
+  await expect(page.locator('.compact-export')).toHaveCount(1);
   await expect(next(page)).toContainText('Capture a Recent Win'); // the fixture profile has a headline
 
   // Truthful counts and correct plurals.
