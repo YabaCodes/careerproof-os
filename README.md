@@ -1,8 +1,15 @@
-# CareerProof OS — v0.1.3-alpha.6 (CP-UX-Fluid in review)
+# CareerProof OS — v0.1.3-alpha.7 (CP-UX3 in review)
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.3-alpha.5` CP-UX-Links was merged in PR #36, its version-specific CI assertions were repaired in PR #37, and the subsequent `main` build/test/deployment passed.** The user confirmed **UX301–UX307 all PASS on physical iPhone (2026-10-16)** for context navigation among existing achievements, experiences, roles and skills. Earlier `v0.1.3-alpha.4` CP-UX2 was merged in PR #35, but its separate UX201–UX207 acceptance is unreported. Current progress is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+**Current development:** CP-UX3 `v0.1.3-alpha.7` is proposed on `feat/cp-ux3-home-expected-results` and **not merged, deployed or accepted**. The latest merged main change is PR #40 (`v0.1.3-alpha.6`); the user reported a general successful test, while itemized UX401–UX408 results are not separately documented.
+
+### v0.1.3-alpha.7 — Finish the redesign (DEC-039)
+
+- **Slim Home:** four compact counts (Recorded, Draft, Experiences, Skills Shown), truthful last-generated-export note, Last 12 Months + Recent unchanged, Your Record expands existing completeness/role drilldowns and three smaller Quick Add buttons. The header Achievement + and all five existing Home/Vault/Experience/Skills/Profile destinations remain.
+- **Draft → Expected Result:** explicit user choice, editable future-looking preview, add-only `projects.objective`, archived (not deleted) Draft, same-transaction revision checks, duplicate and confidentiality protections; same-session Undo only if neither record changed.
+- **Data safety:** no new database stores or fields; **schema 3 / backup format 3** preserved. This flow intentionally updates an existing Draft and Experience. Review and CV Studio are **not** in this increment.
+- **Review gate:** run CI, review PR, merge only with user consent; then perform installed-iPhone **UX301-S3–UX309-S3** acceptance. Never uninstall or clear storage to force an update.
 
 ## v0.1.3-alpha.6 — Feel, the Recorded Moment and Last 12 Months (CP-UX-Fluid, in review)
 
