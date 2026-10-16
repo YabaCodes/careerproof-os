@@ -44,7 +44,7 @@ test('UX301-S3: compact Home, both record drilldowns, all five destinations and 
     await page.locator('.mobile-nav-item[data-screen='+item+']').click();
     await expect(page.locator('.mobile-nav-item[data-screen='+item+']')).toHaveAttribute('aria-current','page');
   }
-  await page.locator('[data-action=capture]').first().click();
+  await page.locator('.mobile-create').click();
   await expect(page.getByRole('dialog')).toBeVisible();
   await page.locator('.close-dialog').click();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
