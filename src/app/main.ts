@@ -304,6 +304,7 @@ function homeView():string {
   </div>
   <p class="footer-note">${icon('lock',14)} Records stay on this device. Export and securely save a JSON backup regularly; there is no cloud sync.</p>`;
 }
+function emptyState(heading:string,body:string,button:string,action:string):string {return `<div class="empty-state"><div class="empty-illustration">${icon('vault',27)}</div><h3>${heading}</h3><p>${body}</p><button class="button button-primary" data-action="${action}">${icon('plus',17)} ${button}</button></div>`;}
 /** Every filter except status, so the Recorded / Drafts / Archived counts reflect the same search. */
 function matchesFilters(a:Achievement):boolean{
   const q=searchText.trim().toLocaleLowerCase();
