@@ -154,7 +154,7 @@ test('dialog focus, scroll lock, dirty confirmation and hash events preserve inp
   await expect(page.locator('.content-wrap')).not.toHaveAttribute('inert','');
   // An invocation far down the page restores both its scroll and keyboard focus.
   await action(page,'[data-screen="home"]');
-  const invoker=page.locator('.quick-action[data-kind="credentials"]');
+  const invoker=page.locator('.compact-quick-add [data-kind="credentials"]');
   await invoker.scrollIntoViewIfNeeded();
   const scroll=await page.evaluate(()=>scrollY);
   await invoker.click();
