@@ -1028,6 +1028,9 @@ document.addEventListener('pointermove',e=>{
   if(month?.dataset.month&&month.dataset.month!==homeMonth)pickHomeMonth(month.dataset.month);
 });
 for(const type of ['pointerup','pointercancel'])document.addEventListener(type,()=>{monthScrub=null;});
+// CP-UX3: update the preview without rerendering the sheet or losing text/keyboard focus.
+document.addEventListener('input',e=>{if(e.target instanceof Element&&e.target.closest('#expected-form')){isDirty=true;syncExpectedPreview();}});
+document.addEventListener('change',e=>{if(e.target instanceof Element&&e.target.closest('#expected-form')){isDirty=true;syncExpectedPreview();}});
 window.addEventListener('hashchange',()=>{const next=currentNav(),exp=hashExperience();if(next===screen&&exp===experienceId)return;screen=next;experienceId=exp;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof Couldn't Open Your Local Database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{
