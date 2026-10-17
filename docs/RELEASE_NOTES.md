@@ -1,3 +1,42 @@
+## v0.1.3-alpha.7 — CP-UX3: Slim Home and Plans as Expected Results (Review Candidate)
+
+**Status:** Implementation PR for review; **not merged, deployed or physically accepted**. User authorized Redesign Step 3 after reporting the preceding app test was okay; that informal confirmation does not separately establish every UX401–UX408 result.
+
+- **Home:** one compact row with Recorded, Draft, Experiences and Skills Shown; accurate generated-export status below. Last 12 Months and Recent keep the existing alpha.6 interaction. Complete Your Record and Achievements by Role become two expandable rows under **Your Record**, retaining the existing Data Health and role-filter drilldowns. Quick Add has three compact actions (Experience, Employer, Credential); header + still creates an Achievement. Five destination tabs remain Home / Vault / Experience / Skills / Profile; Studio is deferred until usable in v0.1.4.
+- **Plans as Expected Results:** an active Draft explicitly offers "Hasn't happened yet?" and a user-editable preview on a chosen Experience. Conversion appends text below the existing `projects.objective`, archives (never deletes) the Draft, and preserves its links/metrics/evidence. Current Experience revision and Draft revision are checked in the same IndexedDB transaction; duplicate paragraphs, overlength text, stale data and status conflicts abort without partial updates. Completed Experiences require confirmation. Confidential Drafts require a Confidential Experience, avoiding silent privacy downgrades.
+- **Undo:** after conversion, the Experience shows a same-session Undo that atomically restores the exact former objective and active Draft status only while both saved revisions remain unchanged. No Undo is promised after reload or after newer edits.
+- **Data:** **no new fields or stores**; database schema **3**, backup format **3**, and proficiency history are unchanged. Conversion intentionally updates one Experience and one Draft in a single transaction, unlike presentation-only Step 1/2.
+- **Testing:** Node integration and Playwright mobile cases introduced/updated for atomicity, stale/retry protection, archive/Undo, confidentiality, responsive Home, original drilldowns, offline-shell completeness and backup compatibility. Real iPhone UX301-S3 through UX309-S3 are still required after review/merge/deployment. Automated outcome is reported in the PR/CI, not presumed here.
+- **Next:** v0.1.4 Studio remains a separately gated migration/recovery project. No review/CV document stores or PDF functionality in alpha.7.
+
+## v0.1.3-alpha.6 — CP-UX-Fluid: feel, the recorded moment and the record timeline (review candidate)
+
+**Status:** PR open, CI result stated in the PR; **not merged, deployed or accepted**. A user-approved increment (DEC-038) on top of `0.1.3-alpha.5` (CP-UX-Links, accepted UX301–UX307). Presentation only: no record, schema, backup-format or taxonomy change.
+
+- **Motion and touch feedback:**
+  - Buttons, tabs, chips and rows give a little under the finger (iOS gets `:active` through a passive touch listener); a tapped tab no longer keeps a hover tint.
+  - Sheets slide up from the bottom on phones (and settle in on wider screens) **only when they open** — redrawing a sheet, or moving from an achievement to its editor, does not replay it. While a sheet is still rising, a tap on the dimmed area does not close it; after that the backdrop works exactly as before.
+  - Capture steps slide forward on Next and back on Back. Moving between tabs eases the page in; opening an experience pushes in from the right and Back returns from the left. Nothing scrolls sideways while it moves.
+  - Messages ease in when they appear (not on later redraws) and can carry a second line.
+  - **Reduce Motion** turns all of it off; the result is identical, just immediate.
+- **The recorded moment:**
+  - Recording an achievement says where it went and what it adds, from the links just saved: e.g. "Achievement recorded. In Platform Migration · Adds an example to Planning and 1 more". A draft says what it still needs ("Add what you did and a date to record it."). Editing a recorded achievement still says "Achievement updated".
+  - The new achievement glows briefly where it now appears (Home, Vault or the experience page), scrolled into view if needed, and its month on the Home timeline grows from its old height.
+- **Tidy-ups:**
+  - Home's Recorded card says "1 achievement", not "1 achievements".
+  - **Skills:** search, **Filters** and **Add** share one row like the Vault and Experience (two rows only below 360px). Category and Show archived sit under Filters, which shows how many are on.
+  - **Experience role headers:** "Current" sits beside the role title, and the details line breaks between its parts, never inside a date range or a count. Experience rows follow the same rule.
+- **Home: Last 12 Months** (DEC-038, amends DEC-035):
+  - One bar per month for the **recorded** achievements that **happened** in it (by the achievement's date, not when it was entered), with the count above each bar. Drafts, archived and undated achievements are left out; achievements dated only by a year are counted in a note instead of being spread over months.
+  - Tap a month (or slide a finger sideways across the months) to list that month in place of Recent; ‹ › step a month at a time; **Recent** goes back. Leaving Home goes back to Recent.
+  - Counts only: no target line, average, streak, comparison or score. The section is hidden when nothing in the window can be shown by month.
+  - On a 320px screen the month columns are about 22px wide (24px from about 346px up); a sideways slide adjusts the pick and the 44px ‹ › buttons step precisely.
+- **Data:** unchanged. Schema 3, backup format 3, no migration; every new view is derived from existing records and nothing new is stored.
+- **Tests (local):** `npm test` passes 106 Node and 150 browser tests.
+  - New: `ux-fluid.test.mjs` (4 Node: month window across a year boundary, what is counted, timeline markup, saved messages) and `ux-fluid.spec.mjs` (7 browser: timeline and month list, sideways slide vs scroll, recorded moment, motion follows changes and Reduce Motion, press feedback and the rising-sheet backdrop, tidy-ups at 320 and 390px).
+  - The Playwright configuration now runs the suites with Reduce Motion on, so layout checks measure finished layouts; motion is tested where `ux-fluid.spec` turns it back on. Two existing assertions were updated for the new wording and Filters panel.
+- Pending: CI, user review and merge, Pages deployment and iPhone checks UX401–UX408.
+
 ## v0.1.3-alpha.4 — CP-UX2 guided capture (review candidate)
 
 **Status:** PR open, CI result stated in the PR; **not merged, deployed or accepted**. Step 2 of the user-approved redesign (DEC-037). Step 1 (`0.1.3-alpha.3`, PR #34) is merged, deployed and accepted on iPhone (UX101–UX109).

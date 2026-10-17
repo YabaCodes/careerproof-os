@@ -1,3 +1,36 @@
+## CP-UX3 — Redesign Step 3, v0.1.3-alpha.7 (installed-iPhone gate)
+
+**Status: PENDING until merged, deployed and explicitly user-accepted.** Do not uninstall the Home Screen PWA or clear storage. Export a secure current JSON backup before testing. Use disposable synthetic records for any destructive test; never replace real career data solely for testing. The conversion changes two existing records, although **schema 3 and backup format 3 remain unchanged**.
+
+- [ ] **UX301-S3:** Home at 320/375/390/430px: one row with correct **Recorded / Draft / Experiences / Skills Shown** counts, legible typography and no sideways page overflow; honest last-generated-export line.
+- [ ] **UX302-S3:** Header + creates an Achievement, Settings works, all five tabs (Home, Vault, Experience, Skills, Profile) remain functional. Quick Add offers Experience, Employer and Credential.
+- [ ] **UX303-S3:** Last 12 Months remains tappable and swipeable, month list replaces Recent, and returning to Recent works; drafts, archived and year-only dates follow original rules. Reduce Motion works.
+- [ ] **UX304-S3:** Expand Your Record → Complete Your Record, open a gap and Data Health; expand Achievements by Role and reach the role-filtered Vault. Collapsing/reopening does not remove content.
+- [ ] **UX305-S3:** Open a synthetic Draft → Hasn't happened yet?; choose a linked Experience with an existing objective, edit expected text; confirm old objective survives with new paragraph appended; Draft appears in Vault → Archived with its original role/skills/metrics/evidence.
+- [ ] **UX306-S3:** From resulting Experience use Undo before editing anything else; old objective returns exactly and Draft returns as active Draft. Attempting repeated conversion cannot duplicate paragraph.
+- [ ] **UX307-S3:** Stale source edit, concurrent tab edit, repeated press, blank/overlength text and failed transaction must not partially archive/appended anything; show a clear error. Synthetic tests plus unit/integration failure injection qualify destructive conditions; do not force storage quota failures on personal data.
+- [ ] **UX308-S3:** Convert a synthetic Draft again, reload installed app offline, verify objective and Archived Draft persist; Undo from before reload is unavailable; Settings / exported JSON still show format 3 and 13 stores.
+- [ ] **UX309-S3:** Confidential synthetic Draft to standard-private Experience is blocked until target Experience is explicitly marked Confidential; completed Experience requires acknowledgement. Dark/light contrast, tap targets, keyboard and sheet/scroll safe areas verified.
+
+**No item is automatically PASS solely from automated Chromium or GitHub CI.** Report individual results and any limitations before acceptance.
+
+---
+
+## CP-UX-Fluid — v0.1.3-alpha.6 feel, recorded moment and record timeline: physical iPhone checks (pending)
+
+**Status:** review candidate (DEC-038). Run on the installed iPhone app after the user merges and the Pages deployment finishes (close and reopen the app, then Restart app when offered). Use your own records or a few synthetic ones; nothing here changes stored data. Report each as PASS or FAIL with a note.
+
+- [ ] **UX401 — Press feedback:** Home quick actions, the header **+**, tabs, segmented controls, chips and list rows respond under your finger and settle when you lift it. No tab stays tinted after you move away from it.
+- [ ] **UX402 — Sheets:** capture, an achievement and Settings slide up when opened. Opening an achievement and tapping **Edit** does not slide the sheet a second time. Tapping the dimmed area while a sheet is still rising does not close it; once it has settled, tapping the dimmed area closes it as before (and still asks first when there are unsaved changes).
+- [ ] **UX403 — Capture steps:** Next slides the next step in from the right and Back from the left. Nothing wobbles or scrolls sideways. Typing on each step behaves as before (labels and fields stay above the keyboard, as in UX207).
+- [ ] **UX404 — Recorded moment:** from Home, record an achievement in an experience with a skill ticked. The message names the experience and the skill, the new achievement glows in Recent, and its month on **Last 12 Months** grows. Save another as a draft: the message says what it still needs. Edit a recorded achievement: the message says "Achievement updated".
+- [ ] **UX405 — Tidy-ups:** with exactly one recorded achievement, Home says "1 achievement". On **Skills**, search, Filters and Add sit in one row; Category and Show archived are under Filters, which shows how many are on; Add opens the custom skill editor. On **Experience**, "Current" sits beside the role title and the details line does not break inside a date range or a count.
+- [ ] **UX406 — Last 12 Months:** bars follow when achievements happened (an older achievement entered today sits in its own month); drafts, archived and undated ones are not counted; a year-only achievement is mentioned in the note. Tapping a month lists it in place of Recent; ‹ › step one month; **Recent** returns; sliding a finger sideways across the bars picks months, while scrolling the page up or down over the chart does not. Leaving Home and coming back shows Recent. Nothing shows a target, streak or score.
+- [ ] **UX407 — Reduce Motion:** with iPhone Settings → Accessibility → Motion → Reduce Motion on, nothing slides, grows or glows; every step above still works and messages still appear.
+- [ ] **UX408 — Regression and data:** light and dark; offline reopen; Settings → Check data passes and an export still downloads; your records, Data Health suggestions and backup contents are unchanged by using these screens.
+
+**Qualification boundaries:** automated Playwright checks (106 Node / 150 browser locally) cover the logic, layout at 320–390px and Reduce Motion, but they are **not** evidence of how the motion and touch feedback feel on a physical iPhone. Month columns on the Home timeline are narrower than 44px on phones (about 22px at 320px, 24px from about 346px); the 44px ‹ › buttons and a sideways slide are the precise alternatives. UX201–UX207 (CP-UX2) subsequently passed retrospectively on the installed alpha.5 build (UX201 does not certify the historical alpha.4 update screen); PA101–PA106 (CP-013B) remain separately unreported.
+
 ## CP-UX-Links — v0.1.3-alpha.5 contextual navigation: accepted on physical iPhone (2026-10-16)
 
 **Release evidence:** [PR #36](https://github.com/YabaCodes/careerproof-os/pull/36) merged; [PR #37](https://github.com/YabaCodes/careerproof-os/pull/37) merged to correct stale version-specific browser assertions. The [post-repair main GitHub Actions run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) completed **build, tests and Pages deployment successfully**. The user separately confirmed all seven checks PASS on their installed iPhone. This is **physical acceptance of alpha.5 context navigation**, not final v0.1.3 release sign-off.
@@ -10,7 +43,7 @@
 - [x] **UX306 — Missing and archived links:** Part A: no fabricated links on unlinked achievement (**PASS**). Part B: archived linked skill opens without changing its archived state (**PASS**). **Overall PASS**.
 - [x] **UX307 — Final device verification:** Mobile layout/navigation **PASS**; light/dark appearance and Reduce Motion **PASS**; offline reopening/navigation **PASS**; saved data, Data Health and backup export **PASS**. **Overall PASS**.
 
-**Qualification boundaries:** The user tested their own iPhone, not each possible 320–390px physical-device width. Playwright viewport checks supplement but do not replace device results. No destructive restore of the user's personal data was requested or performed. Existing IndexedDB schema 3 and backup format 3 remain unchanged by CP-UX-Links. **CP-UX2 alpha.4 UX201–UX207 have since passed retrospectively on the installed alpha.5 build (see below); CP-013B PA101–PA106 remain unreported**, even though those capabilities are present in the deployed build.
+**Qualification boundaries:** The user tested their own iPhone, not each possible 320–390px physical-device width. Playwright viewport checks supplement but do not replace device results. No destructive restore of the user's personal data was requested or performed. Existing IndexedDB schema 3 and backup format 3 remain unchanged by CP-UX-Links. **CP-UX2 alpha.4 UX201–UX207 passed retrospectively on alpha.5 (see below); CP-013B PA101–PA106 remain unreported**, even though those capabilities are present in the deployed build.
 
 ---
 

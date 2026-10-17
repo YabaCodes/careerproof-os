@@ -55,6 +55,8 @@ export function achievementStory(a: AchievementView, c: CareerCollections): Stor
   const notice = a.status === 'draft'
     ? `<p class="story-notice">${icon('info', 16)}<span>Draft — not counted yet. ${missing.length ? `Add ${missing.join(' and ')}, then record it.` : 'Open Edit and record it when it is ready.'}</span></p>`
     : a.status === 'archived' ? `<p class="story-notice">${icon('archive', 16)}<span>Archived — kept, but left out of lists and counts.</span></p>` : '';
+  const planAction = a.status === 'draft'
+    ? `<button type="button" class="expected-action" data-action="draft-to-expected" data-id="${esc(a.id)}">Hasn't happened yet? Make it an Experience's Expected Result ${icon('arrow',16)}</button>` : '';
   const result = `<section class="story-result" aria-labelledby="story-result-title"><h3 id="story-result-title">Result</h3>`
     + (a.outcome.trim() ? `<p>${esc(a.outcome)}</p>` : '<p class="is-missing">No result stated yet</p>')
     + (metrics.length ? `<ul class="story-metrics">${metrics.map(metricLine).join('')}</ul>` : '') + '</section>';
@@ -70,11 +72,37 @@ export function achievementStory(a: AchievementView, c: CareerCollections): Stor
     `<div class="story-actions"><button type="button" class="button button-outline" data-action="toggle-archive">${icon(a.status === 'archived' ? 'refresh' : 'archive', 16)} ${a.status === 'archived' ? 'Restore' : 'Archive'}</button>`
       + `<button type="button" class="button button-danger-soft" data-action="delete-achievement">${icon('trash', 16)} Delete</button></div>`
   ].join('');
-  const body = `<div class="modal-body story">${notice}${result}`
+  const body = `<div class="modal-body story">${notice}${planAction}${result}`
     + section('What I Did', a.contribution.trim() ? para(a.contribution) : '<p class="readable-text is-missing">Not added yet</p>')
     + section('Context', context)
     + (skills.length ? `<section class="story-section"><h3>Skills Shown</h3><div class="chip-row">${skills.map(s => `<button type="button" class="chip chip-action" data-action="open-skill" data-id="${esc(s.id)}" aria-label="View skill ${esc(s.name)}">${esc(s.name)} ${icon('arrow',14)}</button>`).join('')}</div></section>` : '')
     + `<details class="story-more" data-keep-open="story-more"><summary>More Details</summary>${more}</details></div>`;
   const footer = `<div class="modal-footer"><button type="button" class="button button-primary" data-action="edit-achievement">${icon('edit', 16)} Edit</button></div>`;
   return { title: a.title, subtitle, body, footer };
+}
+
+/** "A", "A and B", "A, B and 2 more" */
+function nameList(names: string[]): string {
+  if (names.length <= 2) return names.join(' and ');
+  return `${names.slice(0, 2).join(', ')} and ${names.length - 2} more`;
+}
+/**
+ * CP-UX-Fluid (DEC-038): what a save just did, in the app's words. A newly
+ * recorded achievement names the experience (or role) it sits in and the skills
+ * it now gives an example of; a draft says what it still needs. Facts from the
+ * saved links only; nothing is scored.
+ */
+export function savedMessage(c: CareerCollections, a: AchievementView, before: AchievementView['status'] | null): { title: string; detail: string } {
+  if (a.status === 'draft') {
+    const missing = [a.contribution.trim() ? '' : 'what you did', a.occurredStart ? '' : 'a date'].filter(Boolean);
+    return { title: before ? 'Draft updated' : 'Draft saved', detail: missing.length ? `Add ${missing.join(' and ')} to record it.` : 'Record it when it is ready.' };
+  }
+  if (a.status !== 'recorded' || before === 'recorded') return { title: 'Achievement updated', detail: '' };
+  const primary = c.recordLinks.find(l => l.linkType === 'achievement-project' && l.sourceId === a.id && l.isPrimary)?.targetId;
+  const experience = primary ? c.projects.find(p => p.id === primary)?.name ?? '' : '';
+  const role = !experience && a.roleId ? c.roles.find(r => r.id === a.roleId)?.title ?? '' : '';
+  const skills = c.recordLinks.filter(l => l.linkType === 'achievement-competency' && l.sourceId === a.id)
+    .map(l => c.competencies.find(s => s.id === l.targetId)?.name ?? '').filter(Boolean);
+  const parts = [experience ? `In ${experience}` : role ? `As ${role}` : '', skills.length ? `Adds an example to ${nameList(skills)}` : ''].filter(Boolean);
+  return { title: 'Achievement recorded', detail: parts.join(' · ') };
 }

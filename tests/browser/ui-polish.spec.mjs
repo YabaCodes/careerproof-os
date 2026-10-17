@@ -154,7 +154,7 @@ test('dialog focus, scroll lock, dirty confirmation and hash events preserve inp
   await expect(page.locator('.content-wrap')).not.toHaveAttribute('inert','');
   // An invocation far down the page restores both its scroll and keyboard focus.
   await action(page,'[data-screen="home"]');
-  const invoker=page.locator('.quick-action[data-kind="credentials"]');
+  const invoker=page.locator('.compact-quick-add [data-kind="credentials"]');
   await invoker.scrollIntoViewIfNeeded();
   const scroll=await page.evaluate(()=>scrollY);
   await invoker.click();
@@ -231,7 +231,7 @@ test('pending achievement save exposes busy state and prevents duplicate button 
   await expect(page.locator('.close-dialog')).toBeDisabled();
   await page.evaluate(()=>syntheticReleaseSave());
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.locator('#toast')).toContainText('Achievement saved');
+  await expect(page.locator('#toast')).toContainText('Achievement recorded');
   const count=await page.evaluate(async()=>{const {database}=await import('/app/data/db.js');return (await database.readSnapshot()).collections.achievements.length;});
   expect(count).toBe(1);
 });

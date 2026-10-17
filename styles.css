@@ -545,8 +545,6 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .vault-advanced-filters label { display:grid;gap:5px;min-width:0;font-size:var(--type-meta);color:var(--muted); }
 .vault-advanced-filters select,.vault-advanced-filters input { min-width:0;width:100%;max-width:100%;box-sizing:border-box; }
 .vault-advanced-filters select,.vault-advanced-filters input { min-height:44px; }
-.skill-toolbar { display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:var(--space-3);margin:var(--space-3) 0 var(--space-4);padding:var(--space-4); }
-.skill-toolbar .field,.skill-toolbar input,.skill-toolbar select { min-width:0;width:100%;box-sizing:border-box; }
 .skill-groups { display:grid;gap:var(--space-4); }
 .skill-panel { padding:var(--space-5); }
 .skill-entry { border-top:1px solid var(--line);min-width:0; }
@@ -561,7 +559,6 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .skill-entry .portfolio-achievement-links { margin-top:var(--space-3); }
 @media(max-width:767px) {
   .vault-advanced-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .skill-toolbar { grid-template-columns:minmax(0,1fr); }
   .skill-panel { padding:var(--space-4); }
   .rich-panel>.rich-expander,.rich-panel-body { padding:var(--space-3); }
   .rich-panel-body { padding-top:0; }
@@ -661,8 +658,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .vault-advanced-filters .field label { font-size: var(--type-meta); }
 
 /* Experience and Skills pages: actions sit in their toolbars. */
-.portfolio-overview .button, .skill-toolbar > .button { min-height: 44px; }
-.skill-toolbar { align-items: end; }
+.portfolio-overview .button { min-height: 44px; }
 .profile-grid { grid-template-columns: minmax(0,1fr); }
 .modal-header .eyebrow { display: none; }
 
@@ -700,10 +696,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 .filter-controls .filter-toggle { flex: none; width: auto; padding-inline: var(--space-3); }
 .filter-controls .filter-toggle span { white-space: nowrap; }
 .skill-panel .career-section-heading h2 { font-size: 17px; }
-.skill-toolbar { grid-template-columns: minmax(0,2fr) minmax(0,1fr) auto; }
 @media (max-width:767px) {
-  .skill-toolbar { grid-template-columns: minmax(0,1fr) auto; }
-  .skill-toolbar > .field { grid-column: 1 / -1; }
   .filter-controls select { width: auto; flex: 1 1 0; }
 }
 @media (max-width:359px) {
@@ -1060,3 +1053,141 @@ button.role-row:focus-visible { outline: 2px solid var(--focus); outline-offset:
 .story-related-link:focus-visible,.chip-action:focus-visible { outline:2px solid var(--focus); outline-offset:2px; }
 .chip-action { min-height:44px; max-width:100%; gap:6px; padding:8px 12px; text-align:left; font:inherit; font-size:13px; line-height:1.4; cursor:pointer; white-space:normal; overflow-wrap:anywhere; }
 .chip-action svg { flex:none; width:14px; height:14px; color:var(--teal); }
+
+/* ===== CP-UX-Fluid (DEC-038): feel, the recorded moment and the record timeline ===== */
+/* Press feedback: buttons give a little under the finger; rows tint. iOS needs a touch
+   listener for :active (main.ts). The global Reduce Motion rule keeps this immediate. */
+button, summary, .where-option, .skill-chip { -webkit-tap-highlight-color: transparent; }
+.button, .header-button, .icon-button, .quick-action, .segment, .text-action, .back-link, .chip-action,
+.story-related-link, .mobile-nav .nav-item, .sidebar .nav-item, .filter-toggle, .toolbar-add, .record-month, .skill-chip span {
+  transition: transform .14s ease, background-color .14s ease, box-shadow .14s ease;
+}
+.button:active:not(:disabled), .header-button:active, .icon-button:active:not(:disabled), .quick-action:active,
+.text-action:active, .back-link:active, .chip-action:active, .story-related-link:active, .segment:active { transform: scale(.97); }
+.mobile-nav .nav-item:active .nav-icon { transform: scale(.88); }
+.nav-icon { transition: transform .14s ease; }
+.skill-chip:active span { transform: scale(.96); }
+.achievement-row:active, .experience-row:active, button.role-row:active, .story-row:active, .health-link:active,
+.capture-add-row:active, .where-option:active, .role-group > summary:active, .skill-entry > summary:active, .health-issue summary:active {
+  background-color: var(--surface-alt);
+}
+.achievement-row, .experience-row, .story-row, button.role-row { transition: background-color .14s ease; }
+
+/* A sheet slides up from the bottom on phones and settles in on wider screens — only when it opens. */
+@keyframes cp-backdrop-in { from { background-color: rgb(8 22 33 / 0%); backdrop-filter: blur(0); } }
+@keyframes cp-sheet-up { from { transform: translateY(100%); } }
+@keyframes cp-sheet-in { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+.modal-backdrop.is-entering { animation: cp-backdrop-in .24s ease-out; }
+.modal-backdrop.is-entering .modal { animation: cp-sheet-in .26s cubic-bezier(.2,.8,.2,1); }
+@media (max-width:767px) {
+  .modal-backdrop.is-entering .modal { animation: cp-sheet-up .34s cubic-bezier(.2,.8,.2,1); }
+}
+
+/* Sliding steps and screens never make the page or a sheet scroll sideways mid-animation. */
+.modal-body { overflow-x: hidden; }
+.content-wrap { overflow-x: clip; }
+
+/* Messages ease in when they appear, and carry an optional second line. */
+@keyframes cp-toast-in { from { opacity: 0; transform: translateY(10px); } }
+.toast.toast-enter { animation: cp-toast-in .26s cubic-bezier(.2,.8,.2,1); }
+.toast-text { display: grid; gap: 2px; min-width: 0; }
+.toast-text strong { font-weight: 700; }
+.toast-text small { font-size: 13px; color: #d9e5ed; overflow-wrap: anywhere; }
+.toast-error .toast-text small { color: #fde7e9; }
+
+/* The recorded moment: the record glows where it now appears. */
+@keyframes cp-glow { 0%, 35% { opacity: 1; } 100% { opacity: 0; } }
+.just-saved { position: relative; isolation: isolate; }
+.just-saved::before { content: ''; position: absolute; inset: 2px -8px; z-index: -1; border-radius: 12px; background: var(--teal-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--teal) 35%, transparent); opacity: 0; animation: cp-glow 2.2s ease-out; }
+
+/* One row for search, Filters and Add (Skills), matching the Vault and Experience. */
+.list-toolbar { display: flex; gap: var(--space-2); align-items: center; margin: 0 0 var(--space-3); min-width: 0; }
+.list-toolbar .search-field { flex: 1 1 auto; min-width: 0; background: var(--surface); }
+.list-toolbar .filter-toggle, .list-toolbar .toolbar-add { flex: none; min-height: 48px; padding-inline: var(--space-3); }
+.list-toolbar .filter-toggle span, .list-toolbar .toolbar-add span { white-space: nowrap; }
+.skill-filters { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-3); align-items: end; padding: var(--space-4); margin: 0 0 var(--space-3); }
+.skill-filters[hidden] { display: none !important; }
+.skill-filters .skill-archived-toggle { min-height: 48px; }
+.competency-page > .segmented { margin-bottom: var(--space-3); }
+@media (max-width:359px) {
+  .list-toolbar { flex-wrap: wrap; }
+  .list-toolbar .search-field { flex-basis: 100%; }
+  .skill-filters { grid-template-columns: minmax(0,1fr); }
+}
+
+/* Experience role headers: Current sits by the title; the line breaks between its parts. */
+.role-group-title { display: flex; align-items: center; flex-wrap: wrap; gap: 4px var(--space-2); min-width: 0; }
+.role-group-title h2 { min-width: 0; }
+.role-group-title .role-current { padding: 2px 8px; }
+.nowrap { white-space: nowrap; }
+
+/* Home: the last 12 months, by the month each achievement happened (counts only). */
+.section-meta { font-size: 13px; color: var(--muted); font-weight: 600; }
+.record-card { padding: var(--space-4) var(--space-3) var(--space-3); }
+.record-chart { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); align-items: end; touch-action: pan-y; }
+.record-month { display: grid; grid-template-rows: 16px 72px 22px; align-items: end; justify-items: center; gap: 2px; min-width: 0; min-height: 112px; padding: 0 1px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.record-count { font-size: 11px; font-weight: 700; line-height: 16px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.record-track { position: relative; display: flex; align-items: flex-end; justify-content: center; width: 100%; height: 72px; border-bottom: 2px solid var(--line); }
+.record-fill { display: block; width: min(16px, 70%); border-radius: 5px 5px 2px 2px; background: color-mix(in srgb, var(--teal) 55%, transparent); transition: background-color .14s ease; }
+.record-letter { font-size: 12px; line-height: 22px; font-weight: 600; }
+.record-month.is-current .record-letter { color: var(--ink); font-weight: 800; }
+.record-month.is-selected .record-fill { background: var(--teal); }
+.record-month.is-selected .record-count, .record-month.is-selected .record-letter { color: var(--teal); }
+.record-month.is-selected .record-track { border-bottom-color: var(--teal); }
+.record-month:active { background-color: var(--surface-alt); }
+.record-month:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.record-note { margin: var(--space-2) var(--space-1) 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.month-title h2 { min-width: 0; }
+.month-actions { display: flex; align-items: center; gap: var(--space-1); flex: none; }
+.month-step { border-color: var(--line); }
+.month-step:disabled { opacity: .35; }
+.month-empty { margin: 0; padding: var(--space-4) 0; color: var(--muted); font-size: var(--type-meta); }
+/* A tapped tab must not keep a hover tint on touch screens. */
+@media (hover:none) {
+  .mobile-nav .nav-item:not(.active):hover { background: transparent; color: #64748b; }
+  :root[data-theme=dark] .mobile-nav .nav-item:not(.active):hover { color: var(--muted); }
+}
+@media (hover:none) and (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]):not([data-theme=dark]) .mobile-nav .nav-item:not(.active):hover { color: var(--muted); }
+}
+
+
+/* CP-UX3 (DEC-039) — Home density and safe Draft → Expected Result flow. */
+.compact-dashboard { margin: var(--space-4) 0; padding: var(--space-3) var(--space-4); }
+.compact-stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); min-width: 0; }
+.compact-metric { min-width: 0; display: flex; flex-direction: column; gap: 1px; align-items: center; justify-content: center; padding: var(--space-2) var(--space-1); text-align: center; }
+.compact-metric + .compact-metric { border-left: 1px solid var(--line); }
+.compact-metric strong { font-size: clamp(19px,5vw,27px); color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.25; }
+.compact-metric span { font-size: 11px; line-height: 1.3; color: var(--muted); overflow-wrap: anywhere; }
+.compact-export { border-top: 1px solid var(--line); margin: var(--space-1) 0 0; padding: var(--space-3) 0 0; display: flex; align-items: center; gap: var(--space-2); font-size: var(--type-small); color: var(--muted); }
+.home-record { margin-block: var(--space-6); }
+.home-record > h2 { font-size: var(--type-section); margin: 0 0 var(--space-3); }
+.home-record-card { padding: 0; overflow: hidden; }
+.home-record-disclosure + .home-record-disclosure { border-top: 1px solid var(--line); }
+.home-record-disclosure > summary { min-height: 64px; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); cursor: pointer; list-style: none; }
+.home-record-disclosure > summary::-webkit-details-marker { display: none; }
+.home-record-disclosure > summary span { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.home-record-disclosure > summary strong { font-size: var(--type-body); color: var(--ink); }
+.home-record-disclosure > summary small { color: var(--muted); font-size: var(--type-meta); }
+.home-record-disclosure > summary svg { color: var(--muted); }
+.home-record-disclosure[open] > summary svg { transform: rotate(90deg); }
+.home-record-content { border-top: 1px solid var(--line); padding: var(--space-3) var(--space-4); }
+.home-record-content .panel { box-shadow: none; border: 0; padding: 0; }
+.home-record-content .home-gaps .text-action { margin-bottom: var(--space-2); }
+.home-record-content .role-coverage .role-row:last-child { border-bottom: 0; }
+.compact-quick-add { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--space-2); }
+.compact-quick-add .button { padding-inline: var(--space-1); min-height: 44px; font-size: clamp(11px,3vw,14px); white-space: normal; }
+.expected-action { display: flex; gap: var(--space-2); align-items: center; justify-content: space-between; width: 100%; min-height: 48px; margin: var(--space-3) 0; padding: var(--space-3); color: var(--teal); background: var(--teal-soft); border: 1px solid var(--teal); border-radius: var(--radius-control); text-align: left; font-size: var(--type-meta); font-weight: 600; }
+.expected-preview-wrap { border: 1px solid var(--line); border-radius: var(--radius-control); padding: var(--space-4); }
+.expected-preview-wrap strong { color: var(--ink); font-size: var(--type-meta); }
+.expected-preview { white-space: pre-wrap; overflow-wrap: anywhere; margin: var(--space-2) 0 0; font-size: var(--type-meta); }
+.expected-warning { margin: 0; border-radius: var(--radius-control); padding: var(--space-3); background: var(--danger-soft); color: var(--danger); font-size: var(--type-meta); }
+.expected-warning[hidden], #expected-completed-row[hidden] { display: none; }
+.expected-undo { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4); margin-block: var(--space-3); border-radius: var(--radius-control); background: var(--teal-soft); color: var(--ink); font-size: var(--type-meta); }
+.expected-undo button { flex-shrink: 0; }
+@media (max-width:359px) {
+  .compact-dashboard { padding-inline: var(--space-2); }
+  .compact-metric span { font-size: 10px; }
+  .expected-undo { flex-direction: column; align-items: stretch; }
+}

@@ -147,6 +147,8 @@ test('competency library displays 32 built-in skills plus custom skills and link
   await page.locator('[data-action=archive-competency]').click();
   await expect(page.locator('details.skill-entry')).toHaveCount(0);
   expect((await snapshot(page)).competencies.find(x=>x.name==='Industrialization Strategy').status).toBe('archived');
+  // CP-UX-Fluid: Show archived sits under Filters.
+  await page.locator('#skill-filter-toggle').click();
   await page.locator('#competency-archived').click();
   await expect(page.locator('#competency-archived')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('details.skill-entry')).toHaveCount(1);

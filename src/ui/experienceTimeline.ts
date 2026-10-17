@@ -39,7 +39,7 @@ function experienceRow(x: TimelineExperience): string {
   ].filter(Boolean);
   return `<button type="button" class="experience-row" data-action="open-experience" data-id="${esc(p.id)}">`
     + `<span class="experience-row-text"><strong>${esc(p.name)}</strong>`
-    + `<span class="experience-row-meta">${x.ongoing ? '<span class="live-dot" aria-hidden="true"></span>' : ''}${esc(parts.join(' · '))}</span>`
+    + `<span class="experience-row-meta">${x.ongoing ? '<span class="live-dot" aria-hidden="true"></span>' : ''}<span>${parts.map(t => `<span class="nowrap">${esc(t)}</span>`).join(' · ')}</span></span>`
     + (x.alsoRoles.length ? `<span class="experience-row-also">Also: ${esc(x.alsoRoles.join(', '))}</span>` : '')
     + `</span><span class="row-arrow">${icon('chevron', 17)}</span></button>`;
 }
@@ -59,13 +59,14 @@ export function timelineGroups(c: CareerCollections, query = '', openKeys: Reado
   if (!groups.length) return q ? '<p class="timeline-empty">No experiences match your search.</p>' : '';
   return groups.map((g, i) => {
     const count = g.role ? plural(g.experiences.length, 'experience') : '';
-    const sub = [g.employer, roleRange(g), count].filter(Boolean).join(' · ');
+    // CP-UX-Fluid: the line breaks between its parts, never inside a date range or a count.
+    const sub = [g.employer ? esc(g.employer) : '', ...[roleRange(g), count].filter(Boolean).map(t => `<span class="nowrap">${esc(t)}</span>`)].filter(Boolean).join(' · ');
     const rows = g.experiences.map(experienceRow).join('')
       + (g.looseAchievements && g.role ? `<button type="button" class="experience-row experience-row-loose" data-action="role-achievements" data-id="${esc(g.role.id)}"><span class="experience-row-text"><strong>${esc(plural(g.looseAchievements, 'achievement'))} not in an experience</strong><span class="experience-row-meta">Open them in the Vault</span></span><span class="row-arrow">${icon('chevron', 17)}</span></button>` : '');
     const open = q || (openKeys ? openKeys.has(g.key) : i < 2) ? ' open' : '';
     return `<details class="role-group" data-keep-open="${esc(g.key)}"${open}><summary>`
-      + `<span class="role-group-text"><h2>${esc(g.title)}</h2>${sub ? `<span class="role-group-sub">${esc(sub)}</span>` : ''}</span>`
-      + (g.current ? '<span class="role-current">Current</span>' : '')
+      + `<span class="role-group-text"><span class="role-group-title"><h2>${esc(g.title)}</h2>${g.current ? '<span class="role-current">Current</span>' : ''}</span>`
+      + `${sub ? `<span class="role-group-sub">${sub}</span>` : ''}</span>`
       + `<span class="role-group-chevron" aria-hidden="true">${icon('chevron', 17)}</span></summary>`
       + `<div class="panel list-card role-group-body">${rows || '<p class="timeline-empty">Nothing recorded for this role yet.</p>'}</div></details>`;
   }).join('');
@@ -85,7 +86,7 @@ export function timelinePage(c: CareerCollections, query: string, openKeys: Read
 const statusTag = (s: 'draft' | 'recorded' | 'archived') => s === 'recorded' ? '' : `<span class="status-tag status-${s}">${s === 'draft' ? 'Draft' : 'Archived'}</span>`;
 
 /** One experience: what it is, its goal, its achievements and the skills they show. */
-export function experiencePageView(c: CareerCollections, projectId: string): string {
+export function experiencePageView(c: CareerCollections, projectId: string, canUndoExpected = false): string {
   const p = c.projects.find(x => x.id === projectId);
   if (!p) return `<div class="experience-page"><div class="page-topbar"><button type="button" class="back-link" data-action="close-experience">${icon('back', 20)}Experience</button></div><p class="timeline-empty">This experience no longer exists.</p></div>`;
   const employer = c.employers.find(e => e.id === p.employerId)?.name ?? '';
@@ -110,6 +111,7 @@ export function experiencePageView(c: CareerCollections, projectId: string): str
     + `<header class="experience-head"><div class="pill-row"><span class="pill-outline">${esc(TYPE[p.experienceType])}</span><span class="pill-status ${ongoing ? 'is-live' : ''}">${esc(STATUS[p.status])}</span></div>`
     + `<h1 id="experience-title">${esc(p.name)}</h1>${sub ? `<p class="experience-sub">${esc(sub)}</p>` : ''}`
     + (p.scope.trim() ? `<p class="experience-context">${esc(p.scope)}</p>` : '') + '</header>'
+    + (canUndoExpected ? `<div class="expected-undo" role="status"><span><strong>Moved to Expected Result.</strong> The Draft is archived. Undo is available in this session.</span><button class="button button-outline" data-action="undo-expected">Undo</button></div>` : '')
     + goal
     + `<section class="experience-achievements" aria-labelledby="experience-achievements-title"><div class="section-title"><h2 id="experience-achievements-title">Achievements · ${roll.items.length}</h2>`
     + `<button type="button" class="text-action" data-action="project-capture" data-id="${esc(p.id)}">${icon('plus', 16)} Add</button></div>`

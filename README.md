@@ -1,8 +1,27 @@
-# CareerProof OS — v0.1.3-alpha.5 (CP-UX-Links accepted)
+# CareerProof OS — v0.1.3-alpha.7 (CP-UX3 in review)
 
 **Own your experience. Prove your impact. Shape your future.**
 
-CareerProof OS is a privacy-first, local-first professional career and achievement PWA. **`v0.1.3-alpha.5` CP-UX-Links was merged in PR #36, its version-specific CI assertions were repaired in PR #37, and the subsequent `main` build/test/deployment passed.** The user confirmed **UX301–UX307 all PASS on physical iPhone (2026-10-16)** for context navigation among existing achievements, experiences, roles and skills. Earlier `v0.1.3-alpha.4` CP-UX2 was merged in PR #35; the user has since confirmed **UX201–UX207 all PASS retrospectively on the installed alpha.5 build (2026-10-16)**. The original alpha.4 version/update transition was not physically tested. Current progress is in the [milestone tracker](docs/MILESTONE_TRACKER.md).
+**Current development:** CP-UX3 `v0.1.3-alpha.7` is proposed on `feat/cp-ux3-home-expected-results` and **not merged, deployed or accepted**. The latest merged main change is PR #40 (`v0.1.3-alpha.6`); the user reported a general successful test, while itemized UX401–UX408 results are not separately documented.
+
+### v0.1.3-alpha.7 — Finish the redesign (DEC-039)
+
+- **Slim Home:** four compact counts (Recorded, Draft, Experiences, Skills Shown), truthful last-generated-export note, Last 12 Months + Recent unchanged, Your Record expands existing completeness/role drilldowns and three smaller Quick Add buttons. The header Achievement + and all five existing Home/Vault/Experience/Skills/Profile destinations remain.
+- **Draft → Expected Result:** explicit user choice, editable future-looking preview, add-only `projects.objective`, archived (not deleted) Draft, same-transaction revision checks, duplicate and confidentiality protections; same-session Undo only if neither record changed.
+- **Data safety:** no new database stores or fields; **schema 3 / backup format 3** preserved. This flow intentionally updates an existing Draft and Experience. Review and CV Studio are **not** in this increment.
+- **Review gate:** run CI, review PR, merge only with user consent; then perform installed-iPhone **UX301-S3–UX309-S3** acceptance. Never uninstall or clear storage to force an update.
+
+## v0.1.3-alpha.6 — Feel, the Recorded Moment and Last 12 Months (CP-UX-Fluid, in review)
+
+A presentation-only increment (DEC-038), **not merged, deployed or accepted** until the user merges it and reports UX401–UX408 on iPhone:
+- **Feel:** buttons, tabs, chips and rows respond under the finger; sheets slide up when they open; capture steps and screens move in the direction you are going; messages ease in. Reduce Motion turns all motion off.
+- **Recorded moment:** saving says which experience the achievement went into and which skills it adds an example to (drafts say what they still need), and the new achievement glows where it appears.
+- **Tidy-ups:** "1 achievement" on Home; one-row Skills toolbar (search, Filters, Add); role headers with Current beside the title.
+- **Home – Last 12 Months:** recorded achievements counted by the month they happened; tap a month to list it. Counts only — no targets, streaks or scores.
+
+Schema **3**, backup format **3** and every stored record are unchanged. See [release notes](docs/RELEASE_NOTES.md) and [acceptance tests](docs/ACCEPTANCE_TESTS.md).
+
+**Physical-iPhone acceptance reconciliation (2026-10-16):** All seven guided-capture checks **UX201–UX207 PASS** on installed alpha.5 (including UX205 saved record and undated draft). The original alpha.4 version screen/update transition was not tested. [Acceptance record](docs/ACCEPTANCE_TESTS.md) · [Tracker](docs/MILESTONE_TRACKER.md).
 
 ## v0.1.3-alpha.5 — Context Navigation (CP-UX-Links)
 
@@ -14,7 +33,7 @@ This **read-only** improvement makes saved associations tappable without inventi
 
 The original Result → What I Did → Context → Skills reading order, Guided Capture flow, search/filter controls, IndexedDB schema **3**, backup format **3**, taxonomy and privacy rules remain unchanged. Navigation writes no records. Mobile controls target at least 44px, and scrolling honors Reduce Motion.
 
-**Qualification:** CP-UX-Links alpha.5 **accepted** based on physical iPhone UX301–UX307 PASS. [Main CI build/test/deploy run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) succeeded. This is acceptance of the contextual navigation increment only, **not final v0.1.3 release acceptance**. CP-UX2 alpha.4 UX201–UX207 are retrospectively accepted on the alpha.5 build, with the historical alpha.4 version/update check excluded. CP-013B PA101–PA106 have not yet been reported.
+**Qualification:** CP-UX-Links alpha.5 **accepted** based on physical iPhone UX301–UX307 PASS. [Main CI build/test/deploy run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) succeeded. This is acceptance of the contextual navigation increment only, **not final v0.1.3 release acceptance**. CP-UX2 alpha.4 UX201–UX207 all passed retrospectively on installed alpha.5, with its historical alpha.4 installation/version label untested; CP-013B PA101–PA106 remain unreported.
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 
@@ -28,7 +47,7 @@ The original Result → What I Did → Context → Skills reading order, Guided 
 - **Recovery:** full version-3 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
-**Since v0.1.3-alpha.4 (CP-UX2, merged and retrospectively device-accepted on alpha.5):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
+**Since v0.1.3-alpha.4 (CP-UX2, merged; retrospectively device-accepted on installed alpha.5):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
 
 **Since v0.1.3-alpha.3 (CP-UX1, accepted):**
 - **Experience** lists roles most recent first, each with its experiences as one-line rows. Each experience has a page with its context, goal or expected result, achievements and skills.

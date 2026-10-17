@@ -39,16 +39,18 @@ The first builds are useful but **not certified for irreplaceable data** until P
 
 **2026-10-12 CP-013A checkpoint:** Read-only evidence breadth implementation proposed as v0.1.3-alpha.1. Full 0.1.3 remains incomplete until separate L1–L4 proficiency persistence, history, migration and restoration gates are implemented and accepted.
 
-**2026-10-16 CP-UX2 acceptance checkpoint (DEC-037):** Step 1 (`0.1.3-alpha.3`, PR #34) is merged and accepted (UX101–UX109). Step 2 (`0.1.3-alpha.4`, guided capture, PR #35) is merged and **retrospectively accepted** by user-reported iPhone **UX201–UX207 PASS** on installed **alpha.5**. UX201 confirms alpha.5/schema 3/record retention, **not** the historical alpha.4 update screen. The independent alpha.5 context-navigation increment (PR #36; test-only repair #37) is accepted UX301–UX307. Step 3 remains separate. No schema or backup change from these UX increments. PA101–PA106 are still unreported; full `v0.1.3` release acceptance is not claimed.
+**2026-10-16 CP-UX-Fluid candidate (DEC-038, `0.1.3-alpha.6`):** A user-approved polish increment to existing P0 modules, not new P0/P1 scope: motion and touch feedback (off with Reduce Motion), a recorded moment after capture, tidy-ups (Home count wording, a one-row Skills toolbar, role headers) and Home's **Last 12 Months** — recorded achievements by the month they happened, counts only. It amends DEC-035 for that one factual trend view; targets, streaks, averages and scores remain out of scope. DEC-036 step 3 is unchanged. No schema or backup change.
 
-**2026-10-15 CP-UX1 (DEC-036; historical approved design, now accepted):** After reviewing the user's own records, the user approved a three-step UX redesign of existing P0 modules. This is not new P0/P1 scope.
+**2026-10-16 CP-UX2 accepted retrospectively (DEC-037):** Step 1 (`0.1.3-alpha.3`, PR #34) is merged and accepted (UX101–UX109). Step 2 (`0.1.3-alpha.4`, guided capture, PR #35) is merged and **UX201–UX207 PASS on a physical iPhone running alpha.5**. UX201 confirms alpha.5/schema 3/records, not the historical alpha.4 update screen. The separately tested alpha.5 navigation increment passed UX301–UX307. Step 3 follows separately; no schema or backup-format change is involved.
+
+**2026-10-15 CP-UX1 (DEC-036):** After reviewing the user's own records, the user approved a three-step UX redesign of existing P0 modules. This is not new P0/P1 scope.
 - **Step 1, `0.1.3-alpha.3`, merged and accepted:** reading and scanning. That covers the Experience timeline and pages, the achievement story, Vault segments and years, Month/Year/Exact-day dates, and Profile tap-to-edit. It also carries the #33 follow-ups.
 - **Step 2:** guided capture.
 - **Step 3:** candidates → Expected Result, and a slimmer Home.
 
 No schema or backup change. CP-013B (#33) is merged and deployed, with PA101–PA106 not yet reported.
 
-**2026-10-12 CP-013B original candidate, subsequent status corrected:** This increment implements explicit L1–L4 self-assessment history and related schema-3 / backup-format-3 recovery. **Merged as PR #33; PA101–PA106 remain unreported, so it is not device-accepted.** The CP-013A evidence-breadth alpha.1 increment is user-accepted with EB103 manual coverage outstanding. v0.1.3 full release qualification remains separate.
+**2026-10-12 CP-013B historical candidate:** The increment implements explicit L1–L4 self-assessment history and related schema-3 / backup-format-3 recovery. **PR #33 has merged, but PA101–PA106 are still unreported; device acceptance is pending**. The CP-013A evidence-breadth alpha.1 increment is user-accepted with EB103 manual coverage outstanding. v0.1.3 full release qualification remains separate.
 
 ## 3. Requirements traceability
 
@@ -109,7 +111,7 @@ Module-level summary below; per-feature lifecycle status is in [MILESTONE_TRACKE
 | M05 Career Roadmap | Deferred | Later release |
 | M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |
 | M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
-| M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls; from 0.1.2-alpha.8 Home adds Complete Your Record and Achievements by Role (DEC-035) | Trends and advanced analytics later |
+| M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls; from 0.1.2-alpha.8 Home adds Complete Your Record and Achievements by Role (DEC-035); 0.1.3-alpha.6 (in review) adds Last 12 Months, a count of recorded achievements by the month they happened (DEC-038) | Advanced analytics later; no targets, streaks or scores |
 
 **v0.1.1 delivery history:** CP-011A (PR #4, alpha.1) → A.1–A.3 UI/iOS corrections (PRs #5–#8) → CP-011B with B.1/B.2 (PRs #9–#11) → CP-011C (PR #12) → CP-011D with D.1 (PRs #13–#14) → CP-011E rc.1 (PR #15) → final promotion (PR #16). All merged by the user. Per-feature status, PRs, test baselines and device-acceptance evidence are in the [milestone tracker](MILESTONE_TRACKER.md), which is the authoritative progress record and must be updated in every PR.
 
