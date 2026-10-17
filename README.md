@@ -21,6 +21,8 @@ A presentation-only increment (DEC-038), **not merged, deployed or accepted** un
 
 Schema **3**, backup format **3** and every stored record are unchanged. See [release notes](docs/RELEASE_NOTES.md) and [acceptance tests](docs/ACCEPTANCE_TESTS.md).
 
+**Physical-iPhone acceptance reconciliation (2026-10-16):** All seven guided-capture checks **UX201–UX207 PASS** on installed alpha.5 (including UX205 saved record and undated draft). The original alpha.4 version screen/update transition was not tested. [Acceptance record](docs/ACCEPTANCE_TESTS.md) · [Tracker](docs/MILESTONE_TRACKER.md).
+
 ## v0.1.3-alpha.5 — Context Navigation (CP-UX-Links)
 
 This **read-only** improvement makes saved associations tappable without inventing links or proficiency scores:
@@ -31,7 +33,7 @@ This **read-only** improvement makes saved associations tappable without inventi
 
 The original Result → What I Did → Context → Skills reading order, Guided Capture flow, search/filter controls, IndexedDB schema **3**, backup format **3**, taxonomy and privacy rules remain unchanged. Navigation writes no records. Mobile controls target at least 44px, and scrolling honors Reduce Motion.
 
-**Qualification:** CP-UX-Links alpha.5 **accepted** based on physical iPhone UX301–UX307 PASS. [Main CI build/test/deploy run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) succeeded. This is acceptance of the contextual navigation increment only, **not final v0.1.3 release acceptance**. CP-UX2 alpha.4 UX201–UX207 and CP-013B PA101–PA106 results have not yet been reported.
+**Qualification:** CP-UX-Links alpha.5 **accepted** based on physical iPhone UX301–UX307 PASS. [Main CI build/test/deploy run 38751956798](https://github.com/YabaCodes/careerproof-os/actions/runs/38751956798) succeeded. This is acceptance of the contextual navigation increment only, **not final v0.1.3 release acceptance**. CP-UX2 alpha.4 UX201–UX207 all passed retrospectively on installed alpha.5, with its historical alpha.4 installation/version label untested; CP-013B PA101–PA106 remain unreported.
 
 ## Capabilities in v0.1.2 (P0 shipped baseline)
 
@@ -45,7 +47,7 @@ The original Result → What I Did → Context → Skills reading order, Guided 
 - **Recovery:** full version-3 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
-**Since v0.1.3-alpha.4 (CP-UX2, merged, device acceptance pending):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
+**Since v0.1.3-alpha.4 (CP-UX2, merged; retrospectively device-accepted on installed alpha.5):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
 
 **Since v0.1.3-alpha.3 (CP-UX1, accepted):**
 - **Experience** lists roles most recent first, each with its experiences as one-line rows. Each experience has a page with its context, goal or expected result, achievements and skills.
