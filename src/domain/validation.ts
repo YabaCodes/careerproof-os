@@ -126,6 +126,31 @@ export function validateAchievementInput(input:{title:string;contribution:string
   if (!enumeration(...Object.keys(IMPACT_CATEGORIES))(input.impactCategory)) errors.push('Choose a valid impact category.');
   return errors;
 }
+/**
+ * CP-PC (0.1.4-alpha.2): profile contact details used by CVs. A web address typed
+ * without a scheme ("example.com/me") gets https://; anything that is not a plain
+ * http(s) address, or carries a user name/password, is refused.
+ */
+export function normalizeWebUrl(value:string):string {
+  const v=value.trim();
+  if(!v)return '';
+  return /^[a-z][a-z0-9+.-]*:/i.test(v)?v:'https://'+v;
+}
+/** One address per line; blank lines dropped, duplicates removed, order kept. */
+export function parseProfessionalLinks(text:string):string[] {
+  const seen=new Set<string>(),out:string[]=[];
+  for(const line of text.split(/\r?\n/)){const v=normalizeWebUrl(line);if(v&&!seen.has(v.toLowerCase())){seen.add(v.toLowerCase());out.push(v);}}
+  return out;
+}
+export function validateProfileContact(input:{phone:string;website:string;professionalLinks:string[]}):string[] {
+  const errors:string[]=[];
+  if(input.phone.length>80||(input.phone.trim()&&!/\d/.test(input.phone)))errors.push('Enter a phone number of 80 characters or fewer, or leave it blank.');
+  if(input.website&&(!url(input.website)||!/^https?:\/\/[^/\s]+\.[^/\s]/i.test(input.website)))errors.push('Enter the website as a web address, such as example.com/you, or leave it blank.');
+  if(input.professionalLinks.length>100)errors.push('Add at most 100 professional links.');
+  const bad=input.professionalLinks.find(l=>!url(l)||!/^https?:\/\/[^/\s]+\.[^/\s]/i.test(l));
+  if(bad)errors.push(`Check the link “${bad.length>60?bad.slice(0,57)+'…':bad}”: use one web address per line, such as linkedin.com/in/you.`);
+  return errors;
+}
 export function validateProfileInput(input:Pick<Profile,'displayName'|'headline'|'summary'|'email'|'location'>):string[] {
   return Object.entries(profileFields).flatMap(([key,check])=>check(input[key as keyof typeof input])?[]:[key==='email'?'Enter a valid email address or leave it blank.':`Check ${key}: it exceeds the supported length or has an incorrect type.`]);
 }

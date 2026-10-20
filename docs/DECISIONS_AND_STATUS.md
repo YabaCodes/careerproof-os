@@ -12,6 +12,7 @@
 - **CP-UX2 (`0.1.3-alpha.4`, DEC-037)** guided capture is In Review on `feat/cp-ux2-guided-capture`. No schema or backup-format change.
 - **2026-10-16:** CP-UX2 merged (PR #35; UX201–UX207 unreported). CP-UX-Links (`0.1.3-alpha.5`) merged (PR #36, test repair #37) and **accepted UX301–UX307**. **CP-UX-Fluid (`0.1.3-alpha.6`, DEC-038)** is In Review in PR #40 (`feat/cp-ux-fluid`): motion and touch feedback, the recorded moment, tidy-ups and Home's Last 12 Months. No schema or backup-format change.
 
+- **2026-10-20 (later):** `main` = `4e5ee63` (merge of PR #42, `0.1.4-alpha.1`, deployed by run 39422037049). The user reported **STU-01–STU-09** and the alpha.7 checks **UX301-S3–UX309-S3** all passed on iPhone. **CP-PC (`0.1.4-alpha.2`)** is In Review on `feat/cp-profile-contact`: Phone, Website and Professional links in Edit Career Profile, used by CVs (design-review correction 1; no new decision, no schema or backup change).
 - **2026-10-20:** `main` = `05ac275` (merge of PR #41, `0.1.3-alpha.7` CP-UX3, deployed; UX301-S3–UX309-S3 not yet reported). The user reported that guided capture (CP-UX2) and proficiency (CP-013B) work okay — recorded as a general report, not item by item. **CP-STU (`0.1.4-alpha.1`, DEC-040)** is In Review on `feat/cp-studio`: Studio tab, Performance Review, CV Builder, on-device PDF, **schema 4 / backup format 4** (formats 1–3 importable).
 
 ### Earlier verified state (2026-10-10, updated at CP-012.3)

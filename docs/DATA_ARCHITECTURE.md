@@ -43,7 +43,7 @@ Fields marked **required** below are required for a *completed applicable record
 
 ### P0 — Professional identity
 
-1. `profiles` (1 current local profile): `displayName`, `headline`, `summary`, `primaryDomain`, `primaryRoleId`, `careerInterests[]`, `locale`, and CV-related optional contact fields `email`, `phone`, `location`, `website`, `professionalLinks[]`. Do **not** require personal contact data to use Vault. Preserve shipped profile fields and reserved ID.
+1. `profiles` (1 current local profile): `displayName`, `headline`, `summary`, `primaryDomain`, `primaryRoleId`, `careerInterests[]`, `locale`, and CV-related optional contact fields `email`, `phone`, `location`, `website`, `professionalLinks[]`. Do **not** require personal contact data to use Vault. Preserve shipped profile fields and reserved ID. *0.1.4-alpha.2:* the Edit Career Profile form fills `phone` (≤80, at least one digit), `website` and `professionalLinks[]` (http(s) only, `https://` added when typed without a scheme, duplicates dropped, ≤100); no schema change.
 2. `employers`: **`name`** (1–160 chars); optional `industry`, `location`, `website`, `description`.
 3. `roles`: **`employerId`, `title`, `startDate`**; optional `endDate`, `isCurrent`, `employmentType`, `responsibilities`, `leadershipScope`, `technologies[]`. One employer has multiple roles; overlapping roles allowed. A current role has null end date; only one role may be designated `primaryRoleId` (others may also be active). End must not definitively predate start.
 

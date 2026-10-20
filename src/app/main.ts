@@ -1,5 +1,5 @@
 import { type AchievementView as Achievement, type Profile, type AchievementStatus, type P0Store, type CareerCollections, IMPACT_CATEGORIES, APP_VERSION, SCHEMA_VERSION, P0_STORES, localDate, PROFILE_ID } from '../domain/models.js';
-import { validateAchievementInput, validateProfileInput, summarizeAchievements, ValidationError } from '../domain/validation.js';
+import { validateAchievementInput, validateProfileInput, validateProfileContact, parseProfessionalLinks, normalizeWebUrl, summarizeAchievements, ValidationError } from '../domain/validation.js';
 import { initialize, getProfile, saveProfile, listAchievements, getAchievement, saveAchievement, removeAchievement, getMeta, setMeta, database } from '../data/db.js';
 import { careerSections, careerForm, readCareerForm, syncCareerDisclosures, toggleCareerDisclosure, type CareerKind, type CareerRecord } from '../ui/careerHistory.js';
 import { portfolioForm,readPortfolioForm,updatePortfolioRoleChoices } from '../ui/experiencePortfolio.js';
@@ -382,10 +382,17 @@ function vaultView():string {
     </div><div id="vault-results" class="vault-results">${vaultRows()}</div>
   <p class="footer-note">${icon('info',14)} Outcomes, metrics and evidence are self-reported; nothing here is independently verified.</p>`;
 }
+/** CP-PC: the contact details a CV can use, as plain text and safe http(s) links. */
+const displayWeb=(u:string)=>u.replace(/^https?:\/\//i,'').replace(/\/$/,'');
+function profileContact():string{
+  const link=(u:string)=>`<a class="profile-link" href="${escape(u)}" target="_blank" rel="noopener noreferrer">${escape(displayWeb(u))}</a>`;
+  const rows=[profile.email?`<p>${escape(profile.email)}</p>`:'',profile.phone?`<p>${escape(profile.phone)}</p>`:'',profile.website?`<p>${link(profile.website)}</p>`:'',...profile.professionalLinks.map(u=>`<p>${link(u)}</p>`)].filter(Boolean);
+  return rows.length?`<div class="profile-section profile-contact"><p class="section-kicker">CONTACT</p>${rows.join('')}</div>`:'';
+}
 function profileView():string {
-  const has=Boolean(profile.displayName||profile.headline||profile.summary||profile.location||profile.email);
+  const has=Boolean(profile.displayName||profile.headline||profile.summary||profile.location||profile.email||profile.phone||profile.website||profile.professionalLinks.length);
   // CP-STU (DEC-040): Settings & Data now opens from the Profile page.
-  return `<button type="button" class="panel profile-settings" data-action="settings"><span class="profile-settings-icon">${icon('settings',21)}</span><span class="profile-settings-text"><strong>Settings &amp; Data</strong><small>Theme, backup, restore, Data Health and updates</small></span>${icon('chevron',17)}</button><div class="profile-grid"><section class="panel profile-card"><div class="profile-top"><div class="avatar">${escape(initials())}</div><div><h2>${escape(profile.displayName||'Your name')}</h2><p>${escape(profile.headline||'Add your current professional headline')}</p>${profile.location?`<span class="profile-location">${escape(profile.location)}</span>`:''}</div></div><div class="profile-section"><p class="section-kicker">ABOUT</p>${profile.summary?`<p class="profile-summary">${escape(profile.summary)}</p>`:`<p class="muted">Describe the expertise, responsibilities, and career direction that define you.</p>`}</div>${profile.email?`<div class="profile-section"><p class="section-kicker">CONTACT</p><p>${escape(profile.email)}</p></div>`:''}<button class="button button-outline" data-action="edit-profile">${icon('edit',16)} ${has?'Edit your profile':'Complete profile'}</button></section></div>${careerCollections?careerSections(profile,careerCollections):''}`;
+  return `<button type="button" class="panel profile-settings" data-action="settings"><span class="profile-settings-icon">${icon('settings',21)}</span><span class="profile-settings-text"><strong>Settings &amp; Data</strong><small>Theme, backup, restore, Data Health and updates</small></span>${icon('chevron',17)}</button><div class="profile-grid"><section class="panel profile-card"><div class="profile-top"><div class="avatar">${escape(initials())}</div><div><h2>${escape(profile.displayName||'Your name')}</h2><p>${escape(profile.headline||'Add your current professional headline')}</p>${profile.location?`<span class="profile-location">${escape(profile.location)}</span>`:''}</div></div><div class="profile-section"><p class="section-kicker">ABOUT</p>${profile.summary?`<p class="profile-summary">${escape(profile.summary)}</p>`:`<p class="muted">Describe the expertise, responsibilities, and career direction that define you.</p>`}</div>${profileContact()}<button class="button button-outline" data-action="edit-profile">${icon('edit',16)} ${has?'Edit your profile':'Complete profile'}</button></section></div>${careerCollections?careerSections(profile,careerCollections):''}`;
 }
 function modalContent():string {
   let content='';
@@ -554,6 +561,8 @@ function profileForm():string {
     <div class="field"><label for="headline">Professional headline</label><input id="headline" name="headline" maxlength="200" value="${escape(profile.headline)}" placeholder="e.g., Manufacturing Engineer & Technical Project Lead"/></div>
     <div class="field"><label for="summary">Professional summary</label><textarea id="summary" name="summary" rows="5" maxlength="10000" placeholder="Your background, specialization and professional goals">${escape(profile.summary)}</textarea></div>
     <div class="field-row"><div class="field"><label for="location">Location</label><input id="location" name="location" maxlength="150" value="${escape(profile.location)}" placeholder="City, country"/></div><div class="field"><label for="email">Professional email</label><input id="email" name="email" type="email" maxlength="254" value="${escape(profile.email)}" placeholder="you@example.com"/></div></div>
+    <div class="field-row"><div class="field"><label for="phone">Phone <span class="optional">optional</span></label><input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="80" value="${escape(profile.phone)}" placeholder="+886 900 000 000"/></div><div class="field"><label for="website">Website <span class="optional">optional</span></label><input id="website" name="website" type="url" inputmode="url" autocapitalize="off" autocomplete="url" maxlength="2000" value="${escape(profile.website)}" placeholder="example.com/you"/></div></div>
+    <div class="field"><label for="professionalLinks">Professional links <span class="optional">optional</span></label><textarea id="professionalLinks" name="professionalLinks" rows="3" autocapitalize="off" spellcheck="false" placeholder="linkedin.com/in/you&#10;github.com/you">${escape(profile.professionalLinks.join('\n'))}</textarea><p class="field-hint">One web address per line; https:// is added if you leave it out. CVs show these only when you choose them, and leave the phone number off unless you tick it.</p></div>
     <div class="form-guidance">${icon('shield',18)}<p>Profile information stays on this device. Only enter details you're comfortable storing locally.</p></div>
   </form><div class="modal-footer"><button class="button button-outline" data-action="close">Cancel</button><button class="button button-primary" data-action="save-profile">${icon('check',17)} Save profile</button></div>`;
 }
@@ -906,8 +915,9 @@ function captureRole(rich:ReturnType<typeof parseRichFields>,existing:Achievemen
 }
 async function saveProfileForm(){if(saving)return;setSaving(true);try{
   const form=document.getElementById('profile-form') as HTMLFormElement;const fd=new FormData(form);const input={displayName:String(fd.get('displayName')??'').trim(),headline:String(fd.get('headline')??'').trim(),summary:String(fd.get('summary')??'').trim(),email:String(fd.get('email')??'').trim(),location:String(fd.get('location')??'').trim()};
-  const errors=validateProfileInput(input);if(errors.length){showError(errors.join(' '));return;}
-  profile=await saveProfile({...input,id:PROFILE_ID,revision:profile.revision});if(careerCollections)careerCollections.profiles[0]=profile;closeModal(true);notify('Profile updated.');
+  const contact={phone:String(fd.get('phone')??'').trim(),website:normalizeWebUrl(String(fd.get('website')??'')),professionalLinks:parseProfessionalLinks(String(fd.get('professionalLinks')??''))};
+  const errors=[...validateProfileInput(input),...validateProfileContact(contact)];if(errors.length){showError(errors.join(' '));return;}
+  profile=await saveProfile({...input,...contact,id:PROFILE_ID,revision:profile.revision});if(careerCollections)careerCollections.profiles[0]=profile;closeModal(true);notify('Profile updated.');
 }catch(err){showError(errorMessage(err));}finally{setSaving(false);}}
 async function loadCareerCollections(){careerCollections=(await database.readSnapshot()).collections;profile=careerCollections.profiles[0]!;}
 function openCareer(kind:CareerKind,id:string|null=null,employerId?:string){
