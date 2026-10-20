@@ -7,7 +7,7 @@ import { timelinePage,timelineGroups,experiencePageView } from '../ui/experience
 import { achievementRow,achievementStory,savedMessage } from '../ui/achievementStory.js';
 import { achievementContexts,achievementYear,roleForExperience } from '../domain/timeline.js';
 import { compareRolesByRecency } from '../domain/chronology.js';
-import { createBackup, downloadBackup, parseBackupFile, restoreBackup, inspectDataHealth, type PreparedBackup } from '../data/backup.js';
+import { createBackup, downloadBackup, downloadBlob, parseBackupFile, restoreBackup, inspectDataHealth, type PreparedBackup } from '../data/backup.js';
 import { dataHealthReport } from '../ui/dataHealth.js';
 import { homeGapsSection, roleCoverageSection, recordTimelineSection, monthListTitle, monthEmpty } from '../ui/homeDashboard.js';
 import { recordByMonth } from '../domain/dashboard.js';
@@ -24,9 +24,13 @@ import {captureForm,captureFooter,showCaptureStep,syncWhere,filterWhere,filterSk
 import {competencyPage,competencyGroups,customCompetencyForm,readCustomCompetency,defaultSkillScope,skillExampleSummary,skillFilterLabel,type SkillScope} from '../ui/competencyLibrary.js';
 import {proficiencyAssessmentForm,readProficiencyForm} from '../ui/proficiencyAssessment.js';
 import {dateBounds,precisionDateFromInput} from '../domain/dates.js';
+import {type CareerDocument,type DocumentSection} from '../domain/models.js';
+import {buildReview,buildCv,documentReview,useUpdatedText,keepBlockText,removeBlock,editBlock,addBlock,restoreGenerated,moveSection,showSection,refreshSource,duplicateDocument,nextVersionTitle,documentHeader,presetPeriod,cvCandidates,cvDefaultSelection,defaultContactFields,type BlockState,type PeriodPreset} from '../domain/studio.js';
+import {documentPdf,pdfFileName} from '../domain/documentPdf.js';
+import {studioPage,reviewWizard,cvWizard,newReviewDraft,newCvDraft,readReviewForm,readCvForm,reviewInfo,reviewScopeOf,defaultReviewTitle,defaultCvTitle,documentPage,blockForm,readBlockForm,documentSettingsForm,previewView,type ReviewDraft,type CvDraft} from '../ui/studio.js';
 
-type Screen='home'|'vault'|'profile'|'portfolio'|'competencies';
-type Modal='capture'|'detail'|'expected'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|'assessment'|'remove'|null;
+type Screen='home'|'vault'|'profile'|'portfolio'|'competencies'|'studio';
+type Modal='capture'|'detail'|'expected'|'profile'|'settings'|'restore'|'career'|'project'|'competency'|'assessment'|'remove'|'studio-new'|'block'|'document-settings'|'preview'|null;
 const root=document.getElementById('app')!;
 let profile:Profile;
 let achievements:Achievement[]=[];
@@ -39,6 +43,13 @@ let captureStep:CaptureStep=1;
 // CP-UX1: the Experience tab shows a role-grouped timeline, or one experience's page.
 let experienceId:string|null=null;
 let experienceQuery='';
+// CP-STU (DEC-040): the Studio tab lists documents, or shows one document's editor (#/studio/<id>).
+let documentId:string|null=null;
+let studioKind:'review'|'cv'='review';
+let reviewDraft:ReviewDraft|null=null;
+let cvDraft:CvDraft|null=null;
+/** The block open in the text sheet (null id: new text in `section`). */
+let blockEdit:{id:string|null;section:DocumentSection}|null=null;
 let timelineOpen:Set<string>|null=null;
 let screen:Screen='home';
 let modal:Modal=null;
@@ -81,20 +92,25 @@ let toastTimer:number|undefined;
 let toastMessage='';
 let toastKind:'success'|'error'='success';
 let toastDetail='';
-const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships',proficiencyAssessments:'Proficiency assessments'};
+const collectionLabels:Record<P0Store,string>={profiles:'Career profiles',employers:'Employers',roles:'Roles',education:'Education',credentials:'Credentials',projects:'Projects',achievements:'Achievements',impactMetrics:'Impact metrics',competencyCategories:'Competency categories',competencies:'Competencies',evidenceReferences:'Evidence references',recordLinks:'Relationships',proficiencyAssessments:'Proficiency assessments',careerDocuments:'Studio documents',documentSources:'Document sources'};
 
 const escape=escapeHtml;
 function relativeDate(v:string):string {if(!v)return 'Never';return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',year:'numeric'}).format(new Date(v));}
 function capitalize(v:string):string {return v.charAt(0).toUpperCase()+v.slice(1);}
 function initials():string {return profile.displayName.trim().split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()??'').join('') || 'CP';}
-function currentNav():Screen {const name=location.hash.replace('#/','').split('/')[0];return name==='vault'||name==='profile'||name==='portfolio'||name==='competencies'?name:'home';}
+function currentNav():Screen {const name=location.hash.replace('#/','').split('/')[0];return name==='vault'||name==='profile'||name==='portfolio'||name==='competencies'||name==='studio'?name:'home';}
+/** CP-STU: #/studio/<id> opens that document's editor. */
+function hashDocument():string|null {const [name,id]=location.hash.replace('#/','').split('/');return name==='studio'&&id?decodeURIComponent(id):null;}
 /** CP-UX1: #/portfolio/<id> opens that experience's page. */
 function hashExperience():string|null {const [name,id]=location.hash.replace('#/','').split('/');return name==='portfolio'&&id?decodeURIComponent(id):null;}
 function applyTheme(){document.documentElement.dataset.theme=theme;}
 async function setTheme(value:string){if(!['system','light','dark'].includes(value))return;try{await setMeta('preferences',{theme:value});theme=value;localStorage.setItem('careerproof-theme',theme);applyTheme();}catch(err){notify(errorMessage(err),'error');}}
 function navButton(id:Screen,label:string,glyph:string,mobile=false):string{return `<button class="nav-item ${mobile?'mobile-nav-item':''} ${screen===id?'active':''}" data-action="nav" data-screen="${id}" ${screen===id?'aria-current="page"':''}>${mobile?'<span class="nav-icon">':''}${icon(glyph,24)}${mobile?'</span>':''}<span>${label}</span></button>`;}
-// CP-012.2 (DEC-029): five content destinations; capture and Settings live in the header.
-const NAV:[Screen,string,string][]=[['home','Home','home'],['vault','Vault','vault'],['portfolio','Experience','layers'],['competencies','Skills','target'],['profile','Profile','user']];
+// CP-012.2 (DEC-029): five content destinations; capture lives in the header.
+// CP-STU (DEC-040): Studio takes Profile's tab. Profile (with Settings inside) opens from the
+// initials in the header; the wider sidebar keeps Profile as well.
+const NAV:[Screen,string,string][]=[['home','Home','home'],['vault','Vault','vault'],['portfolio','Experience','layers'],['competencies','Skills','target'],['studio','Studio','document']];
+const SIDE_NAV:[Screen,string,string][]=[...NAV,['profile','Profile','user']];
 function plural(n:number,word:string):string{return `${n} ${word}${n===1?'':'s'}`;}
 // CP-012.3: page titles and subtitles use Title Case; minor words (a, and, of, the, with…) stay lower case.
 function screenMeta():{title:string;subtitle:string}{
@@ -104,12 +120,13 @@ function screenMeta():{title:string;subtitle:string}{
     case 'portfolio':{const n=careerCollections?.projects.length??0,r=careerCollections?.roles.length??0;return {title:'Experience',subtitle:n||r?`${plural(r,'Role')} · ${plural(n,'Experience')}`:'Your Work, Grouped by Role'};}
     case 'competencies':{const s=careerCollections?skillExampleSummary(careerCollections):{withExamples:0,total:0};return {title:'Skills',subtitle:`${s.withExamples} of ${s.total} Skills with Examples`};}
     case 'profile':return {title:'Career Profile',subtitle:'Identity, Work History and Qualifications'};
+    case 'studio':return {title:'Studio',subtitle:'Reviews and CVs Made from Your Record'};
     default:{const first=profile.displayName.trim().split(/\s+/)[0];return {title:'CareerProof',subtitle:first?`Welcome Back, ${first}`:'Record the Work. Prove the Impact.'};}
   }
 }
 function pageHeader():string{
   const meta=screenMeta();
-  return `<header class="page-header"><div class="page-title"><h1>${escape(meta.title)}</h1><p>${escape(meta.subtitle)}</p></div><div class="page-actions"><button class="header-button mobile-create" data-action="capture" aria-label="New achievement" title="New achievement">${icon('plus',21)}<span class="header-button-label">New achievement</span></button><button class="header-button header-settings" data-action="settings" aria-label="Settings" title="Settings">${icon('settings',21)}</button></div></header>`;
+  return `<header class="page-header"><div class="page-title"><h1>${escape(meta.title)}</h1><p>${escape(meta.subtitle)}</p></div><div class="page-actions"><button class="header-button mobile-create" data-action="capture" aria-label="New achievement" title="New achievement">${icon('plus',21)}<span class="header-button-label">New achievement</span></button><button class="header-button header-profile" data-action="nav" data-screen="profile" aria-label="Profile and settings" title="Profile and settings" ${screen==='profile'?'aria-current="page"':''}>${escape(initials())}</button></div></header>`;
 }
 function pwaUpdateMessage():string {
   const target=pwaReadyVersion?`version ${pwaReadyVersion}`:'the new version';
@@ -206,11 +223,11 @@ function shell():string {
     <aside class="sidebar" aria-label="Primary navigation">
       <div class="brand"><img class="brand-mark" src="./icon.svg" alt="" width="44" height="44"/><div class="brand-copy"><strong>CareerProof</strong><small>Personal career OS</small></div></div>
       <p class="sidebar-caption">WORKSPACE</p>
-      <nav class="side-links" aria-label="Main navigation">${NAV.map(([id,label,glyph])=>navButton(id,label,glyph)).join('')}</nav>
+      <nav class="side-links" aria-label="Main navigation">${SIDE_NAV.map(([id,label,glyph])=>navButton(id,label,glyph)).join('')}</nav>
       <div class="sidebar-bottom"><button class="sidebar-settings" data-action="settings">${icon('settings',24)} Settings ${icon('chevron',16)}</button><div class="sidebar-version">CareerProof OS <span>v${APP_VERSION}</span></div></div>
     </aside>
     <div class="content-wrap">
-      <main class="page" id="main-content">${screen==='portfolio'&&experienceId&&careerCollections?experiencePageView(careerCollections,experienceId,expectedUndo?.experienceId===experienceId):pageHeader()+(screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?timelinePage(careerCollections,experienceQuery,timelineOpen):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope(),skillFiltersOpen):profileView())}</main>
+      <main class="page" id="main-content">${screen==='portfolio'&&experienceId&&careerCollections?experiencePageView(careerCollections,experienceId,expectedUndo?.experienceId===experienceId):screen==='studio'&&documentId&&careerCollections&&openDocument()?documentPage(careerCollections,openDocument()!,documentStates()):pageHeader()+(screen==='home'?homeView():screen==='vault'?vaultView():screen==='portfolio'&&careerCollections?timelinePage(careerCollections,experienceQuery,timelineOpen):screen==='competencies'&&careerCollections?competencyPage(careerCollections,skillQuery,skillCategory,skillShowArchived,currentSkillScope(),skillFiltersOpen):screen==='studio'&&careerCollections?studioPage(careerCollections):profileView())}</main>
     </div>
     <nav class="mobile-nav" aria-label="Mobile navigation">${NAV.map(([id,label,glyph])=>navButton(id,label,glyph,true)).join('')}</nav>
     <div id="modal-layer">${modalView()}</div>${modal?'':toastView()}
@@ -367,10 +384,10 @@ function vaultView():string {
 }
 function profileView():string {
   const has=Boolean(profile.displayName||profile.headline||profile.summary||profile.location||profile.email);
-  return `<div class="profile-grid"><section class="panel profile-card"><div class="profile-top"><div class="avatar">${escape(initials())}</div><div><h2>${escape(profile.displayName||'Your name')}</h2><p>${escape(profile.headline||'Add your current professional headline')}</p>${profile.location?`<span class="profile-location">${escape(profile.location)}</span>`:''}</div></div><div class="profile-section"><p class="section-kicker">ABOUT</p>${profile.summary?`<p class="profile-summary">${escape(profile.summary)}</p>`:`<p class="muted">Describe the expertise, responsibilities, and career direction that define you.</p>`}</div>${profile.email?`<div class="profile-section"><p class="section-kicker">CONTACT</p><p>${escape(profile.email)}</p></div>`:''}<button class="button button-outline" data-action="edit-profile">${icon('edit',16)} ${has?'Edit your profile':'Complete profile'}</button></section></div>${careerCollections?careerSections(profile,careerCollections):''}`;
+  // CP-STU (DEC-040): Settings & Data now opens from the Profile page.
+  return `<button type="button" class="panel profile-settings" data-action="settings"><span class="profile-settings-icon">${icon('settings',21)}</span><span class="profile-settings-text"><strong>Settings &amp; Data</strong><small>Theme, backup, restore, Data Health and updates</small></span>${icon('chevron',17)}</button><div class="profile-grid"><section class="panel profile-card"><div class="profile-top"><div class="avatar">${escape(initials())}</div><div><h2>${escape(profile.displayName||'Your name')}</h2><p>${escape(profile.headline||'Add your current professional headline')}</p>${profile.location?`<span class="profile-location">${escape(profile.location)}</span>`:''}</div></div><div class="profile-section"><p class="section-kicker">ABOUT</p>${profile.summary?`<p class="profile-summary">${escape(profile.summary)}</p>`:`<p class="muted">Describe the expertise, responsibilities, and career direction that define you.</p>`}</div>${profile.email?`<div class="profile-section"><p class="section-kicker">CONTACT</p><p>${escape(profile.email)}</p></div>`:''}<button class="button button-outline" data-action="edit-profile">${icon('edit',16)} ${has?'Edit your profile':'Complete profile'}</button></section></div>${careerCollections?careerSections(profile,careerCollections):''}`;
 }
-function modalView():string {
-  if(!modal)return '';
+function modalContent():string {
   let content='';
   if(modal==='capture')content=achievementForm();
   if(modal==='detail')content=achievementDetail();
@@ -389,8 +406,16 @@ function modalView():string {
   if(modal==='assessment'&&careerCollections){const skill=careerCollections.competencies.find(x=>x.id===selectedId);if(skill)content=proficiencyAssessmentForm(skill,localDate());}
   if(modal==='remove')content=removalView();
   if(modal==='settings')content=settingsView();
+  if(modal==='studio-new'&&careerCollections){const v=studioKind==='review'&&reviewDraft?reviewWizard(careerCollections,reviewDraft):cvDraft?cvWizard(careerCollections,cvDraft,localDate()):null;if(v)content=dialogHeader(v.title,v.subtitle)+v.body+v.footer;}
+  if(modal==='block'&&careerCollections&&blockEdit){const doc=openDocument();if(doc)content=blockForm(careerCollections,doc,doc.contentBlocks.find(b=>b.id===blockEdit!.id)??null,blockEdit.section);}
+  if(modal==='document-settings'&&careerCollections){const doc=openDocument();if(doc)content=documentSettingsForm(careerCollections,doc);}
+  if(modal==='preview'&&careerCollections){const doc=openDocument();if(doc)content=previewView(doc,documentHeader(careerCollections,doc));}
   if(modal==='restore')content=restoreView();
-  return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1" class="modal ${modal==='capture'?'capture-modal':''}">${content}</section></div>`;
+  return content;
+}
+function modalView():string {
+  if(!modal)return '';
+  return `<div class="modal-backdrop" data-action="backdrop"><section role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description" tabindex="-1" class="modal ${modal==='capture'?'capture-modal':''}${modal==='preview'?' preview-modal':''}">${modalContent()}</section></div>`;
 }
 function dialogHeader(title:string,subtitle:string):string {return `<div class="modal-header"><div><h2 id="dialog-title">${title}</h2><p id="dialog-description">${subtitle}</p></div><button class="icon-button close-dialog" data-action="close" aria-label="Close dialog">${icon('close',24)}</button></div>${toastView(true)}`;}
 const stepText=(step:CaptureStep)=>`Step ${step} of 3`;
@@ -570,10 +595,229 @@ async function confirmRemoval(){
 function restoreView():string {
   if(!pendingBackup)return '';
   const m=pendingBackup.backup.manifest;
-  return `${dialogHeader('Restore Career Data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This Replaces Your Current Data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.sourceFormat===2?'<p><strong>Older format-2 backup:</strong> this file predates proficiency history. Restoring it replaces local data and removes any newer self-assessments. Export your current data first.</p>':''}${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System. Any proficiency assessments will also be removed.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
+  return `${dialogHeader('Restore Career Data','Review the backup before replacing your local records.')}<div class="modal-body"><div class="restore-warning">${icon('alert',20)}<div><strong>This Replaces Your Current Data</strong><p>Every local career collection and portable preference will be replaced. Export your current data before proceeding.</p>${pendingBackup.sourceFormat===2?'<p><strong>Older format-2 backup:</strong> this file predates proficiency history and Studio documents. Restoring it replaces local data and removes any newer self-assessments, reviews and CVs. Export your current data first.</p>':''}${pendingBackup.sourceFormat===3?'<p><strong>Older format-3 backup:</strong> this file predates Studio documents. Restoring it replaces local data and removes any performance reviews and CVs saved here. Export your current data first.</p>':''}${pendingBackup.legacy?'<p><strong>Legacy format-1 backup:</strong> employers, roles, qualifications, projects, metrics, evidence, custom competencies and links currently stored here will be removed. This file restores its profile and achievements and the 32 built-in competencies. Theme resets to System. Any proficiency assessments, reviews and CVs will also be removed.</p>':''}</div></div><div class="restore-preview"><p><span>Backup created</span><strong>${relativeDate(m.exportedAt)}</strong></p><p><span>Achievements</span><strong>${m.counts.achievements}</strong></p>${P0_STORES.filter(s=>s!=='achievements').map(s=>`<p><span>${collectionLabels[s]}</span><strong>${m.counts[s]}</strong></p>`).join('')}<p><span>Schema</span><strong>${m.schemaVersion}</strong></p></div><div class="form-guidance">${icon('shield',17)}<p>This backup passed initial structure and record validation. Its contents are not independently verified.</p></div></div><div class="modal-footer"><button class="button button-outline" data-action="settings">Cancel</button><button class="button button-danger" data-action="confirm-restore">Replace local data</button></div>`;
+}
+// ---------------------------------------------------------------- CP-STU Studio (DEC-040)
+function openDocument():CareerDocument|undefined{return documentId?careerCollections?.careerDocuments.find(d=>d.id===documentId):undefined;}
+function documentStates():Map<string,BlockState>{const doc=openDocument();return doc&&careerCollections?documentReview(careerCollections,doc,careerCollections.documentSources):new Map();}
+/** Open one document's editor (#/studio/<id>), or return to the Studio list. */
+function openStudioDocument(id:string|null){
+  if(modal)closeModal(true);
+  screen='studio';experienceId=null;documentId=id;location.hash=id?`/studio/${encodeURIComponent(id)}`:'/studio';render();window.scrollTo(0,0);
+  const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
+}
+function startStudio(kind:'review'|'cv'){
+  if(!careerCollections)return notify('Career records are still loading.','error');
+  studioKind=kind;
+  if(kind==='review')reviewDraft=newReviewDraft(localDate());else cvDraft=newCvDraft();
+  openModal('studio-new');
+}
+function wizardForm():HTMLFormElement|null{return document.getElementById('studio-wizard') as HTMLFormElement|null;}
+function syncWizardState(){
+  const form=wizardForm();if(!form)return;
+  if(studioKind==='review'&&reviewDraft){
+    const before=JSON.stringify(reviewScopeOf(reviewDraft));
+    reviewDraft=readReviewForm(form,reviewDraft);
+    // A different period, role or privacy choice offers different achievements: start from all of them again.
+    if(reviewDraft.step===1&&JSON.stringify(reviewScopeOf(reviewDraft))!==before)reviewDraft.selected=null;
+  }
+  if(studioKind==='cv'&&cvDraft)cvDraft=readCvForm(form,cvDraft);
+}
+/** Redraw the open sheet in place (no rise animation); a new step slides in and its heading takes focus. */
+function refreshModal(forward:boolean|null=null){
+  const dialog=document.querySelector<HTMLElement>('.modal');if(!dialog){render();return;}
+  const scroller=dialog.querySelector<HTMLElement>('.modal-body'),scroll=scroller?.scrollTop??0;
+  const active=document.activeElement instanceof HTMLInputElement&&dialog.contains(document.activeElement)?document.activeElement:null;
+  const focusKey=active?{name:active.name,value:active.value}:null;
+  dialog.innerHTML=modalContent();
+  const body=dialog.querySelector<HTMLElement>('.modal-body');
+  if(forward===null){
+    if(body)body.scrollTop=scroll;
+    // Keep keyboard focus on the choice that was just changed.
+    if(focusKey)[...dialog.querySelectorAll<HTMLInputElement>('input')].find(x=>x.name===focusKey.name&&x.value===focusKey.value)?.focus({preventScroll:true});
+    return;
+  }
+  slideStep(wizardForm(),forward);
+  document.getElementById('wizard-step-title')?.focus({preventScroll:true});
+}
+function refreshReviewInfo(){
+  if(!careerCollections||!reviewDraft)return;
+  const info=reviewInfo(careerCollections,reviewDraft),draft=reviewDraft;
+  const summary=document.getElementById('review-info');if(summary)summary.innerHTML=info.summary;
+  const hint=document.getElementById('review-confidential-hint');if(hint)hint.textContent=info.confidential;
+  const title=document.getElementById('review-title') as HTMLInputElement|null;if(title&&!draft.titleTouched)title.value=defaultReviewTitle(draft);
+  document.querySelectorAll<HTMLElement>('[data-action="review-preset"]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.preset===draft.preset)));
+}
+function pickReviewPreset(preset:string){
+  if(!reviewDraft)return;
+  syncWizardState();
+  const draft:ReviewDraft={...reviewDraft!,preset:preset as ReviewDraft['preset']};
+  if(preset!=='custom'){
+    const p=presetPeriod(preset as PeriodPreset,localDate());draft.start=p.start.value;draft.end=p.end.value;draft.selected=null;
+    const start=document.getElementById('review-start') as HTMLInputElement|null,end=document.getElementById('review-end') as HTMLInputElement|null;
+    if(start)start.value=draft.start;if(end)end.value=draft.end;
+  }else document.getElementById('review-start')?.focus();
+  if(!draft.titleTouched)draft.title=defaultReviewTitle(draft);
+  reviewDraft=draft;isDirty=true;refreshReviewInfo();
+}
+function wizardStep(delta:1|-1){
+  syncWizardState();
+  if(studioKind==='review'&&reviewDraft){
+    if(delta>0){
+      if(!/^\d{4}-\d{2}$/.test(reviewDraft.start)||!/^\d{4}-\d{2}$/.test(reviewDraft.end))return showError('Choose the first and last month of the period.');
+      if(!reviewDraft.title.trim())return showError('Add a title for this review.');
+    }
+    reviewDraft={...reviewDraft,step:delta>0?2:1};
+  }else if(cvDraft){
+    if(delta>0&&cvDraft.step===1&&!cvDraft.title.trim())return showError('Add a name for this CV.');
+    cvDraft={...cvDraft,step:Math.min(3,Math.max(1,cvDraft.step+delta)) as 1|2|3};
+  }
+  refreshModal(delta>0);
+}
+function wizardSelectAll(){
+  const form=wizardForm();if(!form)return;
+  form.querySelectorAll<HTMLInputElement>('input[name="achievement"]').forEach(x=>{x.checked=true;});
+  syncWizardState();updateReviewChosen();isDirty=true;
+}
+function updateReviewChosen(){
+  const form=wizardForm(),out=document.getElementById('review-chosen');if(!form||!out)return;
+  const all=form.querySelectorAll<HTMLInputElement>('input[name="achievement"]');
+  out.textContent=`${[...all].filter(x=>x.checked).length} of ${all.length}`;
+}
+async function finishWizard(){
+  if(saving||!careerCollections)return;
+  syncWizardState();
+  const c=careerCollections,now=new Date().toISOString();
+  let built;
+  try{
+    const revision=(await database.readSnapshot()).revision;
+    if(studioKind==='review'&&reviewDraft){
+      const d=reviewDraft,scope=reviewScopeOf(d);
+      const ids=d.selected??[...(wizardForm()?.querySelectorAll<HTMLInputElement>('input[name="achievement"]')??[])].map(x=>x.value);
+      if(!ids.length)return showError('Choose at least one achievement for the draft.');
+      built=buildReview(c,{...scope,title:d.title.trim()||defaultReviewTitle(d),achievementIds:ids,includeSkills:d.includeSkills,includeNext:d.includeNext},now,revision);
+    }else if(cvDraft){
+      const d=cvDraft;
+      if(d.from!=='record'){
+        const original=c.careerDocuments.find(x=>x.id===d.from&&x.documentType==='cv');
+        if(!original)return showError('That CV no longer exists. Choose “Your record” instead.');
+        built=duplicateDocument(original,c.documentSources,d.title.trim()&&d.title.trim()!==defaultCvTitle(c)?d.title.trim():nextVersionTitle(c,original.title),now);
+        built.document.templateId=d.templateId;
+      }else{
+        const cands=cvCandidates(c,{excludeConfidential:!d.includeConfidential});
+        built=buildCv(c,{title:d.title.trim()||defaultCvTitle(c),templateId:d.templateId,excludeConfidential:!d.includeConfidential,
+          roleIds:d.roleIds??cands.roles.map(r=>r.role.id),achievementIds:d.selected??cvDefaultSelection(cands),includeSkills:d.includeSkills,
+          includeTechnologies:d.includeTechnologies,includeEducation:d.includeEducation,includeCredentials:d.includeCredentials,
+          contactFields:d.contactFields??defaultContactFields(c),today:localDate()},now,revision);
+      }
+    }else return;
+  }catch(err){return showError(errorMessage(err));}
+  setSaving(true);
+  try{
+    const saved=await database.saveCareerDocument(built.document,built.sources);
+    await loadCareerCollections();reviewDraft=null;cvDraft=null;
+    openStudioDocument(saved.id);
+    notify(saved.documentType==='review'?'Draft made.':'CV made.','success','Edit any text here; your records stay as they are.');
+  }catch(err){showError(errorMessage(err));}finally{setSaving(false);}
+}
+/** Save the open document; `refreshKey` also records the current revision of the source the user just reviewed. */
+async function saveOpenDocument(next:CareerDocument,refreshKey?:string|null):Promise<boolean>{
+  if(!careerCollections)return false;
+  try{
+    const sources=refreshKey===undefined?null:refreshSource(careerCollections,careerCollections.documentSources,next.id,refreshKey);
+    await database.saveCareerDocument(next,sources);
+    await loadCareerCollections();return true;
+  }catch(err){
+    await loadCareerCollections().catch(()=>{});
+    if(modal)showError(errorMessage(err));else{render();notify(errorMessage(err),'error');}
+    return false;
+  }
+}
+async function resolveBlock(id:string,how:'updated'|'keep'|'remove'){
+  const doc=openDocument(),state=documentStates().get(id),block=doc?.contentBlocks.find(b=>b.id===id);
+  if(!doc||!block||saving)return;
+  if(how==='remove'&&!window.confirm('Remove this text from the document? Your records are not changed.'))return;
+  saving=true;
+  try{
+    const next=how==='remove'?removeBlock(doc,id):how==='updated'&&state?.state==='changed'?useUpdatedText(doc,id,state.next):state?keepBlockText(doc,id,state):doc;
+    if(await saveOpenDocument(next,how==='remove'?undefined:block.sourceKey)){
+      render();notify(how==='updated'?'Updated from the source.':how==='keep'?'Kept your text.':'Removed from the document.');
+    }
+  }finally{saving=false;}
+}
+async function saveBlockForm(){
+  const doc=openDocument(),form=document.getElementById('block-form') as HTMLFormElement|null;
+  if(!doc||!form||!blockEdit||saving)return;
+  const existing=blockEdit.id?doc.contentBlocks.find(b=>b.id===blockEdit!.id):undefined;
+  if(blockEdit.id&&!existing)return showError('This text was removed in another tab. Close this sheet and reload.');
+  const value=readBlockForm(form,existing?.kind??(blockEdit.section==='summary'||blockEdit.section==='skills'||blockEdit.section==='technologies'?'paragraph':'entry'),existing??null);
+  if(!existing&&!value.heading&&!value.text&&!value.meta&&!value.date)return showError('Add some text first, or cancel.');
+  setSaving(true);
+  try{
+    const next=existing?editBlock(doc,existing.id,value):addBlock(doc,blockEdit.section,value);
+    if(await saveOpenDocument(next)){closeModal(true);notify(existing?'Text saved.':'Text added.','success','Only this document changed.');}
+  }finally{setSaving(false);}
+}
+function restoreBlockFields(){
+  const doc=openDocument(),block=blockEdit?.id?doc?.contentBlocks.find(b=>b.id===blockEdit!.id):undefined;
+  const form=document.getElementById('block-form') as HTMLFormElement|null;
+  if(!block?.generated||!form)return;
+  const restored=restoreGenerated({contentBlocks:[block]},block.id).contentBlocks[0]!;
+  for(const key of ['heading','meta','date','text'] as const){const el=form.elements.namedItem(key) as HTMLInputElement|HTMLTextAreaElement|null;if(el)el.value=key==='text'&&block.kind==='bullet'?restored.text||restored.heading:restored[key];}
+  isDirty=true;notify('Source text restored in the form. Save to keep it.');
+}
+async function changeSections(change:(doc:CareerDocument)=>CareerDocument){
+  const doc=openDocument();if(!doc||saving)return;
+  const focused=document.activeElement?.id??'';
+  saving=true;try{
+    if(await saveOpenDocument(change(doc))){
+      render(true);
+      // A move button that reached the end is disabled: keep focus on the same section's other arrow.
+      const target=document.getElementById(focused) as HTMLButtonElement|null;
+      if(target?.disabled)document.getElementById(focused.endsWith('-up')?focused.replace(/-up$/,'-down'):focused.replace(/-down$/,'-up'))?.focus({preventScroll:true});
+    }
+  }finally{saving=false;}
+}
+async function saveDocumentSettings(){
+  const doc=openDocument(),form=document.getElementById('document-settings-form') as HTMLFormElement|null;
+  if(!doc||!form||saving)return;
+  const fd=new FormData(form),title=String(fd.get('title')??'').trim(),template=String(fd.get('templateId')??doc.templateId);
+  if(!title)return showError('Add a title.');
+  setSaving(true);
+  try{
+    const templateId=doc.documentType==='cv'&&(template==='cv-professional'||template==='cv-technical')?template:doc.templateId;
+    if(await saveOpenDocument({...doc,title,templateId})){closeModal(true);notify('Details saved.');}
+  }finally{setSaving(false);}
+}
+async function duplicateOpenDocument(){
+  const doc=openDocument();if(!doc||!careerCollections||saving)return;
+  setSaving(true);
+  try{
+    const built=duplicateDocument(doc,careerCollections.documentSources,nextVersionTitle(careerCollections,doc.title),new Date().toISOString());
+    const saved=await database.saveCareerDocument(built.document,built.sources);
+    await loadCareerCollections();openStudioDocument(saved.id);
+    notify('New version saved.','success',`“${doc.title}” is unchanged.`);
+  }catch(err){notify(errorMessage(err),'error');}finally{setSaving(false);}
+}
+async function deleteOpenDocument(){
+  const doc=openDocument();if(!doc||saving)return;
+  if(!window.confirm(`Delete “${doc.title}”? This removes only the document; your career records are not changed.`))return;
+  saving=true;
+  try{await database.removeCareerDocument(doc.id,doc.revision);await loadCareerCollections();openStudioDocument(null);notify('Document deleted.','success','Your career records are unchanged.');}
+  catch(err){notify(errorMessage(err),'error');}finally{saving=false;}
+}
+function exportPdf(){
+  const doc=openDocument();if(!doc||!careerCollections)return;
+  try{
+    const pdf=documentPdf(doc,documentHeader(careerCollections,doc),new Date());
+    downloadBlob(pdfFileName(doc,localDate()),new Blob([pdf.bytes as BlobPart],{type:'application/pdf'}));
+    const notes=[plural(pdf.pages,'page'),pdf.unsupported?`${plural(pdf.unsupported,'character')} the PDF fonts cannot show appear as “?”`:'',pdf.simplified?`${plural(pdf.simplified,'symbol')} written in plain form (for example → as ->)`:''].filter(Boolean);
+    notify('PDF generated.',pdf.unsupported?'error':'success',notes.join(' · ')+'. Check that it saved, then share it only where you intend.');
+  }catch(err){notify(`PDF failed: ${errorMessage(err)}`,'error');}
 }
 let lastRenderedScreen:Screen|null=null;
 let lastRenderedExperience:string|null=null;
+let lastRenderedDocument:string|null=null;
 let lastRenderedModal:Modal=null;
 let modalOpenedAt=0;
 /** Keep expanded Experience cards and skill entries open when the same screen redraws (e.g. after a dialog closes). */
@@ -582,10 +826,10 @@ function openDisclosureKeys():string[]{return lastRenderedScreen===screen?[...ro
 function restoreDisclosures(keys:string[]){if(!keys.length)return;const all=[...root.querySelectorAll<HTMLDetailsElement>('details[data-keep-open]')];for(const key of keys){const el=all.find(d=>d.dataset.keepOpen===key);if(el)el.open=true;}}
 function render(preserveFocus=false):void {const focusId=preserveFocus?(document.activeElement as HTMLElement|null)?.id:'';const openKeys=openDisclosureKeys();
   // CP-UX-Fluid (DEC-038): motion follows changes, not redraws.
-  const firstRender=lastRenderedScreen===null,moved=!firstRender&&(lastRenderedScreen!==screen||lastRenderedExperience!==experienceId);
+  const firstRender=lastRenderedScreen===null,moved=!firstRender&&(lastRenderedScreen!==screen||lastRenderedExperience!==experienceId||lastRenderedDocument!==documentId);
   const bars=firstRender||moved?null:snapshotBars(root),opening=Boolean(modal)&&!lastRenderedModal;
-  const move:ScreenMove=experienceId&&experienceId!==lastRenderedExperience?'forward':!experienceId&&lastRenderedExperience&&screen==='portfolio'?'back':'tab';
-  root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;lastRenderedExperience=experienceId;lastRenderedModal=modal;dialogs.update(Boolean(modal));
+  const move:ScreenMove=(experienceId&&experienceId!==lastRenderedExperience)||(documentId&&documentId!==lastRenderedDocument)?'forward':(!experienceId&&lastRenderedExperience&&screen==='portfolio')||(!documentId&&lastRenderedDocument&&screen==='studio')?'back':'tab';
+  root.classList.remove('app-loading');root.innerHTML=shell()+pwaUpdateNotice();restoreDisclosures(openKeys);lastRenderedScreen=screen;lastRenderedExperience=experienceId;lastRenderedDocument=documentId;lastRenderedModal=modal;dialogs.update(Boolean(modal));
   const main=document.getElementById('main-content');
   if(opening){modalOpenedAt=Date.now();enterSheet(root);}
   if(modal==='expected')syncExpectedPreview();
@@ -740,7 +984,7 @@ function refreshTimeline(){
 function openExperience(id:string|null){
   if(modal)closeModal(true);
   if(expectedUndo&&id!==expectedUndo.experienceId)expectedUndo=null;
-  screen='portfolio';experienceId=id;location.hash=id?`/portfolio/${encodeURIComponent(id)}`:'/portfolio';render();window.scrollTo(0,0);
+  screen='portfolio';experienceId=id;documentId=null;location.hash=id?`/portfolio/${encodeURIComponent(id)}`:'/portfolio';render();window.scrollTo(0,0);
   const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}
 }
 /** Open the exact existing Skill record; this is navigation, not assessment or record editing. */
@@ -798,7 +1042,7 @@ async function doIntegrityCheck(){
         report.counts.education+report.counts.credentials;
       target.textContent='Check passed. '+total+' career and achievement records; '+
         report.counts.recordLinks+' relationships, '+report.counts.impactMetrics+
-        ' metrics, '+report.counts.evidenceReferences+' evidence references. '+
+        ' metrics, '+report.counts.evidenceReferences+' evidence references, '+report.counts.careerDocuments+' Studio documents. '+
         'Backup format '+report.formatVersion+' and schema '+report.schemaVersion+
         ' validated ('+Math.ceil(report.jsonBytes/1024)+' KiB estimated JSON). '+
         'Read-only: nothing was restored or uploaded. This does not verify the accuracy of your claims or replace a downloaded backup.';
@@ -815,19 +1059,46 @@ async function doIntegrityCheck(){
 }
 async function doExport(){try{const file=await createBackup();downloadBackup(file.name,file.json);await setMeta('lastExportAt',file.exportedAt);lastExportAt=file.exportedAt;if(!modal||modal==='settings')render(true);notify('Backup file generated. Check that it was saved securely.');}catch(err){notify(`Backup failed: ${errorMessage(err)}`,'error');}}
 async function doFileRestore(file:File){try{pendingBackup=await parseBackupFile(file);openModal('restore');}catch(err){notify(`Cannot restore: ${errorMessage(err)}`,'error');}}
-async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;setSaving(true);try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();await loadCareerCollections();expectedUndo=null;theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';location.hash='/home';render();dialogs.restoreFocus();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{setSaving(false);}}
+async function doConfirmRestore(){if(!pendingBackup||saving)return;const prepared=pendingBackup;setSaving(true);try{await restoreBackup(prepared);profile=await getProfile();achievements=await listAchievements();await loadCareerCollections();expectedUndo=null;theme=prepared.backup.preferences.theme;localStorage.setItem('careerproof-theme',theme);applyTheme();lastExportAt=null;closeModal(true);screen='home';documentId=null;location.hash='/home';render();dialogs.restoreFocus();notify('Backup restored successfully.');}catch(err){notify(`Restore failed: ${errorMessage(err)}`,'error');}finally{setSaving(false);}}
 async function toggleArchive(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;try{
   const isArchived=a.status==='archived';await saveAchievement({...a,revision:a.revision,status:isArchived?a.preArchiveStatus??'draft':'archived',preArchiveStatus:isArchived?null:a.status as 'draft'|'recorded'});
   achievements=await listAchievements();closeModal(true);notify(isArchived?'Achievement restored.':'Achievement archived.');
 }catch(err){notify(errorMessage(err),'error');}}
-async function deleteCurrent(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;if(!window.confirm(`Permanently delete "${a.title}"? This cannot be undone.`))return;
-  try{await removeAchievement(a.id,a.revision);achievements=await listAchievements();closeModal(true);notify('Achievement deleted.');}catch(err){notify(errorMessage(err),'error');}
+async function deleteCurrent(){const a=achievements.find(x=>x.id===selectedId);if(!a)return;
+  // CP-STU: documents keep their text; the editor then marks where the source was deleted.
+  const used=new Set(careerCollections?.documentSources.filter(s=>s.sourceType==='achievement'&&s.sourceId===a.id).map(s=>s.documentId)).size;
+  if(!window.confirm(`Permanently delete "${a.title}"? This cannot be undone.`+(used?` It is used in ${plural(used,'Studio document')}; ${used===1?'that document keeps':'they keep'} its text, marked as from a deleted record.`:'')))return;
+  try{await removeAchievement(a.id,a.revision);achievements=await listAchievements();await loadCareerCollections();closeModal(true);notify('Achievement deleted.');}catch(err){notify(errorMessage(err),'error');}
 }
-function navigate(to:Screen){if(modal)closeModal(true);expectedUndo=null;if(to!==screen)homeMonth=null;screen=to;experienceId=null;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
+function navigate(to:Screen){if(modal)closeModal(true);expectedUndo=null;if(to!==screen)homeMonth=null;screen=to;experienceId=null;documentId=null;location.hash=`/${to}`;render();window.scrollTo(0,0);const heading=document.querySelector<HTMLElement>('#main-content h1');if(heading){heading.tabIndex=-1;heading.focus({preventScroll:true});}}
 function focusables():HTMLElement[]{return Array.from(document.querySelectorAll<HTMLElement>('.modal button:not([disabled]),.modal input:not([disabled]):not([type="hidden"]),.modal textarea:not([disabled]),.modal select:not([disabled])')).filter(x=>x.offsetParent!==null);}
 function runAction(node:HTMLElement){
   const action=node.dataset.action;switch(action){
     case 'nav':navigate(node.dataset.screen as Screen);break;
+    case 'studio-new':startStudio(node.dataset.type==='cv'?'cv':'review');break;
+    case 'review-preset':pickReviewPreset(node.dataset.preset??'last-6');break;
+    case 'wizard-next':wizardStep(1);break;
+    case 'wizard-back':wizardStep(-1);break;
+    case 'wizard-select-all':wizardSelectAll();break;
+    case 'wizard-finish':void finishWizard();break;
+    case 'open-document':openStudioDocument(node.dataset.id??null);break;
+    case 'close-document':openStudioDocument(null);break;
+    case 'edit-block':{const b=openDocument()?.contentBlocks.find(x=>x.id===node.dataset.id);if(b){blockEdit={id:b.id,section:b.section};openModal('block');}break;}
+    case 'add-block':blockEdit={id:null,section:(node.dataset.section??'summary') as DocumentSection};openModal('block');break;
+    case 'save-block':void saveBlockForm();break;
+    case 'block-restore':restoreBlockFields();break;
+    case 'block-remove-current':{const id=blockEdit?.id;if(id&&window.confirm('Remove this text from the document? Your records are not changed.')){const doc=openDocument();if(doc){setSaving(true);void saveOpenDocument(removeBlock(doc,id)).then(ok=>{setSaving(false);if(ok){closeModal(true);notify('Removed from the document.');}});}}break;}
+    case 'block-use-updated':void resolveBlock(node.dataset.id??'','updated');break;
+    case 'block-keep':void resolveBlock(node.dataset.id??'','keep');break;
+    case 'block-remove':void resolveBlock(node.dataset.id??'','remove');break;
+    case 'move-section':void changeSections(doc=>moveSection(doc,node.dataset.section as DocumentSection,node.dataset.delta==='1'?1:-1));break;
+    case 'toggle-section':{const on=(node as HTMLInputElement).checked;void changeSections(doc=>showSection(doc,node.dataset.section as DocumentSection,on));break;}
+    case 'document-settings':openModal('document-settings');break;
+    case 'save-document-settings':void saveDocumentSettings();break;
+    case 'preview-document':openModal('preview');break;
+    case 'duplicate-document':void duplicateOpenDocument();break;
+    case 'delete-document':void deleteOpenDocument();break;
+    case 'export-pdf':exportPdf();break;
     case 'capture':openCapture(null);break;
     case 'add-competency':openModal('competency');break;
     case 'edit-competency':openModal('competency',node.dataset.id??null,true);break;
@@ -970,7 +1241,7 @@ document.addEventListener('input',e=>{const t=e.target as HTMLElement;
   // CP-UX2: searching the capture lists is not a change to the record.
   if(t.id==='where-search'||t.id==='skill-search'){const form=captureFormEl();if(form){if(t.id==='where-search')filterWhere(form);else filterSkills(form);}return;}
   if(t.id==='title'&&t.closest('#achievement-form')){const count=document.getElementById('title-count');if(count)count.textContent=`${(t as HTMLInputElement).value.length} / 160`;}
-  if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;if(t.id==='experience-search'){experienceQuery=(t as HTMLInputElement).value;refreshTimeline();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;refreshVaultResults();}});
+  if(t.closest('#achievement-form, #profile-form, #career-form,#portfolio-form,#competency-form,#proficiency-form,#studio-wizard,#block-form,#document-settings-form'))isDirty=true;if(t.id==='experience-search'){experienceQuery=(t as HTMLInputElement).value;refreshTimeline();}if(t.id==='competency-search'){skillQuery=(t as HTMLInputElement).value;refreshCompetencies();}if(t.id==='vault-search'){searchText=(t as HTMLInputElement).value;refreshVaultResults();}});
 document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTMLSelectElement;if(t.id==='competency-category'){skillCategory=t.value;refreshCompetencies();}
   if(removal&&t.closest('#removal-form')){
     if(t.name==='removal-mode')removal.mode=t.value==='move'?'move':'unlink';
@@ -994,8 +1265,14 @@ document.addEventListener('change',e=>{const t=e.target as HTMLInputElement|HTML
   if(t.id==='career-isCurrent'&&t instanceof HTMLInputElement&&t.checked){
     const end=document.getElementById('career-endDate') as HTMLInputElement|null;if(end)end.value='';
   }
-  if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form,#competency-form,#proficiency-form'))isDirty=true;});
-document.addEventListener('submit',e=>{if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();const f=e.target as HTMLFormElement;if(f.dataset.mode==='steps'&&f.dataset.step!=='3')captureNext();else void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}if((e.target as HTMLElement).id==='proficiency-form'){e.preventDefault();void saveProficiencyForm();}});
+  if(t.closest('#achievement-form,#profile-form,#career-form,#portfolio-form,#competency-form,#proficiency-form,#studio-wizard,#block-form,#document-settings-form'))isDirty=true;});
+document.addEventListener('submit',e=>{
+  // CP-STU: Enter in a Studio field never reloads the page (a one-field form submits implicitly).
+  const studioForm=(e.target as HTMLElement).id;
+  if(studioForm==='studio-wizard'){e.preventDefault();const f=wizardForm();const step=Number(f?.dataset.step??'1');if(studioKind==='cv'&&cvDraft?.from!=='record'&&step===1||step===(studioKind==='review'?2:3))void finishWizard();else wizardStep(1);return;}
+  if(studioForm==='block-form'){e.preventDefault();void saveBlockForm();return;}
+  if(studioForm==='document-settings-form'){e.preventDefault();void saveDocumentSettings();return;}
+  if((e.target as HTMLElement).id==='achievement-form'){e.preventDefault();const f=e.target as HTMLFormElement;if(f.dataset.mode==='steps'&&f.dataset.step!=='3')captureNext();else void saveAchievementForm('recorded');}if((e.target as HTMLElement).id==='profile-form'){e.preventDefault();void saveProfileForm();}if((e.target as HTMLElement).id==='career-form'){e.preventDefault();void saveCareerForm();}if((e.target as HTMLElement).id==='portfolio-form'){e.preventDefault();void saveProjectForm();}if((e.target as HTMLElement).id==='competency-form'){e.preventDefault();void saveCustomSkill();}if((e.target as HTMLElement).id==='proficiency-form'){e.preventDefault();void saveProficiencyForm();}});
 document.addEventListener('keydown',e=>{
   if(!modal)return;
   // A native radiogroup changes selection with arrow keys, not repeated Tab.
@@ -1032,11 +1309,30 @@ for(const type of ['pointerup','pointercancel'])document.addEventListener(type,(
 // CP-UX3: update the preview without rerendering the sheet or losing text/keyboard focus.
 document.addEventListener('input',e=>{if(e.target instanceof Element&&e.target.closest('#expected-form')){isDirty=true;syncExpectedPreview();}});
 document.addEventListener('change',e=>{if(e.target instanceof Element&&e.target.closest('#expected-form')){isDirty=true;syncExpectedPreview();}});
-window.addEventListener('hashchange',()=>{const next=currentNav(),exp=hashExperience();if(next===screen&&exp===experienceId)return;screen=next;experienceId=exp;if(!modal)render();});
+// CP-STU: the journeys update their counts as choices change, without redrawing the field being used.
+document.addEventListener('input',e=>{
+  if(!(e.target instanceof HTMLElement)||!e.target.closest('#studio-wizard'))return;
+  if(studioKind==='review'&&reviewDraft?.step===1&&e.target.id==='review-title'){syncWizardState();}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;if(!(t instanceof HTMLInputElement||t instanceof HTMLSelectElement)||!t.closest('#studio-wizard'))return;
+  if(studioKind==='review'&&reviewDraft){
+    if(reviewDraft.step===1){
+      if(t.id==='review-start'||t.id==='review-end')reviewDraft={...reviewDraft,preset:'custom'};
+      syncWizardState();refreshReviewInfo();
+    }else{syncWizardState();updateReviewChosen();}
+    return;
+  }
+  if(studioKind==='cv'&&cvDraft){
+    const redraw=t.name==='templateId'||t.name==='from'||t.name==='includeConfidential';
+    syncWizardState();if(redraw)refreshModal();
+  }
+});
+window.addEventListener('hashchange',()=>{const next=currentNav(),exp=hashExperience(),doc=hashDocument();if(next===screen&&exp===experienceId&&doc===documentId)return;screen=next;experienceId=exp;documentId=doc;if(!modal)render();});
 function renderStartupError(err:unknown){root.classList.remove('app-loading');root.innerHTML=`<div class="startup-error"><div>${icon('alert',32)}</div><h1>CareerProof Couldn't Open Your Local Database</h1><p>${escape(errorMessage(err))}</p><p>Your existing data has not been intentionally deleted. Try closing other tabs, checking browser storage permissions, and reopening this page.</p><button onclick="location.reload()" class="button button-primary">Retry</button></div>`;}
 async function start(){try{
   dialogs.trackViewport();enableTouchFeedback();
-  applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);await loadCareerCollections();screen=currentNav();experienceId=hashExperience();render();
+  applyTheme();await initialize();const prefs=await getMeta('preferences') as {theme:string};const savedTheme=localStorage.getItem('careerproof-theme');theme=savedTheme&&['system','light','dark'].includes(savedTheme)?savedTheme:prefs.theme;await setMeta('preferences',{theme});applyTheme();[profile,achievements,lastExportAt]=await Promise.all([getProfile(),listAchievements(),getMeta('lastExportAt') as Promise<string|null>]);await loadCareerCollections();screen=currentNav();experienceId=hashExperience();documentId=hashDocument();render();
   configurePwaUpdates();
 }catch(err){renderStartupError(err);}}
 void start();

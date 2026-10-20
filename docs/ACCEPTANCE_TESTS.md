@@ -1,4 +1,22 @@
-## CP-UX3 — Redesign Step 3, v0.1.3-alpha.7 (installed-iPhone gate)
+## CP-STU — Studio, v0.1.4-alpha.1 (installed-iPhone gate STU-01–STU-09)
+
+**Status: PENDING until merged, deployed and explicitly user-accepted.** Do not uninstall the Home Screen PWA or clear storage. **Export a current JSON backup first** (Profile → Settings & Data → Export). The update upgrades the database to **schema 4** and backups to **format 4**. Use synthetic or harmless records for anything you delete or change on purpose, and do not share a test PDF that contains real confidential work.
+
+- [ ] **STU-01 — Update and retention:** Profile → Settings & Data shows `v0.1.4-alpha.1` and *Database schema 4*. Vault, Experience, Skills and Profile counts are unchanged. Check data passes and mentions Studio documents; a new export is saved.
+- [ ] **STU-02 — Navigation:** the tab bar reads Home · Vault · Experience · Skills · Studio with equal spacing above the home indicator. Your initials (next to ＋) open Profile; *Settings & Data* is the first row there; ＋ still captures an achievement.
+- [ ] **STU-03 — Review scope:** Studio → Performance review. The presets fill From/Through; changing a month switches to Custom; the role list filters; the title follows the period until you edit it. The count line and "left out" note are right for your records (drafts and archived never counted).
+- [ ] **STU-04 — Review draft:** choose achievements (Select all, untick some), keep or drop Skills shown and Next period, Make draft. The text is your own wording; Skills Shown has counts, not ratings; nothing Confidential appears unless you switched it on, and then the page says so.
+- [ ] **STU-05 — Editing without touching records:** tap a part and edit it (it shows *Edited by you*); Add text to a section; Remove a part; Restore the source text; Details → rename; Sections and Order → hide one and move one. Reopen the app: all kept. Your achievements in the Vault are unchanged.
+- [ ] **STU-06 — Outdated alerts (synthetic record):** change the result of an achievement used in a review. The document shows the banner and the new text under that part, and **does not change it** until you press *Use updated text* or *Keep this text*. Delete a synthetic achievement used in a document: its text stays, marked as from a deleted record, and you can remove or keep it.
+- [ ] **STU-07 — CV:** make one CV with each template; untick a role and some achievements; leave phone off (then try on). Save as new version; start another CV from a copy; delete one version — the others and your records remain.
+- [ ] **STU-08 — PDF:** Export PDF from a review and a CV. The file saves or opens from the share sheet / Files; text is selectable; sections follow your order and hidden ones are absent; page numbers on multi-page documents; the review footer says it is self-reported. Any "?" characters are reported in the export message.
+- [ ] **STU-09 — Offline, layout and backup:** with no connection, reopen the installed app: Studio, documents, editing and PDF export work. Light and dark, 320–430px: no sideways scrolling, sheets clear the keyboard and safe areas, controls are at least 44pt. A new backup contains your documents (Restore preview lists *Studio documents*); do **not** restore over real data.
+
+**No item is automatically PASS solely from automated Chromium or GitHub CI.** Report individual results and any limitations before acceptance.
+
+---
+
+## CP-UX3 — Redesign Step 3, v0.1.3-alpha.7 (installed-iPhone gate; merged in PR #41, results pending)
 
 **Status: PENDING until merged, deployed and explicitly user-accepted.** Do not uninstall the Home Screen PWA or clear storage. Export a secure current JSON backup before testing. Use disposable synthetic records for any destructive test; never replace real career data solely for testing. The conversion changes two existing records, although **schema 3 and backup format 3 remain unchanged**.
 
@@ -47,7 +65,7 @@
 
 ---
 
-## CP-UX2 — v0.1.3-alpha.4 guided capture: physical-iPhone checks (pending)
+## CP-UX2 — v0.1.3-alpha.4 guided capture: physical-iPhone checks (user reported working on 2026-10-20; items not individually reported)
 
 **Only after PR CI passes, the user merges, and GitHub Pages deploys.** Use the existing Home Screen app, with no reinstall and no cleared data. Export a private backup first. Cancel anything you don't want to keep.
 
@@ -121,7 +139,7 @@ CI success is not iPhone acceptance.
 
 CI success is not physical-iPhone acceptance.
 
-## CP-013B — v0.1.3-alpha.2 proficiency assessment physical-iPhone gate (pending)
+## CP-013B — v0.1.3-alpha.2 proficiency assessment physical-iPhone gate (user reported working on 2026-10-20; items not individually reported)
 
 **Only after PR automated CI passes, the user reviews/merges, and GitHub Pages deploys.** Export the existing private career backup to a secure location **before** updating. Do not reinstall, clear Safari data, or restore over the real personal dataset for testing.
 

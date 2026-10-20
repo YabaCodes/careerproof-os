@@ -20,8 +20,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 | v0.1.1 | Employer/role history, education/credentials, Experience Portfolio, expanded achievement details/evidence, competency taxonomy and links, search/filter refinements | Linked core records create/edit/delete consistently; **v1 migration preserves existing records** |
 | v0.1.2 | Reliable full backup/validated restore, Data Health Check, controlled deletes, schema migration tests, dashboard and responsive/accessibility hardening | All P0 acceptance and destructive/recovery tests pass |
 | v0.1.3 | Rubric-based proficiency history, distinct evidence breadth and explanations | All CIF proficiency/breadth test fixtures pass |
-| v0.1.4 | Performance Review Studio: period/role and evidence selection, editable draft, source links, PDF export | Source-linked accurate editable review with no re-entry |
-| v0.1.5 | CV Builder: contact data, two templates, select/order/edit, save variants, PDF | Accurate editable CV exported without changing source |
+| v0.1.4 | Performance Review Studio: period/role and evidence selection, editable draft, source links, PDF export. **Also the CV Builder** (pulled forward from v0.1.5 by user request, DEC-040) and the Studio tab | Source-linked accurate editable review and CV with no re-entry; in review as `0.1.4-alpha.1` |
+| v0.1.5 | ~~CV Builder~~ delivered with v0.1.4 (DEC-040); scope to be re-planned (e.g. Studio refinements from device testing) | To be agreed |
 | v0.1.6 | Job Fit Analyzer: paste description, parse/classify, map, inspect sources and edit overrides | Transparent requirement matrix; explicit unknowns and qualifications |
 | v0.1.7 | Cross-module integration, regression, migration compatibility, privacy, UX and release checks | No critical data loss, confidentiality or relationship defects; P0/P1 acceptance passed |
 
@@ -36,6 +36,8 @@ The first builds are useful but **not certified for irreplaceable data** until P
 **2026-10-11 progress checkpoint:** v0.1.2-alpha.8 CP-012C (Home dashboard) was merged through PR #26 and the user passed physical-iPhone tests D101–D105. The alpha.9 CP-012D.1 candidate addresses theme-radio keyboard semantics and single-pass role-summary aggregation, with large synthetic fixtures. This does not complete CP-012D, the WCAG accessibility target, or CP-012E recovery/upgrade certification. The approved release sequence remains unchanged.
 
 **Release boundary:** v0.1.1 provides the original professional-record foundation. v0.1.2's P0 Data Health, controlled removal, dashboard, accessibility and recovery scope has been implemented and qualified at alpha.11; only final promotion/installed-iPhone smoke remain. Career proficiency, CV, performance review and job-fit functionality is excluded until separately authorized. The later career studios, evidence/proficiency assessment and job-fit tools are not part of this release.
+
+**2026-10-20 CP-STU checkpoint:** `0.1.4-alpha.1` (DEC-040) is In Review: Studio tab (Profile from the header initials, Settings inside Profile), Performance Review and CV Builder as editable source-linked snapshots with user-controlled outdated alerts, Confidential records left out by default, on-device PDF, schema 4 and backup format 4. Physical gate STU-01–STU-09.
 
 **2026-10-12 CP-013A checkpoint:** Read-only evidence breadth implementation proposed as v0.1.3-alpha.1. Full 0.1.3 remains incomplete until separate L1–L4 proficiency persistence, history, migration and restoration gates are implemented and accepted.
 
@@ -109,8 +111,8 @@ Module-level summary below; per-feature lifecycle status is in [MILESTONE_TRACKE
 | M03 Experience Portfolio | Core Complete for v0.1.1: projects, initiatives and responsibilities with role/achievement associations; user accepted on iPhone. Own **Experience** tab from 0.1.2-alpha.3 | Container model (DEC-034, 0.1.2-alpha.7): short context, outcome roll-up from linked achievements. CP-UX1 (DEC-036, 0.1.3-alpha.3, in review): role-grouped timeline, a page per experience, Goal / Expected Result, inline creation from the achievement form |
 | M04 Competency Intelligence | Partial: core v0.1.1 taxonomy and linked examples, custom skill create/edit/archive/restore accepted; own **Skills** tab with a with-examples view from 0.1.2-alpha.3; no user-assessed proficiency or evidence-breadth ratings | Assessments and evidence breadth v0.1.3 |
 | M05 Career Roadmap | Deferred | Later release |
-| M06 Performance & Promotion Studio | Not started | Reviews v0.1.4; full promotion features later |
-| M07 Job Readiness & Interview Studio | Not started | CV v0.1.5, job fit v0.1.6; interviews later |
+| M06 Performance & Promotion Studio | Partial (in review, 0.1.4-alpha.1): source-linked Performance Review with editable snapshot, outdated alerts, confidential exclusion and on-device PDF (DEC-040) | iPhone STU gate; promotion cases later |
+| M07 Job Readiness & Interview Studio | Partial (in review, 0.1.4-alpha.1): CV Builder with two ATS-friendly templates, versions and PDF (DEC-040) | Job fit v0.1.6; interviews later |
 | M08 Career Analytics & Insights | Foundation: basic dashboard and metadata, stable compact navigation and offline update controls; from 0.1.2-alpha.8 Home adds Complete Your Record and Achievements by Role (DEC-035); 0.1.3-alpha.6 (in review) adds Last 12 Months, a count of recorded achievements by the month they happened (DEC-038) | Advanced analytics later; no targets, streaks or scores |
 
 **v0.1.1 delivery history:** CP-011A (PR #4, alpha.1) → A.1–A.3 UI/iOS corrections (PRs #5–#8) → CP-011B with B.1/B.2 (PRs #9–#11) → CP-011C (PR #12) → CP-011D with D.1 (PRs #13–#14) → CP-011E rc.1 (PR #15) → final promotion (PR #16). All merged by the user. Per-feature status, PRs, test baselines and device-acceptance evidence are in the [milestone tracker](MILESTONE_TRACKER.md), which is the authoritative progress record and must be updated in every PR.

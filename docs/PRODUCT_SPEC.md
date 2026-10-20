@@ -37,6 +37,7 @@ All modules operate on **one set of career records**. Do not duplicate a project
 - Completed P1 navigation: **Home / Vault / Growth / Studio / Profile**.
 - v0.1.0 may show only **Home / Vault / Profile**; introduce Growth with competency functionality and Studio only when its first tool works. Never show empty future destinations.
 - Settings is accessible via Profile/header; **Quick Capture** is a global primary action, not a destination.
+- *Shipped (DEC-029, amended by DEC-040 in 0.1.4-alpha.1):* **Home / Vault / Experience / Skills / Studio** on phones; Profile opens from the user's initials in the header and holds Settings & Data; the tablet/desktop sidebar also lists Profile. Experience and Skills stand in for the planned Growth destination.
 - Mobile: single-column, balanced bottom navigation with safe-area insets; tablet: compact rail; desktop: sidebar and wider detail layouts. Target breakpoints approximately 600 and 1024 CSS px, determined by layout fit; retain usability at 320px.
 - Design identity: restrained professional intelligence workspace; primary ink #142C40, teal #176B73, canvas #F6F8FA, white surface #FFFFFF, slate #657487, divider #DCE3EA; semantic statuses separate from brand. Dark mode with adequate contrast.
 - One shared token system: system-native sans-serif, page titles 24px mobile/28px desktop, headings 18–20px, body 15–16px, labels 14px, 4px spacing scale, 12px card radii, >=44px primary touch controls.

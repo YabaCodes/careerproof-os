@@ -1,4 +1,4 @@
-import { type Achievement, type BaseRecord, type AchievementView, type ImpactMetric, type EvidenceReference, type RecordLink, type ProficiencyAssessment, type Profile, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
+import { type Achievement, type BaseRecord, type AchievementView, type ImpactMetric, type EvidenceReference, type RecordLink, type ProficiencyAssessment, type Profile, type CareerDocument, type DocumentSource, type DocumentSourceDraft, type CareerCollections, type P0RecordMap, type P0Store, type Preferences, type Meta, P0_STORES, SCHEMA_VERSION, TAXONOMY_VERSION, PROFILE_ID, emptyProfile, emptyCollections, nowIso } from '../domain/models.js';
 import { planRemoval, type RemovableKind, type RemovalMode, type RemovalPlan } from '../domain/removal.js';
 import { inlineExperience, type InlineExperienceDraft } from '../domain/experience.js';
 import { achievementView, migrateLegacyAchievement, migrateLegacyProfile, validateCollections, isPreferences, validTime, ConflictError, ValidationError } from '../domain/validation.js';
@@ -36,11 +36,14 @@ function configureSchema(db: IDBDatabase, tx: IDBTransaction): void {
   index('competencies','byCategory','categoryId');index('competencies','byCategoryName',['categoryId','normalizedName'],true);
   index('recordLinks','byTypeEndpoints',['linkType','sourceId','targetId'],true);index('recordLinks','bySource','sourceId');index('recordLinks','byTarget','targetId');
   index('proficiencyAssessments','byCompetencyDate',['competencyId','assessmentDate.value']);
+  index('careerDocuments','byType','documentType');index('careerDocuments','byUpdatedAt','updatedAt');
+  index('documentSources','byDocument','documentId');index('documentSources','bySource','sourceId');
 }
 function upgrade(db: IDBDatabase, tx: IDBTransaction, oldVersion: number): void {
   configureSchema(db,tx);
-  // Schema 2→3 only adds a store. Never reset an existing device's
-  // generation, revision, theme, last export or canonical career records.
+  // Schema 2→3 and 3→4 only add stores (proficiency history; Studio documents
+  // and their sources). Never reset an existing device's generation, revision,
+  // theme, last export or canonical career records.
   if(oldVersion>=2){metaValue(tx,'schemaVersion',SCHEMA_VERSION);return;}
   // All callbacks remain inside the versionchange transaction. No unrelated await.
   const c=emptyCollections();let remaining=P0_STORES.length;
@@ -199,6 +202,42 @@ export class CareerDatabase {
         throw new ConflictError('The draft or experience has changed since the move. Undo was cancelled to protect newer edits.');
       this.upsert(tx,data,'projects',{...project,objective:receipt.previousObjective},project.revision);
       this.upsert(tx,data,'achievements',{...draft,status:'draft',preArchiveStatus:null},draft.revision);
+    });
+  }
+  /**
+   * CP-STU: save a Studio document. With `sources`, the document's source list is
+   * replaced in the same transaction (unchanged sources keep their identity);
+   * with null it is left untouched. Career records are never written here.
+   */
+  async saveCareerDocument(input:Omit<CareerDocument,'createdAt'|'updatedAt'>,sources:DocumentSourceDraft[]|null):Promise<CareerDocument>{
+    return this.write((tx,data)=>{
+      const record=this.upsert(tx,data,'careerDocuments',input as CareerDocument,input.revision);
+      if(!sources)return record;
+      const prior=data.collections.documentSources.filter(s=>s.documentId===record.id),now=nowIso();
+      const next=sources.map((d):DocumentSource=>{
+        const old=prior.find(p=>p.sourceType===d.sourceType&&p.sourceId===d.sourceId);
+        if(old&&old.sourceRevision===d.sourceRevision&&old.order===d.order&&old.sourceLabelSnapshot===d.sourceLabelSnapshot)return old;
+        if(old?.revision===Number.MAX_SAFE_INTEGER)throw new ValidationError('Record revision limit reached.');
+        return {...d,id:old?.id??crypto.randomUUID(),documentId:record.id,createdAt:old?.createdAt??now,updatedAt:now,revision:(old?.revision??0)+1};
+      });
+      const removed=prior.filter(p=>!next.includes(p));
+      data.collections.documentSources=data.collections.documentSources.filter(s=>s.documentId!==record.id).concat(next);
+      validateCollections(data.collections);
+      for(const r of removed)tx.objectStore('documentSources').delete(r.id);
+      for(const r of next)if(!prior.includes(r))tx.objectStore('documentSources').put(r);
+      return record;
+    });
+  }
+  /** Delete one Studio document and only its own source entries; career records are untouched. */
+  async removeCareerDocument(id:string,revision:number):Promise<void>{
+    await this.write((tx,data)=>{
+      const current=data.collections.careerDocuments.find(r=>r.id===id);
+      if(!current||current.revision!==revision)throw new ConflictError('This document changed. Reload before deleting.');
+      const own=data.collections.documentSources.filter(s=>s.documentId===id);
+      data.collections.careerDocuments=data.collections.careerDocuments.filter(r=>r.id!==id);
+      data.collections.documentSources=data.collections.documentSources.filter(s=>s.documentId!==id);
+      validateCollections(data.collections);
+      tx.objectStore('careerDocuments').delete(id);for(const s of own)tx.objectStore('documentSources').delete(s.id);
     });
   }
   async saveProfile(input:ProfileWrite):Promise<Profile> {
@@ -383,6 +422,7 @@ export class CareerDatabase {
   async removeRecord(store:P0Store,id:string,revision:number):Promise<void> {
     if(store==='profiles')throw new ValidationError('The local profile cannot be deleted.');
     if(store==='proficiencyAssessments')throw new ValidationError('Proficiency history is append-only and cannot be deleted individually.');
+    if(store==='careerDocuments')return this.removeCareerDocument(id,revision);
     return this.write((tx,data)=>{
       const current=data.collections[store].find(r=>r.id===id);
       if(!current||current.revision!==revision)throw new ConflictError('This record changed. Reload before deleting.');

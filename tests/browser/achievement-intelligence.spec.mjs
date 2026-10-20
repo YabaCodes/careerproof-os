@@ -83,7 +83,7 @@ test('adding metrics and references persists after reload and restores from priv
     return {format:backup.backup.manifest.formatVersion,metrics:backup.backup.manifest.counts.impactMetrics,
       references:backup.backup.manifest.counts.evidenceReferences,competencyLinks:backup.backup.collections.recordLinks.filter(l=>l.linkType==='achievement-competency').length};
   });
-  expect(check).toEqual({format:3,metrics:2,references:2,competencyLinks:1});
+  expect(check).toEqual({format:4,metrics:2,references:2,competencyLinks:1});
   await page.reload();await openEdit(page);
   await expect(page.locator('.metric-row')).toHaveCount(2);
   await expect(page.locator('.evidence-row')).toHaveCount(2);
@@ -119,7 +119,7 @@ test('invalid evidence URL and metric are rejected without any data write',async
 
 test('competency library displays 32 built-in skills plus custom skills and linked examples',async({page})=>{
   await start(page);
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await page.locator('.mobile-nav [data-screen=competencies]').click();
   await expect(page.getByRole('heading',{name:'Skills',exact:true})).toBeVisible();
   // CP-012.2: the library opens on skills with examples; All shows the full taxonomy.
@@ -199,7 +199,7 @@ test('save transaction rejects invalid skill reference without modifying any col
 
 test('archived competency remains linked to historical achievement through edit/save',async({page})=>{
   await start(page);
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await page.locator('.mobile-nav [data-screen=competencies]').click();
   await page.locator('#competency-search').fill('Synthetic Skill');
   await page.locator('details.skill-entry summary').click();

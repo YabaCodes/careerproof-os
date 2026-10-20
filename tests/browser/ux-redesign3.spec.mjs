@@ -40,7 +40,7 @@ test('UX301-S3: compact Home, both record drilldowns, all five destinations and 
   await page.locator('.home-record-disclosure').last().locator('summary').click();
   await expect(page.locator('.role-coverage .role-row')).toBeVisible();
   await expect(page.locator('.compact-quick-add button')).toHaveText(['+ Experience','+ Employer','+ Credential']);
-  for(const item of ['home','vault','portfolio','competencies','profile']){
+  for(const item of ['home','vault','portfolio','competencies','studio']){
     await page.locator('.mobile-nav-item[data-screen='+item+']').click();
     await expect(page.locator('.mobile-nav-item[data-screen='+item+']')).toHaveAttribute('aria-current','page');
   }
@@ -72,7 +72,7 @@ test('UX305-S3 / UX306-S3: moving a Draft appends and archives it; Undo restores
   expect(undone.collections.achievements.find(a=>a.id==='plan-1').status).toBe('draft');
   expect(undone.collections.recordLinks).toEqual(before.collections.recordLinks);
 });
-test('UX308-S3: conversion survives reload in schema 3 and backup format 3',async({page})=>{
+test('UX308-S3: conversion survives reload and is in the current backup (schema and format 4 since v0.1.4)',async({page})=>{
   await seed(page);await openDraft(page);
   await page.locator('#expected-text').fill('Planned result is not an achievement.');
   await page.locator('[data-action=save-expected]').click();
@@ -85,7 +85,7 @@ test('UX308-S3: conversion survives reload in schema 3 and backup format 3',asyn
   const backup=await page.evaluate(async()=>{
     const {createBackup}=await import('/app/data/backup.js');return JSON.parse((await createBackup()).json).manifest;
   });
-  expect(backup.schemaVersion).toBe(3);expect(backup.formatVersion).toBe(3);
+  expect(backup.schemaVersion).toBe(4);expect(backup.formatVersion).toBe(4);
 });
 test('UX309-S3: confidential Draft cannot move into standard-private Experience',async({page})=>{
   const c=world();c.achievements.find(a=>a.id==='plan-1').confidentiality='confidential';

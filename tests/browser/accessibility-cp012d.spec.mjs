@@ -1,10 +1,11 @@
 import {test,expect} from '@playwright/test';
+import {openSettings} from './ux-helpers.mjs';
 
 // CP-012D: keyboard semantics and reduced-motion checks use synthetic/empty records.
 test('Settings theme radios use a single tab stop and keyboard arrows, Home and End',async({page})=>{
   await page.goto('/');
   await expect(page.locator('.hero-card')).toBeVisible();
-  await page.locator('[data-action="settings"]:visible').click();
+  await openSettings(page);
   const group=page.getByRole('radiogroup',{name:'Color theme'});
   const system=group.getByRole('radio',{name:'System'});
   const light=group.getByRole('radio',{name:'Light'});
@@ -34,7 +35,7 @@ test('Settings theme radios use a single tab stop and keyboard arrows, Home and 
   await page.keyboard.press('Tab');
   await expect(page.locator('#export-backup')).toBeFocused();
   await page.locator('.close-dialog').click();
-  await page.locator('[data-action="settings"]:visible').click();
+  await openSettings(page);
   await expect(system).toHaveAttribute('aria-checked','true');
 });
 
@@ -42,7 +43,7 @@ test('Reduced motion suppresses animation and transitions while preserving visib
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/');
   await expect(page.locator('.hero-card')).toBeVisible();
-  await page.locator('[data-action="settings"]:visible').click();
+  await openSettings(page);
   const close=page.locator('.close-dialog');
   await expect(page.getByRole('dialog')).toBeFocused();
   await page.keyboard.press('Tab');

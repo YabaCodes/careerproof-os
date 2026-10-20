@@ -4,9 +4,9 @@ import {APP_VERSION} from '../../dist/app/domain/models.js';
 const CURRENT_CACHE = `careerproof-v${APP_VERSION}`;
 import {legacyBackup,fullCollections} from '../fixtures.mjs';
 import {generateBackup} from '../../dist/app/domain/validation.js';
-import {fillOccurred,openMore,vaultStatus,captureWhere,captureWhen} from './ux-helpers.mjs';
+import {fillOccurred,openMore,vaultStatus,captureWhere,captureWhen,openSettings} from './ux-helpers.mjs';
 async function start(page){await page.goto('/');await expect(page.locator('.hero-card')).toBeVisible();await expect(page.getByRole('heading',{name:'CareerProof',exact:true})).toBeVisible();}
-async function settings(page){await page.locator('.header-settings').click();await expect(page.getByRole('dialog')).toBeVisible();}
+async function settings(page){await openSettings(page);await expect(page.getByRole('dialog')).toBeVisible();}
 async function capture(page,title='Synthetic mobile entry'){
   // CP-UX2: Where (skipped when there is nothing to choose) → What → When.
   await page.locator('.mobile-create').click();await captureWhere(page);await page.locator('#title').fill(title);await page.locator('#contribution').fill('Synthetic mobile contribution');
@@ -32,7 +32,7 @@ test('mobile capture/edit/archive/profile preserve the accepted dialog behavior 
   await page.locator('[data-action="detail"]').first().click();await openMore(page);await page.locator('[data-action="toggle-archive"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   let c=await rawCollections(page);expect(c.achievements[0].status).toBe('archived');expect(c.achievements[0].preArchiveStatus).toBe('recorded');
   await page.locator('.mobile-nav [data-screen="vault"]').click();await vaultStatus(page,'archived');await page.locator('[data-action="detail"]').first().click();await openMore(page);await page.locator('[data-action="toggle-archive"]').click();
-  await page.locator('.mobile-nav [data-screen="profile"]').click();await page.locator('[data-action="edit-profile"]').last().click();await page.locator('#displayName').fill('Synthetic Mobile Engineer');await page.locator('[data-action="save-profile"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.locator('.header-profile').click();await page.locator('[data-action="edit-profile"]').last().click();await page.locator('#displayName').fill('Synthetic Mobile Engineer');await page.locator('[data-action="save-profile"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.reload();await expect(page.getByText('Synthetic Mobile Engineer').first()).toBeVisible();c=await rawCollections(page);
   expect(c.achievements[0].occurredStart).toEqual({value:'2024-02-29',precision:'day'});expect(c.achievements[0].status).toBe('recorded');expect(c.achievements[0]).not.toHaveProperty('occurredOn');expect(errors).toEqual([]);
 });
@@ -58,7 +58,7 @@ test('Settings export imports cleanly, legacy warning is explicit, and invalid f
   await settings(page);await page.locator('[data-action=set-theme][data-value=dark]').click();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');await expect(page.locator('[data-action=set-theme][data-value=dark]')).toHaveAttribute('aria-checked','true');
   const downloadPromise=page.waitForEvent('download');await page.locator('#export-backup').click();const download=await downloadPromise;
   const chunks=[];for await(const c of await download.createReadStream())chunks.push(c);const backup=JSON.parse(Buffer.concat(chunks).toString());
-  expect(backup.manifest.formatVersion).toBe(3);expect(backup.collections.competencies).toHaveLength(32);expect(backup.preferences.theme).toBe('dark');
+  expect(backup.manifest.formatVersion).toBe(4);expect(backup.collections.competencies).toHaveLength(32);expect(backup.preferences.theme).toBe('dark');
   const before=await rawCollections(page);
   const malformed=structuredClone(backup);malformed.collections.achievements[0].status=['recorded'];
   await page.locator('#restore-file').setInputFiles({name:'Synthetic_Invalid.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(malformed))});
@@ -106,7 +106,7 @@ test('cached PWA opens offline with stored records and all foundation modules',a
   await start(page);await capture(page,'Synthetic offline entry');await page.locator('[data-action="save-achievement"][data-status="recorded"]').click();await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.evaluate(async()=>{await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)await new Promise(resolve=>navigator.serviceWorker.addEventListener('controllerchange',resolve,{once:true}));});
   const keys=await page.evaluate(()=>caches.keys());expect(keys).toContain(CURRENT_CACHE);
-  await context.setOffline(true);await page.reload();await expect(page.getByText('Synthetic offline entry').first()).toBeVisible();await settings(page);await expect(page.getByRole('dialog')).toContainText('Database schema 3');
+  await context.setOffline(true);await page.reload();await expect(page.getByText('Synthetic offline entry').first()).toBeVisible();await settings(page);await expect(page.getByRole('dialog')).toContainText('Database schema 4');
   const cachedAssets=await page.evaluate(async()=>{
     const files=['icon.svg','icon-192.png','icon-512.png','icon-maskable-512.png','apple-touch-icon.png','favicon-32.png','favicon-16.png','app/ui/dialog.js'];
     return Promise.all(files.map(async file=>({file,ok:(await fetch('./'+file)).ok})));
@@ -115,6 +115,8 @@ test('cached PWA opens offline with stored records and all foundation modules',a
   await expect(page.getByRole('dialog')).toContainText(APP_VERSION);
   await page.locator('[data-action=close]').click();
   expect(await page.locator('.mobile-nav').evaluate(el=>el.getBoundingClientRect().height)).toBe(61);
+  // Settings now opens from Profile (DEC-040); return Home to the recent achievement.
+  await page.locator('.mobile-nav [data-screen=home]').click();
   await page.locator('[data-action=detail]').first().click();await page.locator('[data-action=edit-achievement]').click();
   await expect(page.locator('#occurredOn')).toHaveValue('2024-02-29');
   expect(await page.locator('#occurredOn').evaluate(el=>getComputedStyle(el).appearance)).toBe('none');

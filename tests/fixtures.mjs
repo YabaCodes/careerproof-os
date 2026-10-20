@@ -41,3 +41,35 @@ export async function seedV1(factory,name,backup=legacyBackup()){
   tx.objectStore('meta').put({key:'lastExportAt',value:timestamp});
   await done;return db;
 }
+/**
+ * CP-STU: a synthetic record for Studio tests — two roles, a shareable and a
+ * confidential ongoing experience, recorded/draft/archived/confidential
+ * achievements, a metric, a skill link and a current plus an expired credential.
+ */
+export function studioCollections(){
+  const c=fullCollections(),rec=(id,o)=>({...c.achievements[0],...base(id),situation:'',actions:'',notes:'',occurredEnd:null,impactCategory:'delivery',preArchiveStatus:null,status:'recorded',confidentiality:'standard-private',...o});
+  c.profiles[0]={...c.profiles[0],displayName:'Synthetic Engineer',headline:'Example Process Lead',summary:'Synthetic summary of a professional.',phone:'+1 555 0100',website:'https://example.test/me'};
+  c.employers.push({...base('employer-2'),name:'Example Works',industry:'',location:'',website:'',description:''});
+  c.roles.push({...base('role-2'),employerId:'employer-2',title:'Junior Engineer',startDate:{value:'2018',precision:'year'},endDate:{value:'2021',precision:'year'},isCurrent:false,employmentType:'',responsibilities:'',leadershipScope:'',technologies:['Torque tools']});
+  c.projects.push(
+    {...base('project-2'),name:'Line Upgrade',experienceType:'project',employerId:'employer-1',startDate:{value:'2026-03',precision:'month'},endDate:null,status:'active',objective:'Qualify two suppliers by Q1.',scope:'',personalResponsibility:'',technologies:['PLC','Vision'],outcome:'',confidentiality:'standard-private'},
+    {...base('project-3'),name:'Hidden Program',experienceType:'project',employerId:'employer-1',startDate:{value:'2026-01',precision:'month'},endDate:null,status:'active',objective:'Secret goal',scope:'',personalResponsibility:'',technologies:['SecretTech'],outcome:'',confidentiality:'confidential'}
+  );
+  c.achievements.push(
+    rec('ach-a',{title:'Cut changeover time',contribution:'Redesigned the tooling cart.',outcome:'Changeover down from 42 to 31 minutes.',occurredStart:{value:'2026-09',precision:'month'},roleId:'role-1'}),
+    rec('ach-b',{title:'Onboarded two engineers',contribution:'Built a six-week plan.',outcome:'Both run projects alone.',occurredStart:{value:'2026-07-15',precision:'day'},roleId:'role-1'}),
+    rec('ach-c',{title:'Hidden win',contribution:'Secret work.',outcome:'Secret result',occurredStart:{value:'2026-08',precision:'month'},roleId:'role-1',confidentiality:'confidential'}),
+    rec('ach-d',{title:'Old team win',contribution:'Automated checks.',outcome:'Removed manual checks.',occurredStart:{value:'2020',precision:'year'},roleId:'role-2'}),
+    rec('ach-draft',{title:'Planned audit',contribution:'',outcome:'',occurredStart:null,roleId:'role-1',status:'draft'}),
+    rec('ach-arch',{title:'Archived thing',occurredStart:{value:'2026-06',precision:'month'},roleId:'role-1',status:'archived',preArchiveStatus:'recorded'})
+  );
+  c.impactMetrics.push({...base('metric-a'),achievementId:'ach-a',metricName:'Changeover time',unit:'min',baselineValue:42,resultValue:31,reportedValue:null,direction:'decrease',sourceNote:''});
+  c.recordLinks.push(
+    {...base('link-a'),linkType:'achievement-project',sourceId:'ach-a',targetId:'project-2',isPrimary:true,note:''},
+    {...base('link-c'),linkType:'achievement-project',sourceId:'ach-c',targetId:'project-3',isPrimary:true,note:''},
+    {...base('link-a-skill'),linkType:'achievement-competency',sourceId:'ach-a',targetId:'custom-competency',isPrimary:false,note:''},
+    {...base('link-role-2'),linkType:'role-project',sourceId:'role-1',targetId:'project-2',isPrimary:false,note:''}
+  );
+  c.credentials.push({...base('credential-2'),name:'Expired Badge',issuer:'Example Body',issuedDate:{value:'2015',precision:'year'},expirationDate:{value:'2020',precision:'year'},credentialId:'',verificationUrl:'',notes:''});
+  return c;
+}

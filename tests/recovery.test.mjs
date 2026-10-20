@@ -19,7 +19,7 @@ test('v1→v2 migration preserves every old field, ID, timestamp, revision and a
   const migrated=await repo.readSnapshot(),expected=validateBackup(old).collections;
   compare(migrated.collections,expected);
   assert.equal(migrated.generation,1);assert.equal(await repo.getMeta('lastExportAt'),timestamp);
-  const raw=await request(factory.open('migration',3));
+  const raw=await request(factory.open('migration',4));
   assert.deepEqual([...raw.objectStoreNames].sort(),[...P0_STORES,'meta'].sort());
   assert.equal(raw.transaction('achievements').objectStore('achievements').indexNames.contains('byOccurredOn'),false);
   assert.ok(raw.transaction('achievements').objectStore('achievements').indexNames.contains('byOccurredStart'));
@@ -44,9 +44,9 @@ test('blocked upgrades reject with recovery instructions; abandoned requests nev
   compare((await retry.readSnapshot()).collections,validateBackup(legacyBackup()).collections);await retry.close();
 });
 test('newer physical database is rejected without downgrade or deletion',async()=>{
-  const factory=new IDBFactory(),r=factory.open('future',4);r.onupgradeneeded=()=>r.result.createObjectStore('sentinel');const db=await request(r);db.close();
+  const factory=new IDBFactory(),r=factory.open('future',5);r.onupgradeneeded=()=>r.result.createObjectStore('sentinel');const db=await request(r);db.close();
   const repo=new CareerDatabase(factory,'future');await assert.rejects(()=>repo.initialize(),/newer CareerProof version/);
-  const untouched=await request(factory.open('future',4));assert.ok(untouched.objectStoreNames.contains('sentinel'));untouched.close();
+  const untouched=await request(factory.open('future',5));assert.ok(untouched.objectStoreNames.contains('sentinel'));untouched.close();
 });
 test('initialization seeds exactly four categories and 32 competencies idempotently and preserves custom records',async()=>{
   const {repo,factory}=await setup(),c=fullCollections();
@@ -55,7 +55,7 @@ test('initialization seeds exactly four categories and 32 competencies idempoten
   await repo.initialize();await repo.initialize();compare((await repo.readSnapshot()).collections,c);
   assert.equal((await repo.readSnapshot()).revision,revision);
   // Missing seed is repaired without touching custom definitions.
-  const raw=await request(factory.open('synthetic',3)),tx=raw.transaction('competencies','readwrite'),done=completed(tx);tx.objectStore('competencies').delete('CP-COMP-TEC-001');await done;raw.close();
+  const raw=await request(factory.open('synthetic',4)),tx=raw.transaction('competencies','readwrite'),done=completed(tx);tx.objectStore('competencies').delete('CP-COMP-TEC-001');await done;raw.close();
   await repo.initialize();const out=(await repo.readSnapshot()).collections;
   assert.equal(out.competencies.length,33);assert.deepEqual(out.competencies.find(x=>x.id==='custom-competency'),c.competencies.at(-1));
   assert.equal((await repo.readSnapshot()).revision,revision+1);

@@ -42,7 +42,7 @@ test('CP-UX3 archive + append are atomic, preserve links and draft fields, and u
   assert.equal(archived.revision,draft.revision+1);assert.equal(revised.revision,project.revision+1);
   assert.equal(archived.title,draft.title);assert.equal(archived.contribution,draft.contribution);
   assert.deepEqual(after.collections.recordLinks,before.collections.recordLinks);
-  assert.equal(JSON.parse((await createBackup(repo)).json).manifest.formatVersion,3);
+  assert.equal(JSON.parse((await createBackup(repo)).json).manifest.formatVersion,4);
   await repo.undoDraftToExpectedResult(receipt);
   const undone=await repo.readSnapshot();
   assert.equal(undone.collections.projects.find(p=>p.id===experienceId).objective,project.objective);
