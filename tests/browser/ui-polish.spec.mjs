@@ -70,17 +70,18 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430,768,1024
         expect(geometry[i].y).toBe(geometry[0].y);
         expect(geometry[i].iconY).toBe(geometry[0].iconY);
       }
-      // DEC-029: five content tabs; capture and Settings live in the header only.
-      await expect(page.locator('.mobile-nav > button')).toHaveText(['Home','Vault','Experience','Skills','Profile']);
+      // DEC-029/DEC-040: five content tabs; capture and Profile (Settings inside) live in the header only.
+      await expect(page.locator('.mobile-nav > button')).toHaveText(['Home','Vault','Experience','Skills','Studio']);
       await expect(page.locator('.mobile-nav [data-action=settings], .mobile-nav [data-action=capture]')).toHaveCount(0);
-      await expect(page.locator('[data-action=settings]:visible')).toHaveCount(1);
-      const [create,gear]=await Promise.all([page.locator('.mobile-create').boundingBox(),page.locator('.header-settings').boundingBox()]);
+      await expect(page.locator('[data-action=settings]:visible')).toHaveCount(0);
+      const [create,gear]=await Promise.all([page.locator('.mobile-create').boundingBox(),page.locator('.header-profile').boundingBox()]);
       for(const box of [create,gear]){expect(box.width).toBeGreaterThanOrEqual(44);expect(box.height).toBeGreaterThanOrEqual(44);expect(box.x+box.width).toBeLessThanOrEqual(width);}
       expect(create.x+create.width).toBeLessThanOrEqual(gear.x+1);
     }else{
       await expect(page.locator('.side-links [data-screen="profile"]')).toBeVisible();
-      // Settings is in the sidebar only at tablet/desktop widths, never duplicated in the header.
-      await expect(page.locator('.header-settings')).toBeHidden();
+      await expect(page.locator('.side-links [data-screen="studio"]')).toBeVisible();
+      // Settings is in the sidebar at tablet/desktop widths; the header initials are not repeated there.
+      await expect(page.locator('.header-profile')).toBeHidden();
       await expect(page.locator('[data-action=settings]:visible')).toHaveCount(1);
     }
     await action(page,'[data-screen="vault"]');
@@ -186,7 +187,7 @@ test('short visual viewport keeps dialog footer and final input reachable',async
   expect(rects.input.bottom).toBeLessThanOrEqual(rects.body.bottom);
 });
 test('export focus and invalid restore notification remain inside the dialog',async({page})=>{
-  await start(page);await action(page,'[data-action="settings"]');
+  await start(page);await action(page,'[data-screen="profile"]');await action(page,'[data-action="settings"]');
   const download=page.waitForEvent('download');await page.locator('#export-backup').click();await download;
   await expect(page.locator('#export-backup')).toBeFocused();
   await expect(page.locator('.modal #toast')).toContainText('Backup file generated');

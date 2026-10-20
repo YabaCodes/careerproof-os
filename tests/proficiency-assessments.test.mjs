@@ -5,7 +5,7 @@ import {CareerDatabase} from '../dist/app/data/db.js';
 import {generateBackup,validateBackup,ValidationError,validateCollections} from '../dist/app/domain/validation.js';
 import {createBackup,parseBackupJson,restoreBackup} from '../dist/app/data/backup.js';
 import {assessmentHistory,currentAssessment,proficiencyLabel,RUBRIC_VERSION} from '../dist/app/domain/proficiency.js';
-import {P0_STORES} from '../dist/app/domain/models.js';
+import {P0_STORES,FORMAT2_STORES} from '../dist/app/domain/models.js';
 import {fullCollections,base,request,completed,timestamp} from './fixtures.mjs';
 
 const entry=(competencyId,level=3,id='rating-1',date='2026-10-12')=>({...base(id),competencyId,
@@ -18,7 +18,8 @@ const draft=(competencyId,level=3,date='2026-10-12')=>({
 const backup2=c=>{
   const b=structuredClone(generateBackup(c,{theme:'dark'},timestamp));
   b.manifest.formatVersion=2;b.manifest.schemaVersion=2;b.manifest.appVersion='0.1.2';
-  delete b.collections.proficiencyAssessments;delete b.manifest.counts.proficiencyAssessments;
+  // Format 2 predates proficiency history and (schema 4) Studio documents.
+  for(const store of ['proficiencyAssessments','careerDocuments','documentSources']){delete b.collections[store];delete b.manifest.counts[store];}
   return b;
 };
 const sorted=c=>Object.fromEntries(P0_STORES.map(s=>[s,[...c[s]].sort((a,b)=>a.id.localeCompare(b.id))]));
@@ -62,7 +63,7 @@ test('CP-013B append-only history chooses latest assessment DATE, not latest wri
   await assert.rejects(()=>repo.removeRecord('proficiencyAssessments',history.id,history.revision),/append-only/);
   assert.deepEqual(await repo.readSnapshot(),immutable);
   const versioned=await createBackup(repo);
-  assert.equal(JSON.parse(versioned.json).manifest.formatVersion,3);
+  assert.equal(JSON.parse(versioned.json).manifest.formatVersion,4);
   assert.equal(JSON.parse(versioned.json).collections.proficiencyAssessments.length,3);
   await repo.close();
 });
@@ -93,7 +94,7 @@ test('CP-013B skills with historical ratings cannot be deleted silently; archivi
   await repo.close();
 });
 test('CP-013B schema 2→3 upgrade retains every legacy record, metadata value, preference and revision',async()=>{
-  const factory=new IDBFactory(),c=fullCollections(),oldStores=P0_STORES.filter(s=>s!=='proficiencyAssessments');
+  const factory=new IDBFactory(),c=fullCollections(),oldStores=FORMAT2_STORES;
   const open=factory.open('upgrade2',2);
   open.onupgradeneeded=()=>{for(const store of oldStores)open.result.createObjectStore(store,{keyPath:'id'});open.result.createObjectStore('meta',{keyPath:'key'});};
   const raw=await request(open),tx=raw.transaction([...oldStores,'meta'],'readwrite'),done=completed(tx);
@@ -105,16 +106,16 @@ test('CP-013B schema 2→3 upgrade retains every legacy record, metadata value, 
   const out=await repo.readSnapshot();
   assert.equal(out.generation,7);assert.equal(out.revision,23);assert.deepEqual(out.preferences,{theme:'dark'});
   assert.equal(await repo.getMeta('lastExportAt'),timestamp);assert.equal(await repo.getMeta('lastChangeAt'),timestamp);
-  assert.equal(await repo.getMeta('schemaVersion'),3);
+  assert.equal(await repo.getMeta('schemaVersion'),4);
   assert.deepEqual(sorted(out.collections),sorted({...c,proficiencyAssessments:[]}));
-  const physical=await request(factory.open('upgrade2',3));
+  const physical=await request(factory.open('upgrade2',4));
   assert.ok(physical.objectStoreNames.contains('proficiencyAssessments'));
   assert.ok(physical.transaction('proficiencyAssessments').objectStore('proficiencyAssessments').indexNames.contains('byCompetencyDate'));
   physical.close();await repo.close();
 });
-test('CP-013B format-2 backup imports losslessly to format-3 with no fabricated proficiency history',()=>{
+test('CP-013B format-2 backup imports losslessly to the current format with no fabricated proficiency history',()=>{
   const c=fullCollections(),old=backup2(c),converted=validateBackup(old);
-  assert.equal(converted.manifest.formatVersion,3);assert.equal(converted.manifest.schemaVersion,3);
+  assert.equal(converted.manifest.formatVersion,4);assert.equal(converted.manifest.schemaVersion,4);
   assert.equal(converted.manifest.exportedAt,timestamp);
   assert.deepEqual(converted.preferences,{theme:'dark'});
   assert.deepEqual(sorted(converted.collections),sorted(c));
@@ -123,12 +124,12 @@ test('CP-013B format-2 backup imports losslessly to format-3 with no fabricated 
     const bad=structuredClone(old);mutate(bad);assert.throws(()=>validateBackup(bad),ValidationError);
   }
 });
-test('CP-013B format-3 backup restores assessment history; older format-2 replacement clears it ONLY after confirmation',async()=>{
+test('CP-013B current-format backup restores assessment history; older format-2 replacement clears it ONLY after confirmation',async()=>{
   const factory=new IDBFactory(),repo=new CareerDatabase(factory,'restore-3');
   await repo.initialize();await repo.replaceAllData(fullCollections(),{theme:'system'},1);
   await repo.saveProficiencyAssessment(draft('custom-competency',4));
   const existing=await repo.readSnapshot(),backup=await createBackup(repo);
-  const prepared=await parseBackupJson(backup.json,repo);assert.equal(prepared.sourceFormat,3);
+  const prepared=await parseBackupJson(backup.json,repo);assert.equal(prepared.sourceFormat,4);
   await repo.saveProficiencyAssessment(draft('custom-competency',2));
   await assert.rejects(()=>restoreBackup(prepared,repo),/changed since you selected/);
   const restored=await parseBackupJson(backup.json,repo);

@@ -1,6 +1,6 @@
-export const APP_VERSION = '0.1.3-alpha.7';
-export const SCHEMA_VERSION = 3;
-export const BACKUP_FORMAT_VERSION = 3;
+export const APP_VERSION = '0.1.4-alpha.1';
+export const SCHEMA_VERSION = 4;
+export const BACKUP_FORMAT_VERSION = 4;
 export const TAXONOMY_VERSION = '1.0';
 export const PROFILE_ID = 'local-profile';
 export const MAX_BACKUP_BYTES = 12 * 1024 * 1024;
@@ -60,18 +60,53 @@ export interface EvidenceReference extends BaseRecord {
 export interface RecordLink extends BaseRecord {
   linkType: 'role-project' | 'achievement-project' | 'achievement-competency'; sourceId: string; targetId: string; isPrimary: boolean; note: string;
 }
+/**
+ * CP-STU (DEC-040, schema 4): Studio documents are editable snapshots, never live views.
+ * A block keeps the text the user sees plus `generated`, the text its source produced
+ * when the block was last generated or reviewed, so a later source change is detected
+ * by comparing — and is never written into the document without the user's choice.
+ */
+export type DocumentType = 'review' | 'cv';
+export type DocumentTemplate = 'review-standard' | 'cv-professional' | 'cv-technical';
+export type DocumentSection = 'contact' | 'summary' | 'achievements' | 'experience' | 'projects' | 'skills' | 'technologies' | 'education' | 'credentials' | 'next';
+export type BlockKind = 'paragraph' | 'item' | 'entry' | 'bullet';
+export type ContactField = 'email' | 'phone' | 'location' | 'website' | 'links';
+export type DocumentSourceType = 'profile' | 'employer' | 'role' | 'project' | 'achievement' | 'competency' | 'education' | 'credential';
+export interface BlockContent { heading: string; meta: string; date: string; text: string }
+export interface ContentBlock extends BlockContent {
+  id: string; section: DocumentSection; kind: BlockKind; order: number; userEdited: boolean;
+  /** What produced the block (e.g. "achievement:<id>"); null for text the user added. */
+  sourceKey: string | null; generated: BlockContent | null;
+}
+export interface DocumentSectionSetting { key: DocumentSection; visible: boolean }
+export interface CareerDocument extends BaseRecord {
+  documentType: DocumentType; title: string; templateId: DocumentTemplate; status: 'draft' | 'final';
+  excludeConfidential: boolean; periodStart: PrecisionDate | null; periodEnd: PrecisionDate | null; roleId: string | null;
+  sections: DocumentSectionSetting[]; contentBlocks: ContentBlock[]; contactFields: ContactField[];
+  sourceDataRevision: number; generatedAt: string;
+}
+export interface DocumentSource extends BaseRecord {
+  documentId: string; sourceType: DocumentSourceType; sourceId: string; sourceRevision: number; order: number; sourceLabelSnapshot: string;
+}
+/** A document source as the Studio builds it; the database assigns identity and timestamps. */
+export type DocumentSourceDraft = Pick<DocumentSource,'sourceType'|'sourceId'|'sourceRevision'|'order'|'sourceLabelSnapshot'>;
 export interface Meta { key: string; value: unknown }
 export interface P0RecordMap {
   profiles: Profile; employers: Employer; roles: Role; education: Education; credentials: Credential; projects: Project;
   achievements: Achievement; impactMetrics: ImpactMetric; competencyCategories: CompetencyCategory; competencies: Competency;
   evidenceReferences: EvidenceReference; recordLinks: RecordLink; proficiencyAssessments: ProficiencyAssessment;
+  careerDocuments: CareerDocument; documentSources: DocumentSource;
 }
-export const P0_STORES = ['profiles','employers','roles','education','credentials','projects','achievements','impactMetrics','competencyCategories','competencies','evidenceReferences','recordLinks','proficiencyAssessments'] as const;
+export const P0_STORES = ['profiles','employers','roles','education','credentials','projects','achievements','impactMetrics','competencyCategories','competencies','evidenceReferences','recordLinks','proficiencyAssessments','careerDocuments','documentSources'] as const;
+/** Collections a format-3 (schema 3) backup holds: everything before Studio documents. */
+export const FORMAT3_STORES = P0_STORES.filter(s => s !== 'careerDocuments' && s !== 'documentSources');
+/** Collections a format-2 (schema 2) backup holds: also before proficiency history. */
+export const FORMAT2_STORES = FORMAT3_STORES.filter(s => s !== 'proficiencyAssessments');
 export type P0Store = typeof P0_STORES[number];
 export type CareerCollections = { [K in P0Store]: P0RecordMap[K][] };
 export interface Preferences { theme: 'system' | 'light' | 'dark' }
 export interface CareerBackup {
-  manifest: { format: 'careerproof-backup'; formatVersion: 3; schemaVersion: 3; appVersion: string; exportedAt: string; taxonomyVersion: string; counts: { [K in P0Store]: number } };
+  manifest: { format: 'careerproof-backup'; formatVersion: 4; schemaVersion: 4; appVersion: string; exportedAt: string; taxonomyVersion: string; counts: { [K in P0Store]: number } };
   collections: CareerCollections;
   preferences: Preferences;
 }

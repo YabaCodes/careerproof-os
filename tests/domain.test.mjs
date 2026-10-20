@@ -29,7 +29,7 @@ test('profile validates email and types without coercion',()=>{
 });
 test('format-1 conversion is lossless with conservative privacy and no duplicate date field',()=>{
   const legacy=legacyBackup(),b=validateBackup(legacy);
-  assert.equal(b.manifest.formatVersion,3);assert.equal(b.collections.competencies.length,32);
+  assert.equal(b.manifest.formatVersion,4);assert.equal(b.collections.competencies.length,32);
   for(const old of legacy.collections.achievements){
     const migrated=b.collections.achievements.find(a=>a.id===old.id),view=achievementView(migrated);
     for(const key of Object.keys(old))assert.deepEqual(view[key],old[key],key);
@@ -49,7 +49,7 @@ test('reject coerced legacy enums and malformed records before conversion',()=>{
 test('reject invalid format/schema versions, counts, collection types, and duplicate IDs',()=>{
   const b=generateBackup(fullCollections());
   for(const mutation of [
-    x=>x.manifest.schemaVersion=55,x=>x.manifest.formatVersion='2',x=>x.manifest.formatVersion=4,
+    x=>x.manifest.schemaVersion=55,x=>x.manifest.formatVersion='2',x=>x.manifest.formatVersion=5,
     x=>x.manifest.counts.profiles=2,x=>x.collections.employers={},x=>delete x.collections.roles,
     x=>x.collections.achievements.push(x.collections.achievements[0]),
     x=>x.collections.employers[0].id=x.collections.projects[0].id,

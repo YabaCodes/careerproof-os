@@ -63,3 +63,21 @@ export async function openCaptureMore(page){
   if(!await more.evaluate(d=>d.open))await more.locator('summary').click();
   await expect(more).toHaveAttribute('open','');
 }
+/**
+ * CP-STU (DEC-040): Settings & Data opens from Profile — the initials in the
+ * header on phones — or from the sidebar on wider screens.
+ */
+export async function openSettings(page){
+  const side=page.locator('.sidebar-settings');
+  if(await side.isVisible())await side.click();
+  else{await page.locator('.header-profile').click();await page.locator('.profile-settings').click();}
+  await expect(page.getByRole('dialog',{name:'Settings & Data'})).toBeVisible();
+}
+/** Open the Profile screen: the header initials on phones, the sidebar entry on wider screens. */
+export async function openProfile(page){
+  const header=page.locator('.header-profile'),side=page.locator('.side-links [data-screen=profile]');
+  // Detail pages (an experience, a document) carry their own top bar: return to a tab first.
+  if(!await header.isVisible()&&!await side.isVisible())await page.locator('.mobile-nav [data-screen=home]').click();
+  if(await header.isVisible())await header.click();else await side.click();
+  await expect(page.locator('#main-content h1')).toHaveText('Career Profile');
+}

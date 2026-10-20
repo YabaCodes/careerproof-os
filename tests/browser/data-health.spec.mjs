@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {openSettings} from './ux-helpers.mjs';
 import {fullCollections,base} from '../fixtures.mjs';
 test.use({isMobile:true,hasTouch:true});
 async function seeded(page){
@@ -16,7 +17,7 @@ for(const width of [320,390]){
     await page.setViewportSize({width,height:780});
     await seeded(page);
     const before=await state(page);
-    await page.locator('.header-settings').click();
+    await openSettings(page);
     await page.locator('[data-action=check-integrity]').click();
     await expect(page.locator('#integrity-check-result')).toContainText('Check passed.');
     const report=page.locator('#data-health-report');
@@ -41,7 +42,7 @@ for(const width of [320,390]){
     await report.locator('[data-code=achievement-no-outcome] [data-action=health-open][data-id=gap-1]').click();
     await expect(page.getByRole('dialog')).toContainText('Synthetic gap achievement');
     await page.locator('.close-dialog').click();
-    await page.locator('.header-settings').click();
+    await openSettings(page);
     await page.locator('[data-action=check-integrity]').click();
     // CP-012C: Home shows the same gaps behind the dialog, so stay inside the report.
     await page.locator('#data-health-report [data-code=experience-no-achievements] summary').click();
@@ -53,7 +54,7 @@ for(const width of [320,390]){
 }
 test('CP-012A exporting clears the backup suggestion on the next check',async({page})=>{
   await seeded(page);
-  await page.locator('.header-settings').click();
+  await openSettings(page);
   await page.locator('[data-action=check-integrity]').click();
   await expect(page.locator('[data-code=export-never]')).toHaveCount(1);
   const download=page.waitForEvent('download');await page.locator('#export-backup').click();await download;

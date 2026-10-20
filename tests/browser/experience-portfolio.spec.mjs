@@ -77,7 +77,7 @@ test('experiences sit on a role-grouped timeline with partial dates, search and 
 });
 test('roles are linked through canonical IDs in one validated atomic transaction',async({page})=>{
   await pageStart(page);
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await page.locator('[data-action=add-career][data-kind=employers]').click();
   await page.locator('#career-name').fill('Synthetic Manufacturing Co');
   await page.locator('[data-action=save-career]').click();
@@ -207,7 +207,7 @@ test('project links round-trip through private backup; no schema changes',async(
     return {schema:p.backup.manifest.schemaVersion,format:p.backup.manifest.formatVersion,
       projectCount:after.collections.projects.length,same:JSON.stringify(before.collections.projects)===JSON.stringify(after.collections.projects)};
   });
-  expect(result).toEqual({schema:3,format:3,projectCount:1,same:true});
+  expect(result).toEqual({schema:4,format:4,projectCount:1,same:true});
 });
 test('CP-012.0 apostrophes followed by digits survive display, edit and unchanged save',async({page})=>{
   await page.setViewportSize({width:390,height:844});

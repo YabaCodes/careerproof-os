@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {openProfile} from './ux-helpers.mjs';
 import {fullCollections} from '../fixtures.mjs';
 
 // CP-012.3: Title Case for app-authored titles and subtitles; most recent employer first.
@@ -35,7 +36,7 @@ async function seed(page,c){
   if(c)await page.evaluate(async c=>{const {database}=await import('/app/data/db.js');await database.replaceAllData(c,{theme:'light'},await database.getGeneration());},c);
   await page.reload();await expect(page.locator('.hero-card')).toBeVisible();
 }
-const tab=(page,screen)=>page.locator(`.mobile-nav [data-screen=${screen}]`).click();
+const tab=(page,screen)=>screen==='profile'?openProfile(page):page.locator(`.mobile-nav [data-screen=${screen}]`).click();
 const close=page=>page.locator('.close-dialog').click();
 
 test('CP-012.3 titles and subtitles use Title Case on every screen and main dialog',async({page})=>{
@@ -63,7 +64,7 @@ test('CP-012.3 titles and subtitles use Title Case on every screen and main dial
   expect(await expectTitleCase(page,'profile')).toEqual(expect.arrayContaining(['Identity, Work History and Qualifications','Employment History','Education','Certifications & Credentials']));
 
   const dialogs=[
-    ['settings','.header-settings',['Settings & Data','Data Management','Export Career Backup','Data Health','Restore from Backup','Check for Updates']],
+    ['settings','.profile-settings',['Settings & Data','Data Management','Export Career Backup','Data Health','Restore from Backup','Check for Updates']],
     ['capture','.mobile-create',['Capture an Achievement','Where Did This Happen?']],
     ['profile editor','[data-action=edit-profile]',['Edit Career Profile']],
     ['role editor','[data-action=add-career][data-kind=roles]',['Add Employment Role']],

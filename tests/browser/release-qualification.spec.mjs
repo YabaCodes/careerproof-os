@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {openSettings,openProfile} from './ux-helpers.mjs';
 // Keep UI and service worker assertions in sync with compiled app version.
 import {APP_VERSION} from '../../dist/app/domain/models.js';
 const CURRENT_CACHE = `careerproof-v${APP_VERSION}`;
@@ -24,7 +25,7 @@ async function snapshot(page){
   });
 }
 async function settings(page){
-  await page.locator('.header-settings').click();
+  await openSettings(page);
   await expect(page.getByRole('dialog',{name:'Settings & data'})).toBeVisible();
 }
 async function selectBackup(page,backup){
@@ -46,7 +47,7 @@ test('CP-E201 user can verify all current career data without writing, exporting
   await expect(button).toBeVisible();
   await button.click();
   await expect(page.locator('#integrity-check-result')).toContainText('Check passed.');
-  await expect(page.locator('#integrity-check-result')).toContainText('Backup format 3 and schema 3');
+  await expect(page.locator('#integrity-check-result')).toContainText('Backup format 4 and schema 4');
   await expect(page.locator('#integrity-check-result')).toContainText('nothing was restored or uploaded');
   await expect(button).toBeEnabled();
   expect(await snapshot(page)).toEqual(before);
@@ -88,7 +89,7 @@ test('CP-E202 restore preview rejects intervening ordinary edits and succeeds on
 test('CP-E203 cross-module navigation, complete backup and restoration preserve every rich record and link',async({page})=>{
   await start(page);
   const original=await snapshot(page);
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await openProfile(page);
   await expect(page.getByText('Synthetic Company').first()).toBeVisible();
   await page.locator('.mobile-nav [data-screen=portfolio]').click();
   await expect(page.locator('.experience-row')).toHaveCount(1);
@@ -99,7 +100,7 @@ test('CP-E203 cross-module navigation, complete backup and restoration preserve 
   await expect(page.getByRole('dialog')).toContainText('Synthetic reduction');
   await expect(page.getByRole('dialog')).toContainText('SYNTHETIC-001');
   await page.locator('.close-dialog').click();
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await openProfile(page);
   await page.locator('.mobile-nav [data-screen=competencies]').click();
   await page.locator('#competency-search').fill('Synthetic Skill');
   await expect(page.locator('details.skill-entry')).toHaveCount(1);
@@ -113,7 +114,7 @@ test('CP-E203 cross-module navigation, complete backup and restoration preserve 
   const download=await downloadReady,parts=[];
   for await(const chunk of await download.createReadStream())parts.push(chunk);
   const backup=JSON.parse(Buffer.concat(parts).toString('utf8'));
-  expect(backup.manifest.formatVersion).toBe(3);
+  expect(backup.manifest.formatVersion).toBe(4);
   expect(backup.manifest.counts.recordLinks).toBe(3);
   expect(backup.manifest.counts.impactMetrics).toBe(1);
   expect(backup.manifest.counts.evidenceReferences).toBe(1);
@@ -145,13 +146,13 @@ test('CP-E204 installed offline shell supports Profile, Portfolio, Vault and Com
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('.hero-card')).toBeVisible();
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await openProfile(page);
   await expect(page.getByText('Synthetic Company').first()).toBeVisible();
   await page.locator('.mobile-nav [data-screen=portfolio]').click();
   await expect(page.locator('.experience-row')).toHaveCount(1);
   await page.locator('.experience-row').click();
   await expect(page.locator('.experience-page h1')).toHaveText('Synthetic Initiative');
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await openProfile(page);
   await page.locator('.mobile-nav [data-screen=competencies]').click();
   await page.locator('[data-action=skill-scope][data-scope=all]').click();
   await expect(page.locator('details.skill-entry')).toHaveCount(33);

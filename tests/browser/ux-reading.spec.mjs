@@ -219,7 +219,7 @@ test('CP-UX1 achievement dates: month by default, year or exact day when known, 
 
 test('CP-UX1 Profile: a record\'s name opens its editor, and Delete lives in that editor',async({page})=>{
   await seed(page);
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await expect(page.locator('.career-entry-actions')).toHaveCount(0);
   await expect(page.locator('.career-open')).toHaveText(['Synthetic Company','Synthetic Engineer','Example Degree','Synthetic Certificate']);
   for(const h of await page.locator('.career-open').evaluateAll(bs=>bs.map(b=>b.getBoundingClientRect().height)))expect(h).toBeGreaterThanOrEqual(44);

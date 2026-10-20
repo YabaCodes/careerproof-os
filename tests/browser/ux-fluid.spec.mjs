@@ -227,7 +227,8 @@ test('CP-UX-Fluid buttons give under a press; a tap that opens a sheet cannot al
   expect(await quick.evaluate(el=>getComputedStyle(el).transform)).toBe('none');
   // While a sheet is still rising, a tap on the dimmed area (where the sheet is about to be) does not close it;
   // once it has settled, the backdrop works as before.
-  const openAndTapBackdrop=()=>page.evaluate(()=>{document.querySelector('.header-settings').click();document.querySelector('.modal-backdrop').click();});
+  await page.locator('.header-profile').click();
+  const openAndTapBackdrop=()=>page.evaluate(()=>{document.querySelector('.profile-settings').click();document.querySelector('.modal-backdrop').click();});
   await page.emulateMedia({reducedMotion:'no-preference'});
   await openAndTapBackdrop();
   await expect(page.getByRole('dialog',{name:'Settings & Data'})).toBeVisible();

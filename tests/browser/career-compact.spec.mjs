@@ -33,7 +33,7 @@ async function seed(page){
   },c);
   await page.reload();
   await expect(page.locator('.hero-card')).toBeVisible();
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await expect(page.getByRole('heading',{name:'Career Profile'})).toBeVisible();
 }
 
@@ -130,14 +130,14 @@ test('education and credential notes use the same compact previews with optional
   await expect(education.locator('.career-note')).toContainText('Graduated with distinction');
   await expect(credential.locator('.career-link')).toBeVisible();
   await page.reload();
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await expect(page.locator('button.career-more').first()).toHaveAttribute('aria-expanded','false');
 });
 
 test('brief descriptions do not show unnecessary More controls',async({page})=>{
   await page.setViewportSize({width:430,height:812});
   await page.goto('/');
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await page.locator('[data-action=add-career][data-kind=employers]').click();
   await page.locator('#career-name').fill('Brief Employer');
   await page.locator('#career-description').fill('Brief.');

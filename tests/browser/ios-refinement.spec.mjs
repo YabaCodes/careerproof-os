@@ -43,7 +43,7 @@ for(const theme of ['light','dark'])for(const width of [320,375,390,430]){
     expect(nav.height).toBe(61); // 60px content plus one divider; zero device inset here.
     expect(nav.paddingTop).toBe('0px');expect(nav.paddingBottom).toBe('0px');
     // DEC-029/030: five content tabs, Wealth OS line icons; capture and Settings moved to the header.
-    expect(nav.items.map(x=>x.label)).toEqual(['Home','Vault','Experience','Skills','Profile']);
+    expect(nav.items.map(x=>x.label)).toEqual(['Home','Vault','Experience','Skills','Studio']);
     for(const [index,item] of nav.items.entries()){
       expect(item.height).toBe(60);expect(item.width).toBeGreaterThanOrEqual(44);
       expect(item.frame).toBe(24);expect(item.frameHeight).toBe(24);
@@ -126,7 +126,7 @@ test('safe-area inset is separate from navigation content and shared profile foo
   await start(page);await page.evaluate(()=>document.documentElement.style.setProperty('--safe-bottom','34px'));
   expect(await page.locator('.mobile-nav').evaluate(el=>el.getBoundingClientRect().height)).toBe(95);
   expect(await page.locator('.mobile-nav .nav-item').evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height))).toEqual([60,60,60,60,60]);
-  await page.locator('.mobile-nav [data-screen=profile]').click();await page.locator('[data-action=edit-profile]').last().click();
+  await page.locator('.header-profile').click();await page.locator('[data-action=edit-profile]').last().click();
   await expect(page.getByRole('dialog')).toBeFocused();expect(await page.locator('.modal-body').evaluate(el=>el.scrollTop)).toBe(0);
   expect(await page.locator('.modal-footer').evaluate(el=>getComputedStyle(el).paddingBottom)).toBe('46px');
 });
