@@ -1,34 +1,46 @@
-## CP-STU — Studio, v0.1.4-alpha.1 (installed-iPhone gate STU-01–STU-09)
+## CP-PC — Profile contact details, v0.1.4-alpha.2 (installed-iPhone gate PC101–PC103)
 
-**Status: PENDING until merged, deployed and explicitly user-accepted.** Do not uninstall the Home Screen PWA or clear storage. **Export a current JSON backup first** (Profile → Settings & Data → Export). The update upgrades the database to **schema 4** and backups to **format 4**. Use synthetic or harmless records for anything you delete or change on purpose, and do not share a test PDF that contains real confidential work.
+**Status: PENDING until merged, deployed and explicitly user-accepted.** No schema or backup-format change. Export a backup first, as usual.
 
-- [ ] **STU-01 — Update and retention:** Profile → Settings & Data shows `v0.1.4-alpha.1` and *Database schema 4*. Vault, Experience, Skills and Profile counts are unchanged. Check data passes and mentions Studio documents; a new export is saved.
-- [ ] **STU-02 — Navigation:** the tab bar reads Home · Vault · Experience · Skills · Studio with equal spacing above the home indicator. Your initials (next to ＋) open Profile; *Settings & Data* is the first row there; ＋ still captures an achievement.
-- [ ] **STU-03 — Review scope:** Studio → Performance review. The presets fill From/Through; changing a month switches to Custom; the role list filters; the title follows the period until you edit it. The count line and "left out" note are right for your records (drafts and archived never counted).
-- [ ] **STU-04 — Review draft:** choose achievements (Select all, untick some), keep or drop Skills shown and Next period, Make draft. The text is your own wording; Skills Shown has counts, not ratings; nothing Confidential appears unless you switched it on, and then the page says so.
-- [ ] **STU-05 — Editing without touching records:** tap a part and edit it (it shows *Edited by you*); Add text to a section; Remove a part; Restore the source text; Details → rename; Sections and Order → hide one and move one. Reopen the app: all kept. Your achievements in the Vault are unchanged.
-- [ ] **STU-06 — Outdated alerts (synthetic record):** change the result of an achievement used in a review. The document shows the banner and the new text under that part, and **does not change it** until you press *Use updated text* or *Keep this text*. Delete a synthetic achievement used in a document: its text stays, marked as from a deleted record, and you can remove or keep it.
-- [ ] **STU-07 — CV:** make one CV with each template; untick a role and some achievements; leave phone off (then try on). Save as new version; start another CV from a copy; delete one version — the others and your records remain.
-- [ ] **STU-08 — PDF:** Export PDF from a review and a CV. The file saves or opens from the share sheet / Files; text is selectable; sections follow your order and hidden ones are absent; page numbers on multi-page documents; the review footer says it is self-reported. Any "?" characters are reported in the export message.
-- [ ] **STU-09 — Offline, layout and backup:** with no connection, reopen the installed app: Studio, documents, editing and PDF export work. Light and dark, 320–430px: no sideways scrolling, sheets clear the keyboard and safe areas, controls are at least 44pt. A new backup contains your documents (Restore preview lists *Studio documents*); do **not** restore over real data.
+- [ ] **PC101 — Update and form:** Settings & Data shows `v0.1.4-alpha.2`. Profile → Edit your profile shows Phone, Website and Professional links below Location and email; the keyboard does not hide the field you type in; existing profile details are unchanged.
+- [ ] **PC102 — Saving and checks:** enter a phone number, a website without `https://` and two links on separate lines; save. Profile → Contact shows them, the website and links open in a new tab, and reopening the form shows `https://` added. A website such as `javascript:alert(1)` is refused with your text kept.
+- [ ] **PC103 — CV:** Studio → CV → Contact Details lists Email, Phone, Location, Website and Professional links; phone is unticked until you tick it; the made CV and its PDF show exactly what you chose.
+
+---
+
+## CP-STU — Studio, v0.1.4-alpha.1 (installed-iPhone gate STU-01–STU-09; all passed, user-reported 2026-10-20)
+
+**Status: ACCEPTED.** The user reported all nine checks passed on iPhone on 2026-10-20. Original instructions follow.
+
+**Original status: PENDING until merged, deployed and explicitly user-accepted.** Do not uninstall the Home Screen PWA or clear storage. **Export a current JSON backup first** (Profile → Settings & Data → Export). The update upgrades the database to **schema 4** and backups to **format 4**. Use synthetic or harmless records for anything you delete or change on purpose, and do not share a test PDF that contains real confidential work.
+
+- [x] **STU-01 — Update and retention:** Profile → Settings & Data shows `v0.1.4-alpha.1` and *Database schema 4*. Vault, Experience, Skills and Profile counts are unchanged. Check data passes and mentions Studio documents; a new export is saved.
+- [x] **STU-02 — Navigation:** the tab bar reads Home · Vault · Experience · Skills · Studio with equal spacing above the home indicator. Your initials (next to ＋) open Profile; *Settings & Data* is the first row there; ＋ still captures an achievement.
+- [x] **STU-03 — Review scope:** Studio → Performance review. The presets fill From/Through; changing a month switches to Custom; the role list filters; the title follows the period until you edit it. The count line and "left out" note are right for your records (drafts and archived never counted).
+- [x] **STU-04 — Review draft:** choose achievements (Select all, untick some), keep or drop Skills shown and Next period, Make draft. The text is your own wording; Skills Shown has counts, not ratings; nothing Confidential appears unless you switched it on, and then the page says so.
+- [x] **STU-05 — Editing without touching records:** tap a part and edit it (it shows *Edited by you*); Add text to a section; Remove a part; Restore the source text; Details → rename; Sections and Order → hide one and move one. Reopen the app: all kept. Your achievements in the Vault are unchanged.
+- [x] **STU-06 — Outdated alerts (synthetic record):** change the result of an achievement used in a review. The document shows the banner and the new text under that part, and **does not change it** until you press *Use updated text* or *Keep this text*. Delete a synthetic achievement used in a document: its text stays, marked as from a deleted record, and you can remove or keep it.
+- [x] **STU-07 — CV:** make one CV with each template; untick a role and some achievements; leave phone off (then try on). Save as new version; start another CV from a copy; delete one version — the others and your records remain.
+- [x] **STU-08 — PDF:** Export PDF from a review and a CV. The file saves or opens from the share sheet / Files; text is selectable; sections follow your order and hidden ones are absent; page numbers on multi-page documents; the review footer says it is self-reported. Any "?" characters are reported in the export message.
+- [x] **STU-09 — Offline, layout and backup:** with no connection, reopen the installed app: Studio, documents, editing and PDF export work. Light and dark, 320–430px: no sideways scrolling, sheets clear the keyboard and safe areas, controls are at least 44pt. A new backup contains your documents (Restore preview lists *Studio documents*); do **not** restore over real data.
 
 **No item is automatically PASS solely from automated Chromium or GitHub CI.** Report individual results and any limitations before acceptance.
 
 ---
 
-## CP-UX3 — Redesign Step 3, v0.1.3-alpha.7 (installed-iPhone gate; merged in PR #41, results pending)
+## CP-UX3 — Redesign Step 3, v0.1.3-alpha.7 (installed-iPhone gate; merged in PR #41; all passed, user-reported 2026-10-20)
 
 **Status: PENDING until merged, deployed and explicitly user-accepted.** Do not uninstall the Home Screen PWA or clear storage. Export a secure current JSON backup before testing. Use disposable synthetic records for any destructive test; never replace real career data solely for testing. The conversion changes two existing records, although **schema 3 and backup format 3 remain unchanged**.
 
-- [ ] **UX301-S3:** Home at 320/375/390/430px: one row with correct **Recorded / Draft / Experiences / Skills Shown** counts, legible typography and no sideways page overflow; honest last-generated-export line.
-- [ ] **UX302-S3:** Header + creates an Achievement, Settings works, all five tabs (Home, Vault, Experience, Skills, Profile) remain functional. Quick Add offers Experience, Employer and Credential.
-- [ ] **UX303-S3:** Last 12 Months remains tappable and swipeable, month list replaces Recent, and returning to Recent works; drafts, archived and year-only dates follow original rules. Reduce Motion works.
-- [ ] **UX304-S3:** Expand Your Record → Complete Your Record, open a gap and Data Health; expand Achievements by Role and reach the role-filtered Vault. Collapsing/reopening does not remove content.
-- [ ] **UX305-S3:** Open a synthetic Draft → Hasn't happened yet?; choose a linked Experience with an existing objective, edit expected text; confirm old objective survives with new paragraph appended; Draft appears in Vault → Archived with its original role/skills/metrics/evidence.
-- [ ] **UX306-S3:** From resulting Experience use Undo before editing anything else; old objective returns exactly and Draft returns as active Draft. Attempting repeated conversion cannot duplicate paragraph.
-- [ ] **UX307-S3:** Stale source edit, concurrent tab edit, repeated press, blank/overlength text and failed transaction must not partially archive/appended anything; show a clear error. Synthetic tests plus unit/integration failure injection qualify destructive conditions; do not force storage quota failures on personal data.
-- [ ] **UX308-S3:** Convert a synthetic Draft again, reload installed app offline, verify objective and Archived Draft persist; Undo from before reload is unavailable; Settings / exported JSON still show format 3 and 13 stores.
-- [ ] **UX309-S3:** Confidential synthetic Draft to standard-private Experience is blocked until target Experience is explicitly marked Confidential; completed Experience requires acknowledgement. Dark/light contrast, tap targets, keyboard and sheet/scroll safe areas verified.
+- [x] **UX301-S3:** Home at 320/375/390/430px: one row with correct **Recorded / Draft / Experiences / Skills Shown** counts, legible typography and no sideways page overflow; honest last-generated-export line.
+- [x] **UX302-S3:** Header + creates an Achievement, Settings works, all five tabs (Home, Vault, Experience, Skills, Profile) remain functional. Quick Add offers Experience, Employer and Credential.
+- [x] **UX303-S3:** Last 12 Months remains tappable and swipeable, month list replaces Recent, and returning to Recent works; drafts, archived and year-only dates follow original rules. Reduce Motion works.
+- [x] **UX304-S3:** Expand Your Record → Complete Your Record, open a gap and Data Health; expand Achievements by Role and reach the role-filtered Vault. Collapsing/reopening does not remove content.
+- [x] **UX305-S3:** Open a synthetic Draft → Hasn't happened yet?; choose a linked Experience with an existing objective, edit expected text; confirm old objective survives with new paragraph appended; Draft appears in Vault → Archived with its original role/skills/metrics/evidence.
+- [x] **UX306-S3:** From resulting Experience use Undo before editing anything else; old objective returns exactly and Draft returns as active Draft. Attempting repeated conversion cannot duplicate paragraph.
+- [x] **UX307-S3:** Stale source edit, concurrent tab edit, repeated press, blank/overlength text and failed transaction must not partially archive/appended anything; show a clear error. Synthetic tests plus unit/integration failure injection qualify destructive conditions; do not force storage quota failures on personal data.
+- [x] **UX308-S3:** Convert a synthetic Draft again, reload installed app offline, verify objective and Archived Draft persist; Undo from before reload is unavailable; Settings / exported JSON still show format 3 and 13 stores.
+- [x] **UX309-S3:** Confidential synthetic Draft to standard-private Experience is blocked until target Experience is explicitly marked Confidential; completed Experience requires acknowledgement. Dark/light contrast, tap targets, keyboard and sheet/scroll safe areas verified.
 
 **No item is automatically PASS solely from automated Chromium or GitHub CI.** Report individual results and any limitations before acceptance.
 

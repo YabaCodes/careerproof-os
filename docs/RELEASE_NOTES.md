@@ -1,6 +1,19 @@
-## v0.1.4-alpha.1 — CP-STU: Performance Review Studio, CV Builder and PDF (review candidate)
+## v0.1.4-alpha.2 — CP-PC: profile contact details for CVs (review candidate)
 
-**Status:** PR open, CI result stated in the PR; **not merged, deployed or physically accepted**. User approved the mockups on 2026-10-20 ("Looks good. Make the revision") and asked for Performance Review Studio, the CV Builder and the slimmer Home in one PR. The slimmer Home and plans → Expected Results had already shipped in `0.1.3-alpha.7` (PR #41), so this PR carries the Studio, the CV Builder, PDF export and the navigation change (DEC-040).
+**Status:** PR open, CI result stated in the PR; **not merged, deployed or physically accepted**. Follow-up to alpha.1 approved by the user on 2026-10-20 ("continue to the next one").
+
+- **Edit Career Profile** now has **Phone**, **Website** and **Professional links** (one address per line). These fields already existed in the stored profile since schema 2, but no screen could fill them, so a CV could only show email and location.
+- A web address typed without a scheme gets `https://` (`example.com/you` → `https://example.com/you`). Only plain http(s) addresses with a host are accepted; `javascript:`, `ftp:` and addresses with a user name or password are refused with the typed text kept. Phone: up to 80 characters with at least one digit. Duplicate links are dropped; at most 100.
+- The Profile card's **Contact** shows email, phone, website and links (links open in a new tab, `rel="noopener noreferrer"`).
+- The CV journey's Contact Details step now offers all five details; **phone stays off unless ticked**.
+- **Data:** no schema or backup-format change (schema 4, format 4); a profile save now writes the three existing fields.
+- **Acceptance recorded:** the user reported on 2026-10-20 that **STU-01–STU-09** (0.1.4-alpha.1) and **UX301-S3–UX309-S3** (0.1.3-alpha.7) all passed on iPhone.
+- **Tests (local):** `npm test` passes 125 Node and 162 browser tests. New `profile-contact.test.mjs` (2 Node) and `profile-contact.spec.mjs` (1 browser).
+- **Pending:** CI, review and merge, deployment, iPhone checks PC101–PC103.
+
+## v0.1.4-alpha.1 — CP-STU: Performance Review Studio, CV Builder and PDF (accepted on iPhone 2026-10-20)
+
+**Status:** merged in PR #42 (`4e5ee63`) and deployed; the user reported STU-01–STU-09 all passed on iPhone on 2026-10-20. Original candidate status: PR open, CI result stated in the PR; not merged, deployed or physically accepted. User approved the mockups on 2026-10-20 ("Looks good. Make the revision") and asked for Performance Review Studio, the CV Builder and the slimmer Home in one PR. The slimmer Home and plans → Expected Results had already shipped in `0.1.3-alpha.7` (PR #41), so this PR carries the Studio, the CV Builder, PDF export and the navigation change (DEC-040).
 
 - **Navigation:** **Studio** takes Profile's place in the tab bar: Home · Vault · Experience · Skills · Studio. Profile opens from your **initials in the header** (next to ＋), and **Settings & Data** is the first row on the Profile page. On tablet/desktop the sidebar lists Studio and Profile, and Settings stays at its foot.
 - **Studio tab:** start a **Performance review** or a **CV**, and see your documents (most recently edited first) with "N parts to review" when their sources have changed.

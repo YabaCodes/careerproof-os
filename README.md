@@ -1,10 +1,14 @@
-# CareerProof OS — v0.1.4-alpha.1 (Studio in review)
+# CareerProof OS — v0.1.4-alpha.2 (profile contact details in review)
 
 **Own your experience. Prove your impact. Shape your future.**
 
-**Current development:** CP-STU `v0.1.4-alpha.1` is proposed on `feat/cp-studio` and **not merged, deployed or accepted**. The latest merged main change is PR #41 (`v0.1.3-alpha.7`, CP-UX3); its installed-iPhone checks UX301-S3–UX309-S3 are not yet reported.
+**Current development:** CP-PC `v0.1.4-alpha.2` is proposed on `feat/cp-profile-contact` and **not merged, deployed or accepted**. The latest merged main change is PR #42 (`v0.1.4-alpha.1`, Studio), accepted on iPhone (STU-01–STU-09) on 2026-10-20 together with alpha.7 (UX301-S3–UX309-S3).
 
-### v0.1.4-alpha.1 — Studio: Performance Review, CV Builder and PDF (DEC-040)
+### v0.1.4-alpha.2 — Profile contact details for CVs
+
+- **Edit Career Profile** adds Phone, Website and Professional links (one per line; `https://` added when missing; only http(s) addresses accepted). The Profile card shows them and the CV Contact Details step offers them, with phone off unless ticked. No schema or backup change.
+
+### v0.1.4-alpha.1 — Studio: Performance Review, CV Builder and PDF (DEC-040, accepted)
 
 - **Studio tab:** Home · Vault · Experience · Skills · **Studio**. Profile opens from your initials in the header; **Settings & Data** is the first row on Profile.
 - **Performance review:** choose a period and role; only Recorded achievements are offered; the draft uses your own words (Summary, Key Achievements, Skills Shown, Next Period) and you edit anything.

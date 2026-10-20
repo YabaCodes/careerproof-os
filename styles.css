@@ -1366,3 +1366,7 @@ button, summary, .where-option, .skill-chip { -webkit-tap-highlight-color: trans
 }
 @media (prefers-reduced-motion:reduce) { .studio-progress span { transition: none; } }
 .studio-remove { justify-self: start; min-height: 44px; }
+/* CP-PC: contact details on the Profile card. */
+.profile-contact p + p { margin-top: var(--space-1); }
+.profile-link { color: var(--teal); text-decoration: none; overflow-wrap: anywhere; }
+.profile-link:hover { text-decoration: underline; }

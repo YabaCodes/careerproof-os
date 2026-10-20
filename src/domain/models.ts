@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.1.4-alpha.1';
+export const APP_VERSION = '0.1.4-alpha.2';
 export const SCHEMA_VERSION = 4;
 export const BACKUP_FORMAT_VERSION = 4;
 export const TAXONOMY_VERSION = '1.0';
