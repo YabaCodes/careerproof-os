@@ -19,8 +19,8 @@ test('CP-E101 read-only integrity check validates all stores, relationships and 
   const before=await repo.readSnapshot();
   const report=await inspectLocalData(repo);
   const after=await repo.readSnapshot();
-  assert.equal(report.schemaVersion,3);
-  assert.equal(report.formatVersion,3);
+  assert.equal(report.schemaVersion,4);
+  assert.equal(report.formatVersion,4);
   assert.equal(report.generation,before.generation);
   assert.equal(report.revision,before.revision);
   assert.equal(report.counts.profiles,1);
@@ -90,7 +90,7 @@ test('CP-E103 valid-looking corrupted full backups are rejected before any repla
     b=>{b.collections.projects[0].employerId='missing';},
     b=>{b.collections.evidenceReferences[0].achievementId='missing-achievement';},
     b=>{b.manifest.counts.recordLinks=999;},
-    b=>{b.manifest.schemaVersion=4;},
+    b=>{b.manifest.schemaVersion=5;},
     b=>{b.preferences.theme='unsafe';},
     b=>{b.collections.achievements[0].occurredOn='2024-02-29';}
   ];
@@ -125,7 +125,7 @@ test('CP-E105 legacy import explicitly replaces newer collections while recreati
   const legacy=await parseBackupJson(JSON.stringify(legacyBackup()),repo);
   assert.equal(legacy.legacy,true);
   const expected=validateBackup(legacyBackup());
-  assert.equal(expected.manifest.formatVersion,3);
+  assert.equal(expected.manifest.formatVersion,4);
   assert.equal(expected.collections.competencies.length,32);
   await restoreBackup(legacy,repo);
   const after=await repo.readSnapshot();

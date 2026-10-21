@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {openSettings} from './ux-helpers.mjs';
 import {fullCollections} from '../fixtures.mjs';
 test.use({isMobile:true,hasTouch:true,viewport:{width:390,height:844}});
 test('CP-013B user saves repeat assessments, sees dated history, exports them, retains existing career records',async({page})=>{
@@ -33,14 +34,14 @@ test('CP-013B user saves repeat assessments, sees dated history, exports them, r
   const again=page.locator('details.skill-entry[data-skill=custom-competency]');
   await again.locator(':scope > summary').click();
   await expect(again.locator('.skill-self-proficiency')).toContainText('L3 — Proficient');
-  await page.locator('.header-settings').click();
+  await openSettings(page);
   await page.locator('[data-action=check-integrity]').click();
-  await expect(page.locator('#integrity-check-result')).toContainText('Backup format 3 and schema 3');
+  await expect(page.locator('#integrity-check-result')).toContainText('Backup format 4 and schema 4');
   const downloadReady=page.waitForEvent('download');await page.locator('#export-backup').click();
   const download=await downloadReady,chunks=[];
   for await(const chunk of await download.createReadStream())chunks.push(chunk);
   const backup=JSON.parse(Buffer.concat(chunks).toString());
-  expect(backup.manifest.formatVersion).toBe(3);
+  expect(backup.manifest.formatVersion).toBe(4);
   expect(backup.collections.proficiencyAssessments).toHaveLength(2);
   expect(backup.collections.achievements).toHaveLength(1);
   expect(backup.collections.projects).toHaveLength(1);
@@ -63,10 +64,11 @@ test('CP-013B invalid form preserves values and old backup warns about history l
   const legacy=await page.evaluate(async()=>{
     const {createBackup}=await import('/app/data/backup.js');
     const file=JSON.parse((await createBackup()).json);
-    delete file.collections.proficiencyAssessments;delete file.manifest.counts.proficiencyAssessments;
+    // Format 2 predates proficiency history and Studio documents.
+    for(const store of ['proficiencyAssessments','careerDocuments','documentSources']){delete file.collections[store];delete file.manifest.counts[store];}
     file.manifest.schemaVersion=2;file.manifest.formatVersion=2;return file;
   });
-  await page.locator('.header-settings').click();
+  await openSettings(page);
   await page.locator('#restore-file').setInputFiles({name:'Synthetic_OLDER_format2.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(legacy))});
   await expect(page.getByRole('dialog',{name:'Restore Career Data'})).toContainText('Older format-2 backup:');
   await expect(page.getByRole('dialog')).toContainText('removes any newer self-assessments');

@@ -2,7 +2,7 @@ import { generateBackup, validateBackup, validateCollections, ValidationError, o
 import { database, type CareerDatabase } from './db.js';
 import { type CareerBackup, MAX_BACKUP_BYTES } from '../domain/models.js';
 import { assessDataHealth, criticalIssue, type HealthIssue } from '../domain/dataHealth.js';
-export interface PreparedBackup { backup: CareerBackup; legacy: boolean; sourceFormat: 1|2|3; expectedGeneration: number; expectedRevision: number }
+export interface PreparedBackup { backup: CareerBackup; legacy: boolean; sourceFormat: 1|2|3|4; expectedGeneration: number; expectedRevision: number }
 export function checkBackupSize(json:string):void {
   if(new TextEncoder().encode(json).byteLength>MAX_BACKUP_BYTES)throw new ValidationError('Backup exceeds the supported 12 MiB limit. No export or restore was performed.');
 }
@@ -13,7 +13,7 @@ export async function createBackup(repo:CareerDatabase=database):Promise<{name:s
   return {name:`CareerProof_Backup_${backup.manifest.exportedAt.slice(0,10)}.json`,json,count:data.collections.achievements.length,exportedAt:backup.manifest.exportedAt};
 }
 /**
- * Read-only release/data integrity check. A complete version-3 backup is
+ * Read-only release/data integrity check. A complete current-format backup is
  * serialized and revalidated in memory, without importing, writing metadata,
  * invoking the file picker or changing the active browsing context.
  *
@@ -85,7 +85,11 @@ export async function inspectDataHealth(repo:CareerDatabase=database,persisted:(
 }
 export function downloadBackup(name:string,json:string):void {
   checkBackupSize(json);
-  const blob=new Blob([json],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob);
+  downloadBlob(name,new Blob([json],{type:'application/json;charset=utf-8'}));
+}
+/** Save a file the app generated on this device (a backup or a Studio PDF). Nothing is uploaded. */
+export function downloadBlob(name:string,blob:Blob):void {
+  const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
 }
 export async function parseBackupJson(json:string,repo:CareerDatabase=database):Promise<PreparedBackup>{
@@ -93,7 +97,7 @@ export async function parseBackupJson(json:string,repo:CareerDatabase=database):
   let raw:unknown;
   try{raw=JSON.parse(json);}catch{throw new ValidationError('The file is not valid JSON.');}
   const backup=validateBackup(raw);
-  const sourceFormat=obj(raw)&&obj(raw.manifest)?raw.manifest.formatVersion as 1|2|3:3;
+  const sourceFormat=obj(raw)&&obj(raw.manifest)?raw.manifest.formatVersion as 1|2|3|4:4;
   const legacy=sourceFormat===1;
   const snapshot=await repo.readSnapshot();
   return {backup,legacy,sourceFormat,expectedGeneration:snapshot.generation,expectedRevision:snapshot.revision};

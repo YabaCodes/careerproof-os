@@ -1,3 +1,39 @@
+## v0.1.4-alpha.2 — CP-PC: profile contact details for CVs (review candidate)
+
+**Status:** PR open, CI result stated in the PR; **not merged, deployed or physically accepted**. Follow-up to alpha.1 approved by the user on 2026-10-20 ("continue to the next one").
+
+- **Edit Career Profile** now has **Phone**, **Website** and **Professional links** (one address per line). These fields already existed in the stored profile since schema 2, but no screen could fill them, so a CV could only show email and location.
+- A web address typed without a scheme gets `https://` (`example.com/you` → `https://example.com/you`). Only plain http(s) addresses with a host are accepted; `javascript:`, `ftp:` and addresses with a user name or password are refused with the typed text kept. Phone: up to 80 characters with at least one digit. Duplicate links are dropped; at most 100.
+- The Profile card's **Contact** shows email, phone, website and links (links open in a new tab, `rel="noopener noreferrer"`).
+- The CV journey's Contact Details step now offers all five details; **phone stays off unless ticked**.
+- **Data:** no schema or backup-format change (schema 4, format 4); a profile save now writes the three existing fields.
+- **Acceptance recorded:** the user reported on 2026-10-20 that **STU-01–STU-09** (0.1.4-alpha.1) and **UX301-S3–UX309-S3** (0.1.3-alpha.7) all passed on iPhone.
+- **Tests (local):** `npm test` passes 125 Node and 162 browser tests. New `profile-contact.test.mjs` (2 Node) and `profile-contact.spec.mjs` (1 browser).
+- **Pending:** CI, review and merge, deployment, iPhone checks PC101–PC103.
+
+## v0.1.4-alpha.1 — CP-STU: Performance Review Studio, CV Builder and PDF (accepted on iPhone 2026-10-20)
+
+**Status:** merged in PR #42 (`4e5ee63`) and deployed; the user reported STU-01–STU-09 all passed on iPhone on 2026-10-20. Original candidate status: PR open, CI result stated in the PR; not merged, deployed or physically accepted. User approved the mockups on 2026-10-20 ("Looks good. Make the revision") and asked for Performance Review Studio, the CV Builder and the slimmer Home in one PR. The slimmer Home and plans → Expected Results had already shipped in `0.1.3-alpha.7` (PR #41), so this PR carries the Studio, the CV Builder, PDF export and the navigation change (DEC-040).
+
+- **Navigation:** **Studio** takes Profile's place in the tab bar: Home · Vault · Experience · Skills · Studio. Profile opens from your **initials in the header** (next to ＋), and **Settings & Data** is the first row on the Profile page. On tablet/desktop the sidebar lists Studio and Profile, and Settings stays at its foot.
+- **Studio tab:** start a **Performance review** or a **CV**, and see your documents (most recently edited first) with "N parts to review" when their sources have changed.
+- **Performance review** (Scope → Achievements → Editable draft → PDF):
+  - Period presets (Last 6 months, Last 12 months, This year) or custom From/Through months; one role or all; an editable title.
+  - Only **Recorded** achievements that happened in the period are offered, grouped by experience then role. Drafts and archived achievements never appear.
+  - The draft holds a Summary (counts and where the work happened), Key Achievements (your own Result / What I did / measured numbers), Skills Shown (each skill with how many chosen achievements show it — not a rating) and Next Period (Expected Results of ongoing experiences).
+- **CV Builder** (Template → Work → Contact → Editable CV → PDF):
+  - Two plain, one-column, ATS-friendly templates: **Professional Standard** (summary, experience with bullets, then skills) and **Technical Specialist** (skills and technologies first, then selected projects, then employment). No skill bars, columns or images.
+  - Each role lists its recorded achievements with stated results first; up to five per role are preselected. Skills, Technologies, Education and current Credentials can be included (expired credentials are left out).
+  - Contact details come from your profile; **phone is off unless you choose it**.
+  - **Versions:** "Save as new version", or start a new CV from a copy of an existing one.
+- **Editing:** tap any text to edit it, add your own text to any section, remove a part, restore a part's source text, rename the document or switch a CV's look under Details, and show/hide/reorder sections (contact always first). A **Preview** shows what the PDF contains. Edits never change your career records.
+- **Source links and outdated alerts:** every generated part remembers the record it came from (ID and revision). When a record changes, the document shows what it now says and asks: **Use updated text** or **Keep this text**. A deleted record, or one that became Confidential or is no longer Recorded, is reported too — remove the part or keep it as your own text. **Nothing is ever rewritten automatically.**
+- **Confidentiality:** Confidential achievements and experiences are **left out by default**, with a count of what was left out; including them is an explicit per-document switch, and such documents carry a reminder. A left-out experience's name and goal are not used anywhere, not even as context. Note: new achievements default to Confidential, so most real records need this switch on.
+- **PDF export:** generated on the device by a small built-in writer (no library, no network): A4, real selectable text in the standard Helvetica fonts, page breaks between lines, "Page N of M", and the review footer "Prepared from my own CareerProof record … Self-reported." Characters the PDF fonts lack are simplified (→ as ->, ő as o) or shown as "?", and the export message says how many.
+- **Data:** IndexedDB schema **4** adds `careerDocuments` and `documentSources` (forward-only upgrade; every existing record, revision, generation and setting is kept). Backup format **4** includes documents; formats 1–3 still import (with no documents) and their restore preview warns that newer documents would be removed. Deleting a document deletes only it and its own source entries; deleting an achievement keeps documents' text and marks the source as deleted.
+- **Tests (local):** `npm test` passes 123 Node and 161 browser tests. New: `studio.test.mjs` (12 Node: candidates, confidentiality, generation, alerts, keep/use/remove, source revisions, CV structure, versions, validation, atomic save/delete, schema 3→4 upgrade, format 3/4 backups, PDF structure, offsets, encoding and pagination) and `studio.spec.mjs` (7 browser: navigation, review and CV journeys end to end, alerts after a source edit and a deletion, PDF downloads, backups, 320px light/dark). Existing tests updated for schema/format 4 and the new Profile/Settings entry points.
+- **Pending:** CI, user review and merge, Pages deployment and iPhone checks STU-01–STU-09 (docs/ACCEPTANCE_TESTS.md).
+
 ## v0.1.3-alpha.7 — CP-UX3: Slim Home and Plans as Expected Results (Review Candidate)
 
 **Status:** Implementation PR for review; **not merged, deployed or physically accepted**. User authorized Redesign Step 3 after reporting the preceding app test was okay; that informal confirmation does not separately establish every UX401–UX408 result.

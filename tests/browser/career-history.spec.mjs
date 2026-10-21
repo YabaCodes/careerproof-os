@@ -4,7 +4,7 @@ test.use({isMobile:true,hasTouch:true});
 async function openProfile(page){
   await page.goto('/');
   await expect(page.locator('.hero-card')).toBeVisible();
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await expect(page.getByRole('heading',{name:'Career Profile'})).toBeVisible();
 }
 async function add(page,kind){
@@ -53,7 +53,7 @@ test('employers group multiple overlapping roles; primary role stays consistent'
   expect(after.profiles[0].primaryRoleId).toBe(before.roles[1].id);
   expect(after.roles.find(r=>r.id===before.roles[1].id).revision).toBe(2);
   await page.reload();
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await expect(page.locator('.career-primary')).toHaveCount(1);
   await expect(page.getByRole('heading',{name:'Team Lead'})).toBeVisible();
   // CP-012B: a referenced employer is never silently deleted. Its roles need an employer
@@ -107,7 +107,7 @@ test('year/month/day precision, optional dates and validation errors',async({pag
   await save(page);
   expect((await snapshot(page)).roles[0].startDate).toEqual({value:'2025-06',precision:'month'});
   await page.reload();
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   expect(await page.locator('.career-role').count()).toBe(1);
 });
 
@@ -141,7 +141,7 @@ test('education and credentials support editing, no expiry and URL safety',async
   await save(page);
   expect((await snapshot(page)).credentials[0].revision).toBe(2);
   await page.reload();
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await expect(page.getByRole('heading',{name:'Master of Engineering'})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Example Professional Certification'})).toBeVisible();
 });
@@ -167,7 +167,7 @@ test('P0 career collections round-trip through backup and leave achievements int
       roles:after.collections.roles.length,education:after.collections.education.length,
       equal:shape(before.collections)===shape(after.collections),competencies:after.collections.competencies.length};
   });
-  expect(result).toMatchObject({format:3,employers:1,roles:1,education:1,equal:true,competencies:32});
+  expect(result).toMatchObject({format:4,employers:1,roles:1,education:1,equal:true,competencies:32});
 });
 
 test('career forms stay contained on mobile and preserve unsaved edits',async({page})=>{

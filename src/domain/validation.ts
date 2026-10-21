@@ -1,4 +1,4 @@
-import { type Achievement, type AchievementView, type CareerBackup, type CareerCollections, type Profile, type P0RecordMap, type P0Store, type Preferences, type PrecisionDate, APP_VERSION, SCHEMA_VERSION, BACKUP_FORMAT_VERSION, TAXONOMY_VERSION, MAX_COLLECTION_RECORDS, IMPACT_CATEGORIES, PROFILE_ID, P0_STORES, emptyCollections } from './models.js';
+import { type Achievement, type AchievementView, type CareerBackup, type CareerCollections, type Profile, type P0RecordMap, type P0Store, type Preferences, type PrecisionDate, type DocumentSection, type DocumentType, APP_VERSION, SCHEMA_VERSION, BACKUP_FORMAT_VERSION, TAXONOMY_VERSION, MAX_COLLECTION_RECORDS, IMPACT_CATEGORIES, PROFILE_ID, P0_STORES, FORMAT2_STORES, FORMAT3_STORES, emptyCollections } from './models.js';
 import { isValidLocalDate, isPrecisionDate, datesInOrder, precisionDateFromInput } from './dates.js';
 import { builtInTaxonomy, normalizeName } from './taxonomy.js';
 export { isValidLocalDate } from './dates.js';
@@ -23,6 +23,15 @@ const url: Check = v => {
 };
 const date = nullable(isPrecisionDate);
 const privacy = enumeration('standard-private','confidential');
+/** CP-STU: which sections and templates each Studio document type may hold. */
+export const DOCUMENT_SECTIONS: Record<DocumentType, readonly DocumentSection[]> = {
+  review: ['summary','achievements','skills','next'],
+  cv: ['contact','summary','experience','projects','skills','technologies','education','credentials']
+};
+export const DOCUMENT_TEMPLATES: Record<DocumentType, readonly string[]> = { review: ['review-standard'], cv: ['cv-professional','cv-technical'] };
+export const MAX_DOCUMENT_BLOCKS = 600;
+const blockContent: Record<string,Check> = {heading:text(300),meta:text(500),date:text(80),text:text(6000)};
+const blockFields: Record<string,Check> = {...blockContent,id,section:enumeration(...DOCUMENT_SECTIONS.cv,...DOCUMENT_SECTIONS.review),kind:enumeration('paragraph','item','entry','bullet'),order:integer,userEdited:bool,sourceKey:nullable(text(300,true))};
 const base: Record<string,Check> = {id,createdAt:validTime,updatedAt:validTime,revision:v=>Number.isSafeInteger(v)&&(v as number)>0};
 const profileFields: Record<string,Check> = {displayName:text(120),headline:text(200),summary:text(10000),email:v=>str(v)&&v.length<=254&&(!v.trim()||/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())),location:text(150)};
 const legacyAchievementFields: Record<string,Check> = {title:text(160,true),contribution:text(6000),occurredOn:v=>str(v)&&(!v||isValidLocalDate(v)),status:enumeration('draft','recorded','archived'),preArchiveStatus:nullable(enumeration('draft','recorded')),outcome:text(6000),impactCategory:enumeration(...Object.keys(IMPACT_CATEGORIES))};
@@ -39,7 +48,14 @@ const fields: {[K in P0Store]: Record<string,Check>} = {
   competencies: {categoryId:id,name:text(160,true),normalizedName:text(200,true),isBuiltIn:bool,status:enumeration('active','archived'),taxonomyKey:nullable(id),aliases:strings,description:text(6000),rubricId:nullable(id)},
   evidenceReferences: {achievementId:id,referenceType:enumeration('description','url','document-reference'),label:text(200,true),referenceValue:text(6000,true),userReviewedAt:nullable(validTime),notes:text(6000)},
   recordLinks: {linkType:enumeration('role-project','achievement-project','achievement-competency'),sourceId:id,targetId:id,isPrimary:bool,note:text(6000)},
-  proficiencyAssessments: {competencyId:id,selfAssessedLevel:v=>Number.isInteger(v)&&[1,2,3,4].includes(v as number),assessmentDate:isPrecisionDate,rubricVersion:text(80,true),rationale:text(6000),developmentNote:text(6000),assessmentContext:text(2000)}
+  proficiencyAssessments: {competencyId:id,selfAssessedLevel:v=>Number.isInteger(v)&&[1,2,3,4].includes(v as number),assessmentDate:isPrecisionDate,rubricVersion:text(80,true),rationale:text(6000),developmentNote:text(6000),assessmentContext:text(2000)},
+  careerDocuments: {documentType:enumeration('review','cv'),title:text(160,true),templateId:enumeration('review-standard','cv-professional','cv-technical'),status:enumeration('draft','final'),
+    excludeConfidential:bool,periodStart:date,periodEnd:date,roleId:nullable(id),
+    sections:v=>Array.isArray(v)&&v.length<=DOCUMENT_SECTIONS.cv.length&&v.every(x=>shape(x,{key:enumeration(...DOCUMENT_SECTIONS.cv,...DOCUMENT_SECTIONS.review),visible:bool})),
+    contentBlocks:v=>Array.isArray(v)&&v.length<=MAX_DOCUMENT_BLOCKS&&v.every(b=>obj(b)&&shape(b,{...blockFields,generated:g=>g===null||shape(g,blockContent)})),
+    contactFields:v=>Array.isArray(v)&&v.length<=5&&new Set(v).size===v.length&&v.every(enumeration('email','phone','location','website','links')),
+    sourceDataRevision:integer,generatedAt:validTime},
+  documentSources: {documentId:id,sourceType:enumeration('profile','employer','role','project','achievement','competency','education','credential'),sourceId:id,sourceRevision:v=>Number.isSafeInteger(v)&&(v as number)>0,order:integer,sourceLabelSnapshot:text(300)}
 };
 function shape(value: unknown, rules: Record<string,Check>): value is Record<string,unknown> {
   return obj(value) && Object.keys(value).length===Object.keys(rules).length && Object.entries(rules).every(([key,check])=>Object.hasOwn(value,key)&&check(value[key]));
@@ -66,8 +82,22 @@ export function isRecord<K extends P0Store>(store: K, value: unknown): value is 
     case 'competencies': return v.normalizedName===normalizeName(v.name as string);
     case 'evidenceReferences': return v.referenceType!=='url'||(!!v.referenceValue&&url(v.referenceValue));
     case 'recordLinks': return !v.isPrimary || v.linkType==='achievement-project';
+    case 'careerDocuments': return documentConsistent(v);
     default: return true;
   }
+}
+/** A document's template, sections and blocks must agree with its type; block IDs are unique within it. */
+function documentConsistent(v: Record<string,unknown>): boolean {
+  const type=v.documentType as DocumentType;
+  if(!DOCUMENT_TEMPLATES[type].includes(v.templateId as string))return false;
+  if(type==='review'&&(v.contactFields as unknown[]).length)return false;
+  if(!ordered(v.periodStart,v.periodEnd))return false;
+  const allowed=new Set<string>(DOCUMENT_SECTIONS[type]);
+  const sections=v.sections as {key:string}[];
+  if(new Set(sections.map(s=>s.key)).size!==sections.length||sections.some(s=>!allowed.has(s.key)))return false;
+  const listed=new Set(sections.map(s=>s.key));
+  const blocks=v.contentBlocks as {id:string;section:string}[];
+  return new Set(blocks.map(b=>b.id)).size===blocks.length&&blocks.every(b=>listed.has(b.section));
 }
 export const isProfile = (v: unknown): v is Profile => isRecord('profiles',v);
 export const isAchievement = (v: unknown): v is Achievement => isRecord('achievements',v);
@@ -96,6 +126,31 @@ export function validateAchievementInput(input:{title:string;contribution:string
   if (!enumeration(...Object.keys(IMPACT_CATEGORIES))(input.impactCategory)) errors.push('Choose a valid impact category.');
   return errors;
 }
+/**
+ * CP-PC (0.1.4-alpha.2): profile contact details used by CVs. A web address typed
+ * without a scheme ("example.com/me") gets https://; anything that is not a plain
+ * http(s) address, or carries a user name/password, is refused.
+ */
+export function normalizeWebUrl(value:string):string {
+  const v=value.trim();
+  if(!v)return '';
+  return /^[a-z][a-z0-9+.-]*:/i.test(v)?v:'https://'+v;
+}
+/** One address per line; blank lines dropped, duplicates removed, order kept. */
+export function parseProfessionalLinks(text:string):string[] {
+  const seen=new Set<string>(),out:string[]=[];
+  for(const line of text.split(/\r?\n/)){const v=normalizeWebUrl(line);if(v&&!seen.has(v.toLowerCase())){seen.add(v.toLowerCase());out.push(v);}}
+  return out;
+}
+export function validateProfileContact(input:{phone:string;website:string;professionalLinks:string[]}):string[] {
+  const errors:string[]=[];
+  if(input.phone.length>80||(input.phone.trim()&&!/\d/.test(input.phone)))errors.push('Enter a phone number of 80 characters or fewer, or leave it blank.');
+  if(input.website&&(!url(input.website)||!/^https?:\/\/[^/\s]+\.[^/\s]/i.test(input.website)))errors.push('Enter the website as a web address, such as example.com/you, or leave it blank.');
+  if(input.professionalLinks.length>100)errors.push('Add at most 100 professional links.');
+  const bad=input.professionalLinks.find(l=>!url(l)||!/^https?:\/\/[^/\s]+\.[^/\s]/i.test(l));
+  if(bad)errors.push(`Check the link “${bad.length>60?bad.slice(0,57)+'…':bad}”: use one web address per line, such as linkedin.com/in/you.`);
+  return errors;
+}
 export function validateProfileInput(input:Pick<Profile,'displayName'|'headline'|'summary'|'email'|'location'>):string[] {
   return Object.entries(profileFields).flatMap(([key,check])=>check(input[key as keyof typeof input])?[]:[key==='email'?'Enter a valid email address or leave it blank.':`Check ${key}: it exceeds the supported length or has an incorrect type.`]);
 }
@@ -122,6 +177,14 @@ export function validateCollections(raw: unknown): CareerCollections {
   c.impactMetrics.forEach(r=>ref('achievements',r.achievementId));
   c.evidenceReferences.forEach(r=>ref('achievements',r.achievementId));
   c.proficiencyAssessments.forEach(r=>ref('competencies',r.competencyId));
+  // CP-STU: a document source names the document it belongs to. Its sourceId is a
+  // snapshot reference and may outlive the record (the editor reports it as deleted).
+  const sourceKeys=new Set<string>();
+  c.documentSources.forEach(r=>{
+    ref('careerDocuments',r.documentId);
+    const key=JSON.stringify([r.documentId,r.sourceType,r.sourceId]);
+    if(sourceKeys.has(key))throw new ValidationError('Duplicate document source.');sourceKeys.add(key);
+  });
   const names = new Set<string>();
   c.competencyCategories.forEach(r=>{
     const key=normalizeName(r.name); if(names.has(key))throw new ValidationError('Duplicate competency category name.');names.add(key);
@@ -177,21 +240,30 @@ export function validateBackup(raw: unknown): CareerBackup {
     // before destructive restore confirmation, preserving every old record.
     if(Object.keys(raw).length!==3||Object.keys(m).length!==7||m.taxonomyVersion!==TAXONOMY_VERSION||!isPreferences(raw.preferences))
       throw new ValidationError('Unsupported taxonomy or invalid backup preferences.');
-    const older=P0_STORES.filter(s=>s!=='proficiencyAssessments');
-    const olderCounts=m.counts as Record<string,unknown>;
-    if(Object.keys(c).length!==older.length||Object.keys(olderCounts).length!==older.length||
-       older.some(s=>!Array.isArray(c[s])||olderCounts[s]!==c[s].length))
-      throw new ValidationError('Invalid format-2 backup collections or counts.');
-    const adapted:CareerCollections={...(c as unknown as Omit<CareerCollections,'proficiencyAssessments'>),proficiencyAssessments:[]};
-    validateCollections(adapted);
-    return generateBackup(adapted,raw.preferences as Preferences,m.exportedAt as string);
+    return adaptOlderBackup(c,m.counts as Record<string,unknown>,FORMAT2_STORES,raw.preferences as Preferences,m.exportedAt as string,'format-2');
   }
-  if(m.formatVersion!==3||m.schemaVersion!==3)throw new ValidationError('The backup format or schema is unsupported.');
+  if(m.formatVersion===3&&m.schemaVersion===3){
+    // CP-STU: format-3 backups predate Studio documents (13 collections).
+    if(Object.keys(raw).length!==3||Object.keys(m).length!==7||m.taxonomyVersion!==TAXONOMY_VERSION||!isPreferences(raw.preferences))
+      throw new ValidationError('Unsupported taxonomy or invalid backup preferences.');
+    return adaptOlderBackup(c,m.counts as Record<string,unknown>,FORMAT3_STORES,raw.preferences as Preferences,m.exportedAt as string,'format-3');
+  }
+  if(m.formatVersion!==BACKUP_FORMAT_VERSION||m.schemaVersion!==SCHEMA_VERSION)throw new ValidationError('The backup format or schema is unsupported.');
   if(Object.keys(raw).length!==3||Object.keys(m).length!==7||m.taxonomyVersion!==TAXONOMY_VERSION||!isPreferences(raw.preferences))throw new ValidationError('Unsupported taxonomy or invalid backup preferences.');
   validateCollections(c);
   const counts=m.counts;
   if(Object.keys(counts).length!==P0_STORES.length||P0_STORES.some(s=>counts[s]!== (c[s] as unknown[]).length))throw new ValidationError('The backup record counts do not match.');
   return raw as unknown as CareerBackup;
+}
+/** Fill the collections an older backup cannot hold with empty lists; every stored record is kept exactly. */
+function adaptOlderBackup(c:Record<string,unknown>,counts:Record<string,unknown>,stores:readonly P0Store[],preferences:Preferences,exportedAt:string,label:string):CareerBackup{
+  if(Object.keys(c).length!==stores.length||Object.keys(counts).length!==stores.length||
+     stores.some(s=>!Array.isArray(c[s])||counts[s]!==(c[s] as unknown[]).length))
+    throw new ValidationError(`Invalid ${label} backup collections or counts.`);
+  const adapted=emptyCollections() as unknown as Record<string,unknown>;
+  for(const s of stores)adapted[s]=c[s];
+  validateCollections(adapted);
+  return generateBackup(adapted as unknown as CareerCollections,preferences,exportedAt);
 }
 export function summarizeAchievements(items:Achievement[]) {
   return {total:items.filter(a=>a.status!=='archived').length,recorded:items.filter(a=>a.status==='recorded').length,drafts:items.filter(a=>a.status==='draft').length,archived:items.filter(a=>a.status==='archived').length};

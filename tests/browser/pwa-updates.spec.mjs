@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {openSettings} from './ux-helpers.mjs';
 // Keep UI and service worker assertions in sync with compiled app version.
 import {APP_VERSION} from '../../dist/app/domain/models.js';
 
@@ -12,7 +13,7 @@ async function controlled(page){
 
 test('Settings provides a safe manual update check without altering saved data',async({page})=>{
   await start(page);
-  await page.locator('.header-settings').click();
+  await openSettings(page);
   await expect(page.getByRole('dialog')).toContainText(APP_VERSION);
   await expect(page.locator('#pwa-update-status')).toContainText('Checks automatically each time you open CareerProof');
   await page.locator('[data-action=check-updates]').click();

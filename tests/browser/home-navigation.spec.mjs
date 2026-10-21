@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {openSettings} from './ux-helpers.mjs';
 import {fullCollections,legacyAchievement} from '../fixtures.mjs';
 import {migrateLegacyAchievement} from '../../dist/app/domain/validation.js';
 test.use({isMobile:true,hasTouch:true,viewport:{width:390,height:844}});
@@ -43,17 +44,22 @@ test('CP-012.2 Home next action follows first achievement → draft → backup �
   await expect(page.locator('.compact-metric').nth(3)).toContainText('1');
 });
 
-test('CP-012.2 five tabs open their own screens; Settings and capture live in the header',async({page})=>{
+test('CP-012.2 / DEC-040 five tabs open their own screens; capture and Profile (with Settings) live in the header',async({page})=>{
   await seed(page,fullCollections());
-  const tabs=[['home','CareerProof'],['vault','Achievement Vault'],['portfolio','Experience'],['competencies','Skills'],['profile','Career Profile']];
+  const tabs=[['home','CareerProof'],['vault','Achievement Vault'],['portfolio','Experience'],['competencies','Skills'],['studio','Studio']];
   for(const [screen,title] of tabs){
     await page.locator(`.mobile-nav [data-screen=${screen}]`).click();
     await expect(page.locator('#main-content h1')).toHaveText(title);
     await expect(page.locator(`.mobile-nav [data-screen=${screen}]`)).toHaveAttribute('aria-current','page');
     await expect(page.locator('.mobile-nav [aria-current=page]')).toHaveCount(1);
     await expect(page.locator('.mobile-create')).toBeVisible();
-    await expect(page.locator('.header-settings')).toBeVisible();
+    await expect(page.locator('.header-profile')).toBeVisible();
+    await expect(page.locator('.header-profile')).toHaveText('SE');
   }
+  await page.locator('.header-profile').click();
+  await expect(page.locator('#main-content h1')).toHaveText('Career Profile');
+  await expect(page.locator('.header-profile')).toHaveAttribute('aria-current','page');
+  await expect(page.locator('.mobile-nav [aria-current=page]')).toHaveCount(0);
   await expect(page.getByText('Back to Career Profile')).toHaveCount(0);
   await expect(page.getByText('Open Experience Portfolio')).toHaveCount(0);
   await page.locator('.mobile-nav [data-screen=vault]').click();
@@ -62,7 +68,7 @@ test('CP-012.2 five tabs open their own screens; Settings and capture live in th
   await expect(page.locator('[data-action=skill-scope][data-scope=linked]')).toHaveAttribute('aria-pressed','true');
   await expect(page.locator('details.skill-entry')).toHaveCount(1);
   await expect(page.locator('.skill-panel .career-meta').first()).toHaveText('1 skill');
-  await page.locator('.header-settings').click();
+  await openSettings(page);
   await expect(page.getByRole('radiogroup',{name:'Color theme'})).toBeVisible();
   await expect(page.locator('[data-action=set-theme][aria-checked=true]')).toHaveText('Light');
 });

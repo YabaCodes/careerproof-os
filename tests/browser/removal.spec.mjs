@@ -68,7 +68,7 @@ test('CP-012B removal sheet fits 320px, keeps 44px targets and can export a back
   const c=world();c.roles.push({...c.roles[0],id:'role-2',title:'Second synthetic role',isCurrent:false,startDate:{value:'2020',precision:'year'},endDate:{value:'2021',precision:'year'}});
   await seed(page,c);
   const before=await snapshot(page);
-  await page.locator('.mobile-nav [data-screen=profile]').click();
+  await page.locator('.header-profile').click();
   await page.locator('[data-action=edit-career][data-kind=roles][data-id=role-1]').click();
   await page.locator('.modal-footer [data-action=delete-career][data-kind=roles][data-id=role-1]').click();
   await expect(page.locator('#removal-form')).toBeVisible();

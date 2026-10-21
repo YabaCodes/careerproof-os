@@ -1,10 +1,25 @@
-# CareerProof OS — v0.1.3-alpha.7 (CP-UX3 in review)
+# CareerProof OS — v0.1.4-alpha.2 (profile contact details in review)
 
 **Own your experience. Prove your impact. Shape your future.**
 
-**Current development:** CP-UX3 `v0.1.3-alpha.7` is proposed on `feat/cp-ux3-home-expected-results` and **not merged, deployed or accepted**. The latest merged main change is PR #40 (`v0.1.3-alpha.6`); the user reported a general successful test, while itemized UX401–UX408 results are not separately documented.
+**Current development:** CP-PC `v0.1.4-alpha.2` is proposed on `feat/cp-profile-contact` and **not merged, deployed or accepted**. The latest merged main change is PR #42 (`v0.1.4-alpha.1`, Studio), accepted on iPhone (STU-01–STU-09) on 2026-10-20 together with alpha.7 (UX301-S3–UX309-S3).
 
-### v0.1.3-alpha.7 — Finish the redesign (DEC-039)
+### v0.1.4-alpha.2 — Profile contact details for CVs
+
+- **Edit Career Profile** adds Phone, Website and Professional links (one per line; `https://` added when missing; only http(s) addresses accepted). The Profile card shows them and the CV Contact Details step offers them, with phone off unless ticked. No schema or backup change.
+
+### v0.1.4-alpha.1 — Studio: Performance Review, CV Builder and PDF (DEC-040, accepted)
+
+- **Studio tab:** Home · Vault · Experience · Skills · **Studio**. Profile opens from your initials in the header; **Settings & Data** is the first row on Profile.
+- **Performance review:** choose a period and role; only Recorded achievements are offered; the draft uses your own words (Summary, Key Achievements, Skills Shown, Next Period) and you edit anything.
+- **CV Builder:** Professional Standard or Technical Specialist (plain, one column, ATS-friendly); choose roles and achievements; contact details from your profile (phone off unless chosen); keep versions.
+- **Source links:** every generated part remembers its record. When a record changes, the document shows what changed and you choose *Use updated text* or *Keep this text*; nothing is rewritten automatically.
+- **Confidential records are left out by default**, per document, with a count of what was left out.
+- **PDF export** is generated on the device, offline, with selectable text.
+- **Data:** schema **4** adds `careerDocuments` and `documentSources`; backup format **4** includes documents (formats 1–3 still import). Export a backup before updating.
+- **Review gate:** CI, PR review and merge with user consent, then installed-iPhone **STU-01–STU-09**.
+
+### v0.1.3-alpha.7 — Finish the redesign (DEC-039, merged in PR #41)
 
 - **Slim Home:** four compact counts (Recorded, Draft, Experiences, Skills Shown), truthful last-generated-export note, Last 12 Months + Recent unchanged, Your Record expands existing completeness/role drilldowns and three smaller Quick Add buttons. The header Achievement + and all five existing Home/Vault/Experience/Skills/Profile destinations remain.
 - **Draft → Expected Result:** explicit user choice, editable future-looking preview, add-only `projects.objective`, archived (not deleted) Draft, same-transaction revision checks, duplicate and confidentiality protections; same-session Undo only if neither record changed.
@@ -43,8 +58,8 @@ The original Result → What I Did → Context → Skills reading order, Guided 
 - **Evidence and impact:** measurable baseline/result values, units, source/context notes, user-entered evidence references and explicit confidential/private designations. Claims and references are not independently verified.
 - **Competency Library:** four built-in categories and 32 seeded competencies with linked achievement examples, plus custom skill create/edit/archive/restore. No automatic proficiency scoring.
 - **Search and filtering:** achievements by text, dates, role, Experience, competency and status.
-- **Local data integrity:** Settings → **Check data** validates all 13 IndexedDB collections and their full version-3 backup-format round-trip without uploading, restoring or changing records.
-- **Recovery:** full version-3 JSON export, validated full-replacement restore, support for legacy format-1 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
+- **Local data integrity:** Settings → **Check data** validates all 15 IndexedDB collections and their full version-4 backup-format round-trip without uploading, restoring or changing records.
+- **Recovery:** full version-4 JSON export, validated full-replacement restore, support for older format-1 to format-3 backups, transactional data-revision checks against stale restore previews. In v0.1.2 Settings → Check data includes a read-only **Data Health** report; deleting a linked record opens a review sheet to **move or unlink** its dependents. Achievements are never deleted as a side effect.
 - **Installable offline PWA:** iPhone, iPad and desktop responsive layouts, light/dark/system themes, accessible mobile form controls and explicit update checks/restart controls.
 
 **Since v0.1.3-alpha.4 (CP-UX2, merged; retrospectively device-accepted on installed alpha.5):** a new achievement is captured as Where → What → When. The chosen experience is the primary one, and the role follows it by date. Skills are suggested as chips, and the impact category is no longer asked for.
@@ -56,19 +71,20 @@ The original Result → What I Did → Context → Skills reading order, Guided 
 - Achievement dates are Month, Year or Exact day.
 - In **Profile**, a record's name opens its editor, which holds Delete.
 
-The v0.1.2 iPhone bottom navigation is **Home / Vault / Experience / Skills / Profile**, with **＋ (new achievement)** and **Settings** in each screen's header (DEC-029). The look follows the Wealth OS design language with CareerProof's navy/teal (DEC-030). Titles and subtitles use Title Case (DEC-032) and Employment History lists the most recent employer first (DEC-033). Home shows **Complete Your Record** and **Achievements by Role** (DEC-035): derived counts and links, no scores.
+The iPhone bottom navigation is **Home / Vault / Experience / Skills / Studio** from v0.1.4-alpha.1 (DEC-040), with **＋ (new achievement)** and your **initials (Profile, with Settings & Data inside)** in each tab's header; v0.1.2–v0.1.3 used Home / Vault / Experience / Skills / Profile with Settings in the header (DEC-029). The look follows the Wealth OS design language with CareerProof's navy/teal (DEC-030). Titles and subtitles use Title Case (DEC-032) and Employment History lists the most recent employer first (DEC-033). Home shows **Complete Your Record** and **Achievements by Role** (DEC-035): derived counts and links, no scores.
 
 ## Data ownership and safety
 
 **Career data stays in the browser's IndexedDB.** GitHub Pages serves the application code, not the user's personal records. There is **no account, cloud sync, multi-device synchronization or automatic external backup**.
 
-- Export regularly using **Settings → Export**, verify the JSON file really saved and keep a separate secure copy. Exported JSON is **not encrypted**.
+- Export regularly using **Profile → Settings & Data → Export**, verify the JSON file really saved and keep a separate secure copy. Exported JSON is **not encrypted**.
 - **Check data** is read-only and validates structure and backup compatibility. It **does not create a recoverable external backup**, validate the real-world truth of career claims or guarantee that device storage cannot be evicted.
 - Restoring a backup is a **destructive full replacement** of local collections and portable preferences. Inspect the preview carefully. If records changed since the backup was selected, the operation stops without replacing anything; review/reselect the file before trying again.
 - **Never uninstall the Home Screen PWA, clear Safari website data or reset browser storage to force an update.** Doing so may permanently remove unexported local records.
 - Do not put real employer documents, confidential career details, or private backups in this public GitHub repository.
+- Studio PDFs are generated on the device and saved like backups; nothing is uploaded. Share a PDF only where you intend, especially if you included confidential records.
 
-Database schema **3**, backup format **3** (also reads earlier formats **1** and **2**), taxonomy version **1.0**. Backup limit: **12 MiB UTF-8 JSON**, at most **100,000 records per collection**. Oversized backups fail rather than silently dropping records.
+Database schema **4**, backup format **4** (also reads earlier formats **1**, **2** and **3**), taxonomy version **1.0**. Backup limit: **12 MiB UTF-8 JSON**, at most **100,000 records per collection**. Oversized backups fail rather than silently dropping records.
 
 ## Development and testing
 
