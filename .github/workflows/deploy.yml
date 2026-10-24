@@ -15,7 +15,10 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Pinned: GitHub began moving ubuntu-latest to Ubuntu 26 on 2026-10-19, and the
+    # Playwright browser runtime install (--with-deps) failed there. Revisit when
+    # Playwright supports the newer image.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

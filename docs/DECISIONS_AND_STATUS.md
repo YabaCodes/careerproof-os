@@ -4,7 +4,13 @@
 
 ## 1. Current truth: repository and release state
 
-### Verified current state (2026-10-15, at CP-UX1)
+### CP-UX2 retrospective acceptance checkpoint (2026-10-16)
+
+- User confirmed **UX201–UX207 all PASS** for alpha.4 Guided Capture on installed **alpha.5**, after PR #35 merged and subsequent alpha.5 build/test/deployment succeeded. **UX201 caveat:** alpha.5 version, schema 3 and preserved data were verified; the historical alpha.4 version/update screen was not observed. UX205 A/B both passed. These are user-reported physical-iPhone results, not only browser CI.
+- CP-UX-Links UX301–UX307 remain independently accepted. **PA101–PA106 proficiency testing remains unreported.** No full v0.1.3 final acceptance is implied. The later alpha.6/alpha.7 work and its separately defined gates are unaffected by this documentation correction.
+- Acceptance source: [ACCEPTANCE_TESTS.md](ACCEPTANCE_TESTS.md); current feature status: [MILESTONE_TRACKER.md](MILESTONE_TRACKER.md).
+
+### Historical verified state (2026-10-15, at CP-UX1)
 
 - `main` = `ffc72ef` (merge of PR #33). App **`0.1.3-alpha.2`** deployed by main CI run 38684412367 (success). DB schema **3**, backup format **3** (formats 1 and 2 importable), taxonomy **1.0**.
 - v0.1.2 final was promoted in PR #30 (merged 2026-10-11). PR #31 (docs closing v0.1.2 after F201–F204) is open with merge conflicts. CP-013A (`0.1.3-alpha.1`, #32) accepted with EB103 not tested; CP-013B (`0.1.3-alpha.2`, #33) merged, PA101–PA106 not yet reported.
